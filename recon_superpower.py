@@ -53,6 +53,9 @@ from datetime import datetime
 import shlex
 import re
 from urllib.parse import urlparse
+import json
+from pathlib import Path
+from collections import deque
 
 
 class ReconSuperpower:
@@ -86,7 +89,137 @@ class ReconSuperpower:
         self.max_output_lines = 10000
         self.output_line_count = 0
 
+        # Configuration and history
+        self.config_dir = Path.home() / ".recon_superpower"
+        self.config_file = self.config_dir / "config.json"
+        self.history_file = self.config_dir / "history.json"
+        self.config_dir.mkdir(exist_ok=True)
+
+        # Recent targets history (max 20 items)
+        self.recent_targets = deque(maxlen=20)
+        self.recent_urls = deque(maxlen=20)
+        self.command_history = deque(maxlen=50)
+
+        # Scan profiles
+        self.scan_profiles = {
+            "nmap": {
+                "Quick Scan": {"-sS", "T4", "1-1000", ""},
+                "Deep Scan": {"-sS -sV -sC", "T3", "1-65535", "-A"},
+                "Stealth Scan": {"-sS", "T1", "1-1000", "-f"},
+                "UDP Scan": {"-sU", "T3", "53,161,500", ""}
+            },
+            "gobuster": {
+                "Quick Dir": {"dir", "10", "php,html,txt", "-k"},
+                "Deep Dir": {"dir", "50", "php,html,txt,asp,aspx,jsp,js,json,xml", "-k"},
+                "DNS Enum": {"dns", "20", "", ""},
+                "VHost Scan": {"vhost", "10", "", "-k"}
+            },
+            "nikto": {
+                "Quick": {"80", False, "x", ""},
+                "SSL Scan": {"443", True, "x", ""},
+                "Targeted": {"80", False, "4,6,9", ""}
+            }
+        }
+
+        # Load configuration and history
+        self.load_config()
+        self.load_history()
+
         self.setup_ui()
+        self.setup_keyboard_shortcuts()
+
+        # Restore last session settings
+        self.restore_last_session()
+
+    def load_config(self):
+        """Load user configuration from file."""
+        default_config = {
+            "window_geometry": "1400x900",
+            "timeout": 3600,
+            "max_output_lines": 10000,
+            "auto_save": False,
+            "theme": "dark"
+        }
+
+        if self.config_file.exists():
+            try:
+                with open(self.config_file, 'r') as f:
+                    self.config = {**default_config, **json.load(f)}
+            except (json.JSONDecodeError, IOError):
+                self.config = default_config
+        else:
+            self.config = default_config
+
+    def save_config(self):
+        """Save current configuration to file."""
+        try:
+            self.config["window_geometry"] = self.root.geometry()
+            with open(self.config_file, 'w') as f:
+                json.dump(self.config, f, indent=2)
+        except IOError:
+            pass  # Silently fail if unable to save
+
+    def load_history(self):
+        """Load command and target history."""
+        if self.history_file.exists():
+            try:
+                with open(self.history_file, 'r') as f:
+                    history_data = json.load(f)
+                    self.recent_targets = deque(history_data.get("targets", []), maxlen=20)
+                    self.recent_urls = deque(history_data.get("urls", []), maxlen=20)
+                    self.command_history = deque(history_data.get("commands", []), maxlen=50)
+            except (json.JSONDecodeError, IOError):
+                pass  # Start with empty history if file is corrupted
+
+    def save_history(self):
+        """Save command and target history."""
+        try:
+            history_data = {
+                "targets": list(self.recent_targets),
+                "urls": list(self.recent_urls),
+                "commands": list(self.command_history)
+            }
+            with open(self.history_file, 'w') as f:
+                json.dump(history_data, f, indent=2)
+        except IOError:
+            pass  # Silently fail if unable to save
+
+    def add_to_history(self, target=None, url=None, command=None):
+        """Add items to history, avoiding duplicates."""
+        if target and target not in self.recent_targets:
+            self.recent_targets.appendleft(target)
+        if url and url not in self.recent_urls:
+            self.recent_urls.appendleft(url)
+        if command:
+            cmd_str = ' '.join(command) if isinstance(command, list) else command
+            if cmd_str not in self.command_history:
+                self.command_history.appendleft(cmd_str)
+        self.save_history()
+
+    def restore_last_session(self):
+        """Restore window geometry and settings from last session."""
+        if "window_geometry" in self.config:
+            try:
+                self.root.geometry(self.config["window_geometry"])
+            except:
+                pass  # Use default if restoration fails
+
+    def setup_keyboard_shortcuts(self):
+        """Setup keyboard shortcuts for common operations."""
+        self.root.bind('<Control-r>', lambda e: self.run_scan())
+        self.root.bind('<Control-s>', lambda e: self.save_output())
+        self.root.bind('<Control-l>', lambda e: self.clear_output())
+        self.root.bind('<Control-f>', lambda e: self.show_search_dialog())
+        self.root.bind('<Control-c>', lambda e: self.copy_selection())
+        self.root.bind('<Control-q>', lambda e: self.quit_app())
+        self.root.bind('<Escape>', lambda e: self.stop_scan() if self.is_running else None)
+        self.root.protocol("WM_DELETE_WINDOW", self.quit_app)
+
+    def quit_app(self):
+        """Clean exit with config save."""
+        self.save_config()
+        self.save_history()
+        self.root.quit()
 
     def setup_ui(self):
         # Title Bar
@@ -222,6 +355,52 @@ class ReconSuperpower:
             command=self.save_output
         )
         save_button.pack(side=tk.RIGHT, padx=5, pady=5)
+
+        # Additional utility buttons
+        export_button = tk.Button(
+            output_header,
+            text="📤 EXPORT",
+            font=("Courier", 10, "bold"),
+            bg=self.bg_primary,
+            fg=self.text_color,
+            activebackground=self.bg_tertiary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=5,
+            cursor="hand2",
+            command=self.show_export_menu
+        )
+        export_button.pack(side=tk.RIGHT, padx=5, pady=5)
+
+        search_button = tk.Button(
+            output_header,
+            text="🔍 SEARCH",
+            font=("Courier", 10, "bold"),
+            bg=self.bg_primary,
+            fg=self.text_color,
+            activebackground=self.bg_tertiary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=5,
+            cursor="hand2",
+            command=self.show_search_dialog
+        )
+        search_button.pack(side=tk.RIGHT, padx=5, pady=5)
+
+        copy_button = tk.Button(
+            output_header,
+            text="📋 COPY",
+            font=("Courier", 10, "bold"),
+            bg=self.bg_primary,
+            fg=self.text_color,
+            activebackground=self.bg_tertiary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=5,
+            cursor="hand2",
+            command=self.copy_selection
+        )
+        copy_button.pack(side=tk.RIGHT, padx=5, pady=5)
 
         # Output text area
         output_frame = tk.Frame(right_panel, bg=self.bg_primary, highlightthickness=2,
@@ -618,7 +797,7 @@ class ReconSuperpower:
     def print_banner(self):
         banner = """
 ╔═══════════════════════════════════════════════════════════════════════╗
-║                    THE RECON SUPERPOWER v1.0                         ║
+║                    THE RECON SUPERPOWER v1.1                         ║
 ║           Professional Security Reconnaissance Suite                  ║
 ╚═══════════════════════════════════════════════════════════════════════╝
 
@@ -628,11 +807,270 @@ class ReconSuperpower:
 Select a tool from the tabs on the left and configure your scan.
 Press 'RUN SCAN' when ready.
 
+KEYBOARD SHORTCUTS:
+  Ctrl+R: Run Scan  |  Ctrl+S: Save  |  Ctrl+L: Clear  |  Ctrl+F: Search
+  Ctrl+C: Copy      |  Ctrl+Q: Quit  |  ESC: Stop Scan
+
 """
         self.output_text.insert(tk.END, banner, 'info')
         self.output_text.tag_config('info', foreground=self.accent_cyan)
+        # Configure additional output tags for syntax highlighting
+        self.output_text.tag_config('success', foreground="#00ff41")
+        self.output_text.tag_config('error', foreground="#ff0055")
+        self.output_text.tag_config('warning', foreground="#ffa500")
+        self.output_text.tag_config('highlight', background="#1e2749", foreground="#00d9ff")
         # Initialize line count for banner
         self.output_line_count = banner.count('\n')
+
+    def copy_selection(self):
+        """Copy selected text or all output to clipboard."""
+        try:
+            # Try to get selected text first
+            selected_text = self.output_text.get(tk.SEL_FIRST, tk.SEL_LAST)
+            if selected_text:
+                self.root.clipboard_clear()
+                self.root.clipboard_append(selected_text)
+                self.update_status("Selection copied to clipboard", self.accent_green)
+                return
+        except tk.TclError:
+            # No selection, copy all
+            pass
+
+        # Copy all text if no selection
+        all_text = self.output_text.get(1.0, tk.END)
+        if all_text.strip():
+            self.root.clipboard_clear()
+            self.root.clipboard_append(all_text)
+            self.update_status("All output copied to clipboard", self.accent_green)
+        else:
+            self.update_status("No text to copy", self.accent_red)
+
+    def show_search_dialog(self):
+        """Show search dialog for finding text in output."""
+        search_window = tk.Toplevel(self.root)
+        search_window.title("Search Output")
+        search_window.geometry("400x150")
+        search_window.configure(bg=self.bg_secondary)
+        search_window.transient(self.root)
+        search_window.grab_set()
+
+        # Search label and entry
+        tk.Label(search_window, text="Search for:", font=("Courier", 10),
+                fg=self.text_color, bg=self.bg_secondary).pack(pady=10)
+
+        search_entry = tk.Entry(search_window, font=("Courier", 12),
+                               bg=self.bg_primary, fg=self.accent_cyan,
+                               insertbackground=self.accent_cyan, width=40)
+        search_entry.pack(pady=5)
+        search_entry.focus()
+
+        result_label = tk.Label(search_window, text="", font=("Courier", 9),
+                               fg=self.accent_green, bg=self.bg_secondary)
+        result_label.pack(pady=5)
+
+        def perform_search(event=None):
+            # Remove previous highlights
+            self.output_text.tag_remove('highlight', '1.0', tk.END)
+
+            search_term = search_entry.get()
+            if not search_term:
+                result_label.config(text="Enter search term", fg=self.accent_red)
+                return
+
+            # Search and highlight
+            start_pos = '1.0'
+            count = 0
+            while True:
+                pos = self.output_text.search(search_term, start_pos, tk.END, nocase=True)
+                if not pos:
+                    break
+                end_pos = f"{pos}+{len(search_term)}c"
+                self.output_text.tag_add('highlight', pos, end_pos)
+                count += 1
+                start_pos = end_pos
+
+            if count > 0:
+                result_label.config(text=f"Found {count} occurrence(s)", fg=self.accent_green)
+                # Scroll to first occurrence
+                first_pos = self.output_text.search(search_term, '1.0', tk.END, nocase=True)
+                if first_pos:
+                    self.output_text.see(first_pos)
+            else:
+                result_label.config(text="No matches found", fg=self.accent_red)
+
+        search_entry.bind('<Return>', perform_search)
+
+        # Buttons
+        button_frame = tk.Frame(search_window, bg=self.bg_secondary)
+        button_frame.pack(pady=10)
+
+        tk.Button(button_frame, text="Search", command=perform_search,
+                 bg=self.accent_green, fg=self.bg_primary, font=("Courier", 10, "bold"),
+                 cursor="hand2", padx=20).pack(side=tk.LEFT, padx=5)
+
+        tk.Button(button_frame, text="Close", command=search_window.destroy,
+                 bg=self.bg_primary, fg=self.text_color, font=("Courier", 10, "bold"),
+                 cursor="hand2", padx=20).pack(side=tk.LEFT, padx=5)
+
+    def show_export_menu(self):
+        """Show export format selection menu."""
+        export_menu = tk.Menu(self.root, tearoff=0, bg=self.bg_secondary,
+                             fg=self.text_color, font=("Courier", 10))
+        export_menu.add_command(label="Export as Text (.txt)", command=self.save_output)
+        export_menu.add_command(label="Export as JSON (.json)", command=self.export_to_json)
+        export_menu.add_command(label="Export as XML (.xml)", command=self.export_to_xml)
+        export_menu.add_command(label="Export as HTML (.html)", command=self.export_to_html)
+
+        try:
+            export_menu.tk_popup(self.root.winfo_pointerx(), self.root.winfo_pointery())
+        finally:
+            export_menu.grab_release()
+
+    def export_to_json(self):
+        """Export scan results to JSON format."""
+        content = self.output_text.get(1.0, tk.END)
+        if not content.strip():
+            messagebox.showwarning("Warning", "No output to export")
+            return
+
+        filename = filedialog.asksaveasfilename(
+            defaultextension=".json",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
+            initialfile=f"recon_output_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
+
+        if filename:
+            try:
+                abs_path = os.path.abspath(filename)
+                home_dir = os.path.expanduser("~")
+
+                if not abs_path.startswith(home_dir):
+                    messagebox.showerror("Security Error",
+                        "Cannot write files outside your home directory for security reasons.")
+                    return
+
+                # Parse output into structured JSON
+                export_data = {
+                    "timestamp": datetime.now().isoformat(),
+                    "tool": self.notebook.tab(self.notebook.select(), "text"),
+                    "output": content,
+                    "lines": content.count('\n')
+                }
+
+                with open(abs_path, 'w') as f:
+                    json.dump(export_data, f, indent=2)
+
+                messagebox.showinfo("Exported", f"Output exported to:\n{abs_path}")
+                self.update_status("Exported to JSON", self.accent_green)
+            except (OSError, IOError) as e:
+                messagebox.showerror("Error", f"Failed to export: {str(e)}")
+
+    def export_to_xml(self):
+        """Export scan results to XML format."""
+        content = self.output_text.get(1.0, tk.END)
+        if not content.strip():
+            messagebox.showwarning("Warning", "No output to export")
+            return
+
+        filename = filedialog.asksaveasfilename(
+            defaultextension=".xml",
+            filetypes=[("XML files", "*.xml"), ("All files", "*.*")],
+            initialfile=f"recon_output_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xml"
+        )
+
+        if filename:
+            try:
+                abs_path = os.path.abspath(filename)
+                home_dir = os.path.expanduser("~")
+
+                if not abs_path.startswith(home_dir):
+                    messagebox.showerror("Security Error",
+                        "Cannot write files outside your home directory for security reasons.")
+                    return
+
+                # Create simple XML structure
+                import xml.etree.ElementTree as ET
+                root = ET.Element("ReconOutput")
+                ET.SubElement(root, "Timestamp").text = datetime.now().isoformat()
+                ET.SubElement(root, "Tool").text = self.notebook.tab(self.notebook.select(), "text")
+                ET.SubElement(root, "Output").text = content
+
+                tree = ET.ElementTree(root)
+                tree.write(abs_path, encoding='utf-8', xml_declaration=True)
+
+                messagebox.showinfo("Exported", f"Output exported to:\n{abs_path}")
+                self.update_status("Exported to XML", self.accent_green)
+            except (OSError, IOError) as e:
+                messagebox.showerror("Error", f"Failed to export: {str(e)}")
+
+    def export_to_html(self):
+        """Export scan results to HTML format with styling."""
+        content = self.output_text.get(1.0, tk.END)
+        if not content.strip():
+            messagebox.showwarning("Warning", "No output to export")
+            return
+
+        filename = filedialog.asksaveasfilename(
+            defaultextension=".html",
+            filetypes=[("HTML files", "*.html"), ("All files", "*.*")],
+            initialfile=f"recon_output_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
+        )
+
+        if filename:
+            try:
+                abs_path = os.path.abspath(filename)
+                home_dir = os.path.expanduser("~")
+
+                if not abs_path.startswith(home_dir):
+                    messagebox.showerror("Security Error",
+                        "Cannot write files outside your home directory for security reasons.")
+                    return
+
+                # Create HTML with dark theme styling
+                html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>Recon Superpower Output - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</title>
+    <style>
+        body {{
+            background-color: #0a0e27;
+            color: #00ff41;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+        }}
+        h1 {{
+            color: #00d9ff;
+            border-bottom: 2px solid #00ff41;
+            padding-bottom: 10px;
+        }}
+        pre {{
+            background-color: #151b3d;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 3px solid #00ff41;
+            overflow-x: auto;
+        }}
+        .timestamp {{
+            color: #00d9ff;
+            font-size: 0.9em;
+        }}
+    </style>
+</head>
+<body>
+    <h1>⚡ Recon Superpower Output</h1>
+    <p class="timestamp">Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+    <p class="timestamp">Tool: {self.notebook.tab(self.notebook.select(), "text")}</p>
+    <pre>{content}</pre>
+</body>
+</html>"""
+
+                with open(abs_path, 'w') as f:
+                    f.write(html_content)
+
+                messagebox.showinfo("Exported", f"Output exported to:\n{abs_path}")
+                self.update_status("Exported to HTML", self.accent_green)
+            except (OSError, IOError) as e:
+                messagebox.showerror("Error", f"Failed to export: {str(e)}")
 
     def append_output(self, text, tag='normal'):
         # Security: Limit output size to prevent memory exhaustion
@@ -875,6 +1313,25 @@ Press 'RUN SCAN' when ready.
         self.append_output(f"{'='*70}\n\n")
 
         self.update_status("SCANNING...", self.accent_red)
+
+        # Add command to history
+        self.add_to_history(command=cmd)
+
+        # Add target/URL to history based on tool
+        current_tab = self.notebook.index(self.notebook.select())
+        if current_tab == 0:  # Nmap
+            target = self.nmap_target.get().strip()
+            if target:
+                self.add_to_history(target=target)
+        elif current_tab == 1:  # Gobuster
+            url = self.gobuster_url.get().strip()
+            if url:
+                self.add_to_history(url=url)
+        elif current_tab == 2:  # Nikto
+            target = self.nikto_target.get().strip()
+            if target:
+                self.add_to_history(url=target if target.startswith('http') else None,
+                                   target=target if not target.startswith('http') else None)
 
         thread = threading.Thread(target=self.execute_command, args=(cmd,))
         thread.daemon = True
