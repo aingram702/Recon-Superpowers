@@ -118,6 +118,14 @@ class ReconSuperpower:
                 "Quick": {"80", False, "x", ""},
                 "SSL Scan": {"443", True, "x", ""},
                 "Targeted": {"80", False, "4,6,9", ""}
+            },
+            "metasploit": {
+                "Port Scanner": {"auxiliary/scanner/portscan/tcp", "RHOSTS", "PORTS=1-1000"},
+                "SMB Version": {"auxiliary/scanner/smb/smb_version", "RHOSTS", ""},
+                "SSH Version": {"auxiliary/scanner/ssh/ssh_version", "RHOSTS", ""},
+                "HTTP Version": {"auxiliary/scanner/http/http_version", "RHOSTS", ""},
+                "FTP Version": {"auxiliary/scanner/ftp/ftp_version", "RHOSTS", ""},
+                "SNMP Enum": {"auxiliary/scanner/snmp/snmp_enum", "RHOSTS", ""}
             }
         }
 
@@ -271,10 +279,12 @@ class ReconSuperpower:
         self.nmap_frame = self.create_nmap_tab()
         self.gobuster_frame = self.create_gobuster_tab()
         self.nikto_frame = self.create_nikto_tab()
+        self.metasploit_frame = self.create_metasploit_tab()
 
         self.notebook.add(self.nmap_frame, text="🔍 NMAP")
         self.notebook.add(self.gobuster_frame, text="📁 GOBUSTER")
         self.notebook.add(self.nikto_frame, text="🔐 NIKTO")
+        self.notebook.add(self.metasploit_frame, text="💥 METASPLOIT")
 
         # Right panel - Output
         right_panel = tk.Frame(main_container, bg=self.bg_secondary)
@@ -625,6 +635,72 @@ class ReconSuperpower:
 
         return frame
 
+    def create_metasploit_tab(self):
+        frame = tk.Frame(self.notebook, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+
+        # Warning label
+        warning_label = tk.Label(
+            frame,
+            text="⚠️  RECONNAISSANCE MODULES ONLY  ⚠️\nAuxiliary/Scanner modules for information gathering",
+            font=("Courier", 9, "bold"),
+            fg=self.accent_red,
+            bg=self.bg_secondary,
+            justify=tk.CENTER
+        )
+        warning_label.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+
+        # Module
+        label = tk.Label(frame, text="Module:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=1, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.msf_module = ttk.Combobox(frame, values=[
+            "auxiliary/scanner/portscan/tcp",
+            "auxiliary/scanner/portscan/syn",
+            "auxiliary/scanner/smb/smb_version",
+            "auxiliary/scanner/smb/smb_enumshares",
+            "auxiliary/scanner/ssh/ssh_version",
+            "auxiliary/scanner/ssh/ssh_enumusers",
+            "auxiliary/scanner/http/http_version",
+            "auxiliary/scanner/http/http_header",
+            "auxiliary/scanner/http/title",
+            "auxiliary/scanner/ftp/ftp_version",
+            "auxiliary/scanner/ftp/anonymous",
+            "auxiliary/scanner/snmp/snmp_enum",
+            "auxiliary/scanner/snmp/snmp_enumusers",
+            "auxiliary/scanner/dns/dns_amp",
+            "auxiliary/scanner/mysql/mysql_version",
+            "auxiliary/scanner/postgres/postgres_version"
+        ], font=("Courier", 9), state="readonly", width=38)
+        self.msf_module.grid(row=1, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.msf_module.current(0)
+
+        # Target (RHOSTS)
+        self.msf_target = self.create_labeled_entry(frame, "Target (RHOSTS):", 2, "")
+
+        # Ports (for port scanner modules)
+        self.msf_ports = self.create_labeled_entry(frame, "Ports:", 3, "1-1000")
+
+        # Threads
+        self.msf_threads = self.create_labeled_entry(frame, "Threads:", 4, "10")
+
+        # Additional options
+        self.msf_options = self.create_labeled_entry(frame, "Extra Options:", 5, "")
+
+        # Info label
+        info_label = tk.Label(
+            frame,
+            text="\n🔬 Metasploit Framework\nAuxiliary recon & scanning modules\n\nCommon Modules:\n• Port scanners (TCP/SYN)\n• Service version detection\n• SMB/SSH/HTTP enumeration\n\n⚠️ AUTHORIZATION REQUIRED",
+            font=("Courier", 9),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary,
+            justify=tk.LEFT
+        )
+        info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        return frame
+
     def browse_wordlist(self):
         filename = filedialog.askopenfilename(
             title="Select Wordlist",
@@ -797,12 +873,14 @@ class ReconSuperpower:
     def print_banner(self):
         banner = """
 ╔═══════════════════════════════════════════════════════════════════════╗
-║                    THE RECON SUPERPOWER v1.1                         ║
+║                    THE RECON SUPERPOWER v1.2                         ║
 ║           Professional Security Reconnaissance Suite                  ║
 ╚═══════════════════════════════════════════════════════════════════════╝
 
 [!] For Authorized Security Testing Only
 [!] Ensure you have permission to scan the target
+
+4 TOOLS: Nmap | Gobuster | Nikto | Metasploit (Auxiliary/Scanner)
 
 Select a tool from the tabs on the left and configure your scan.
 Press 'RUN SCAN' when ready.
@@ -1277,6 +1355,84 @@ KEYBOARD SHORTCUTS:
 
             return cmd
 
+        elif current_tab == 3:  # Metasploit
+            module = self.msf_module.get().strip()
+            target = self.msf_target.get().strip()
+
+            if not module:
+                messagebox.showerror("Error", "Please select a module")
+                return None
+
+            if not target:
+                messagebox.showerror("Error", "Please enter a target (RHOSTS)")
+                return None
+
+            # Security: Validate module path (must be auxiliary/scanner)
+            if not module.startswith("auxiliary/scanner/"):
+                messagebox.showerror("Security Error",
+                    "Only auxiliary/scanner modules are allowed for reconnaissance.\n"
+                    "Exploitation modules are not permitted.")
+                return None
+
+            # Security: Validate module path format
+            if not re.match(r'^auxiliary/scanner/[a-z_/]+$', module):
+                messagebox.showerror("Security Error",
+                    "Invalid module path format.")
+                return None
+
+            # Security: Validate target
+            if not self.validate_target(target):
+                messagebox.showerror("Security Error",
+                    "Invalid target format. Target contains dangerous characters.")
+                return None
+
+            ports = self.msf_ports.get().strip()
+            threads = self.msf_threads.get().strip()
+            extra = self.msf_options.get().strip()
+
+            # Security: Validate ports if specified
+            if ports and not re.match(r'^[\d,\-]+$', ports):
+                messagebox.showerror("Error", "Invalid port format. Use format like: 80,443 or 1-1000")
+                return None
+
+            # Security: Validate thread count
+            if threads and not self.validate_numeric(threads, 1, 100):
+                messagebox.showerror("Error", "Thread count must be between 1 and 100")
+                return None
+
+            # Build msfconsole command with resource file
+            # Using -q for quiet mode, -x for execute command
+            cmd = ["msfconsole", "-q", "-x"]
+
+            # Build the MSF commands
+            msf_commands = f"use {module}; "
+            msf_commands += f"set RHOSTS {target}; "
+
+            if ports and "portscan" in module:
+                msf_commands += f"set PORTS {ports}; "
+
+            if threads:
+                msf_commands += f"set THREADS {threads}; "
+
+            # Security: Validate and parse extra options
+            if extra:
+                valid, parsed_options = self.validate_extra_options(extra)
+                if not valid:
+                    messagebox.showerror("Security Error",
+                        "Extra options contain dangerous characters or invalid syntax.\n"
+                        "Avoid using: ; & | $ ` < > and command substitution.")
+                    return None
+                # Add each option as a set command
+                for option in parsed_options:
+                    if '=' in option:
+                        msf_commands += f"set {option}; "
+
+            msf_commands += "run; exit"
+
+            cmd.append(msf_commands)
+
+            return cmd
+
         return None
 
     def run_scan(self):
@@ -1332,6 +1488,10 @@ KEYBOARD SHORTCUTS:
             if target:
                 self.add_to_history(url=target if target.startswith('http') else None,
                                    target=target if not target.startswith('http') else None)
+        elif current_tab == 3:  # Metasploit
+            target = self.msf_target.get().strip()
+            if target:
+                self.add_to_history(target=target)
 
         thread = threading.Thread(target=self.execute_command, args=(cmd,))
         thread.daemon = True
