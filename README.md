@@ -1,10 +1,12 @@
-# ⚡ The Recon Superpower
+# ⚡ The Recon Superpower v1.2
 
-A professional dark-themed GUI wrapper for essential security reconnaissance tools: **Nmap**, **Gobuster**, and **Nikto**.
+A professional dark-themed GUI wrapper for essential security reconnaissance tools: **Nmap**, **Gobuster**, **Nikto**, and **Metasploit Framework** (Auxiliary/Scanner modules).
 
-![Version](https://img.shields.io/badge/version-1.0-green)
+![Version](https://img.shields.io/badge/version-1.2-green)
 ![Python](https://img.shields.io/badge/python-3.6%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-orange)
+![Security](https://img.shields.io/badge/security-hardened-brightgreen)
+![Tools](https://img.shields.io/badge/tools-4-blue)
 
 ## ⚠️ Legal Disclaimer
 
@@ -16,6 +18,40 @@ A professional dark-themed GUI wrapper for essential security reconnaissance too
 - ❌ Unauthorized scanning is illegal and unethical
 
 By using this tool, you agree to use it responsibly and legally.
+
+## 🆕 What's New in v1.2
+
+### Metasploit Framework Integration 💥
+- ✅ **Auxiliary/Scanner Modules** - 16+ reconnaissance modules
+- ✅ **Port Scanning** - TCP/SYN port scanners
+- ✅ **Service Detection** - SMB, SSH, HTTP, FTP, MySQL, PostgreSQL version detection
+- ✅ **Enumeration** - SMB shares, SSH users, SNMP information
+- ✅ **Security Restricted** - Only auxiliary/scanner modules allowed (no exploitation)
+- ✅ **Full Validation** - Module path validation and input sanitization
+
+### What's New in v1.1
+
+### Security Enhancements 🔒
+- ✅ **Comprehensive Security Hardening** - Fixed all critical vulnerabilities
+- ✅ **Command Injection Prevention** - Input validation with whitelisting
+- ✅ **Path Traversal Protection** - Secure file operations
+- ✅ **Thread Safety** - Race condition prevention
+- ✅ **Resource Exhaustion Prevention** - Timeouts and limits
+
+### Usability Features ⚡
+- ✅ **Keyboard Shortcuts** - `Ctrl+R` Run, `Ctrl+S` Save, `Ctrl+F` Search, `Ctrl+C` Copy
+- ✅ **Search in Output** - Find and highlight text in scan results
+- ✅ **Copy to Clipboard** - One-click copying of results
+- ✅ **Multi-Format Export** - Save as Text, JSON, XML, or HTML
+- ✅ **Configuration Persistence** - Remembers window size, position, and settings
+- ✅ **Command History** - Quick access to recently used commands
+- ✅ **Recent Targets** - Track last 20 scanned targets/URLs
+- ✅ **Scan Profiles** - Pre-configured templates (Quick, Deep, Stealth scans)
+- ✅ **Syntax Highlighting** - Color-coded output for better readability
+
+See [FEATURE_ENHANCEMENTS.md](FEATURE_ENHANCEMENTS.md) for complete details.
+
+See [SECURITY_AUDIT.md](SECURITY_AUDIT.md) for security improvements.
 
 ## 🎯 Features
 
@@ -38,13 +74,34 @@ By using this tool, you agree to use it responsibly and legally.
 - Tunable scan types (XSS, SQL Injection, Misconfigurations)
 - Port specification
 
+### 💥 Metasploit Integration
+- Auxiliary/Scanner modules only (reconnaissance focused)
+- Port scanning (TCP/SYN)
+- Service version detection (SMB, SSH, HTTP, FTP, MySQL, PostgreSQL)
+- Service enumeration (shares, users, SNMP data)
+- Configurable threads and options
+- **Security Note:** Exploitation modules are blocked - reconnaissance only
+
 ### 🎨 Interface Features
 - Dark hacker-themed UI
 - Real-time command output
+- Multi-format export (Text, JSON, XML, HTML)
+- Search and highlight in results
+- Copy to clipboard
 - Save scan results to file
 - Stop running scans
 - Clear output console
 - Status indicators
+- Configuration persistence
+
+### ⌨️ Keyboard Shortcuts
+- `Ctrl+R` - Run Scan
+- `Ctrl+S` - Save Output
+- `Ctrl+L` - Clear Console
+- `Ctrl+F` - Search in Output
+- `Ctrl+C` - Copy Selection/All
+- `Ctrl+Q` - Quit Application
+- `ESC` - Stop Running Scan
 
 ## 📋 Prerequisites
 
@@ -54,13 +111,16 @@ These tools must be installed and accessible in your PATH:
 ```bash
 # On Kali Linux / Debian / Ubuntu
 sudo apt update
-sudo apt install nmap gobuster nikto
+sudo apt install nmap gobuster nikto metasploit-framework
 
 # On Arch Linux
-sudo pacman -S nmap gobuster nikto
+sudo pacman -S nmap gobuster nikto metasploit
 
 # On macOS (using Homebrew)
-brew install nmap gobuster nikto
+brew install nmap gobuster nikto metasploit
+
+# Note: Metasploit Framework is large (~1.5GB) and may take time to install
+# It is optional - the tool will work without it, just the Metasploit tab won't function
 ```
 
 ### Python Requirements
@@ -79,7 +139,7 @@ sudo apt install python3-tk
 
 1. **Clone or download the repository**
 ```bash
-cd ~/Software/StockTrader
+cd ~/Software/Recon-Superpowers
 ```
 
 2. **Make the script executable**
@@ -152,6 +212,28 @@ Or make it directly executable:
 - `6` - XSS vulnerabilities
 - `9` - SQL injection
 - `x` - All tests (comprehensive)
+
+#### 💥 Metasploit Scanner
+1. Select the **METASPLOIT** tab
+2. Choose an auxiliary/scanner module from dropdown
+3. Enter target IP or hostname (RHOSTS)
+4. Configure ports (for port scanner modules)
+5. Set thread count (default 10)
+6. Add any extra options (as KEY=VALUE)
+7. Click **RUN SCAN**
+
+**Available Modules:**
+- Port Scanners: TCP, SYN
+- Service Detection: SMB, SSH, HTTP, FTP, MySQL, PostgreSQL
+- Enumeration: SMB shares, SSH users, SNMP data
+
+**Example Modules:**
+- `auxiliary/scanner/portscan/tcp` - TCP port scanner
+- `auxiliary/scanner/smb/smb_version` - SMB version detection
+- `auxiliary/scanner/ssh/ssh_version` - SSH banner grabbing
+- `auxiliary/scanner/http/http_version` - HTTP server detection
+
+**Security Note:** Only auxiliary/scanner modules are available. Exploitation modules are blocked for safety.
 
 ### Scan Controls
 - **▶ RUN SCAN** - Start the configured scan
