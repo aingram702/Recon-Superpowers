@@ -1608,7 +1608,225 @@ payload/                        # BLOCKED
 """
         }
 
-        # Load configuration and history
+        # Pre-defined Workflows for automation
+        self.predefined_workflows = {
+            "full_recon": {
+                "name": "Full Network Reconnaissance",
+                "description": "Comprehensive scan: ports → services → web → DNS",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "Port Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "1-1000",
+                            "timing": "T3"
+                        }
+                    },
+                    {
+                        "tool": "gobuster",
+                        "name": "Directory Enumeration",
+                        "config": {
+                            "mode": "dir",
+                            "wordlist": "/usr/share/wordlists/dirb/common.txt",
+                            "threads": "20"
+                        },
+                        "condition": "http_detected"
+                    },
+                    {
+                        "tool": "nikto",
+                        "name": "Web Vulnerability Scan",
+                        "config": {
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "124"
+                        },
+                        "condition": "http_detected"
+                    },
+                    {
+                        "tool": "dnsrecon",
+                        "name": "DNS Enumeration",
+                        "config": {
+                            "scan_type": "std"
+                        }
+                    }
+                ]
+            },
+            "web_deep_scan": {
+                "name": "Web Application Deep Scan",
+                "description": "Nikto → Gobuster → feroxbuster → Shodan lookup",
+                "steps": [
+                    {
+                        "tool": "nikto",
+                        "name": "Initial Web Scan",
+                        "config": {
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "x"
+                        }
+                    },
+                    {
+                        "tool": "gobuster",
+                        "name": "Directory Brute Force",
+                        "config": {
+                            "mode": "dir",
+                            "wordlist": "/usr/share/wordlists/dirb/common.txt",
+                            "extensions": "php,html,txt"
+                        }
+                    },
+                    {
+                        "tool": "feroxbuster",
+                        "name": "Recursive Deep Scan",
+                        "config": {
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
+                            "extensions": "php,html,js",
+                            "threads": "50",
+                            "depth": "3"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Shodan Lookup",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    }
+                ]
+            },
+            "domain_intel": {
+                "name": "Domain Intelligence Gathering",
+                "description": "DNSrecon → Shodan → GitHub OSINT",
+                "steps": [
+                    {
+                        "tool": "dnsrecon",
+                        "name": "DNS Standard Enumeration",
+                        "config": {
+                            "scan_type": "std"
+                        }
+                    },
+                    {
+                        "tool": "dnsrecon",
+                        "name": "Subdomain Brute Force",
+                        "config": {
+                            "scan_type": "brt",
+                            "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Infrastructure Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "hostname:[TARGET_DOMAIN]"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "GitHub Reference Search",
+                        "config": {
+                            "query": "[TARGET_DOMAIN]",
+                            "sort": "best"
+                        }
+                    }
+                ]
+            },
+            "smb_enum": {
+                "name": "Windows/SMB Enumeration",
+                "description": "SMB port scan → enum4linux → Metasploit",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "SMB Port Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "135,139,445",
+                            "timing": "T4"
+                        }
+                    },
+                    {
+                        "tool": "enum4linux",
+                        "name": "SMB Enumeration",
+                        "config": {
+                            "all_enum": True
+                        }
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "SMB Version Detection",
+                        "config": {
+                            "module": "auxiliary/scanner/smb/smb_version",
+                            "threads": "10"
+                        }
+                    }
+                ]
+            },
+            "cloud_discovery": {
+                "name": "Cloud Asset Discovery",
+                "description": "S3 buckets → GitHub credentials → Infrastructure",
+                "steps": [
+                    {
+                        "tool": "awsbucket",
+                        "name": "S3 Bucket Enumeration",
+                        "config": {
+                            "bucket_list": "buckets.txt",
+                            "threads": "10"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "Cloud Credential Search",
+                        "config": {
+                            "query": "AWS_ACCESS_KEY OR AZURE_CLIENT_SECRET",
+                            "account": "[TARGET_ORG]",
+                            "sort": "new"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Organization Infrastructure",
+                        "config": {
+                            "search_type": "search",
+                            "query": "org:[TARGET_ORG]"
+                        }
+                    }
+                ]
+            },
+            "quick_host": {
+                "name": "Quick Host Discovery",
+                "description": "Fast port scan → quick web scan",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "Fast Port Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "1-1000",
+                            "timing": "T5"
+                        }
+                    },
+                    {
+                        "tool": "nikto",
+                        "name": "Quick Web Scan",
+                        "config": {
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "124"
+                        },
+                        "condition": "http_detected"
+                    }
+                ]
+            }
+        }
+
+        # Workflow execution state
+        self.current_workflow = None
+        self.workflow_running = False
+        self.workflow_step_index = 0
+        self.workflow_results = {}
+        self.workflow_target = None
+
+        #Load configuration and history
         self.load_config()
         self.load_history()
 
@@ -1787,6 +2005,7 @@ payload/                        # BLOCKED
             ("feroxbuster", "🦀 feroxbuster"),
             ("awsbucket", "☁️  AWS S3"),
             ("tcpdump", "📦 TCPdump"),
+            ("workflows", "🔄 Workflows"),
             ("settings", "⚙️  Settings")
         ]
 
@@ -2885,6 +3104,392 @@ payload/                        # BLOCKED
         cheat_btn.grid(row=8, column=0, columnspan=2, pady=10)
 
         return frame
+
+
+    def create_workflows_tab(self):
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+
+        # Header
+        header = tk.Label(
+            frame,
+            text="🔄 AUTOMATED WORKFLOWS",
+            font=("Courier", 14, "bold"),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary
+        )
+        header.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=15)
+
+        # Description
+        desc = tk.Label(
+            frame,
+            text="Chain multiple tools together for automated reconnaissance",
+            font=("Courier", 9),
+            fg=self.text_color,
+            bg=self.bg_secondary
+        )
+        desc.grid(row=1, column=0, columnspan=2, padx=10, pady=(0, 15))
+
+        # Workflow selector
+        selector_label = tk.Label(
+            frame,
+            text="Select Workflow:",
+            font=("Courier", 10, "bold"),
+            fg=self.accent_green,
+            bg=self.bg_secondary
+        )
+        selector_label.grid(row=2, column=0, sticky=tk.W, padx=10, pady=5)
+
+        # Create workflow options list
+        workflow_options = [
+            f"{wf['name']} - {wf['description'][:50]}..." if len(wf['description']) > 50 else f"{wf['name']} - {wf['description']}"
+            for wf_id, wf in self.predefined_workflows.items()
+        ]
+        
+        self.workflow_selector = ttk.Combobox(
+            frame,
+            values=workflow_options,
+            state="readonly",
+            font=("Courier", 9),
+            width=60
+        )
+        self.workflow_selector.grid(row=2, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.workflow_selector.current(0)
+        self.workflow_selector.bind("<<ComboboxSelected>>", self.on_workflow_selected)
+
+        # Preview frame
+        preview_frame = tk.LabelFrame(
+            frame,
+            text=" 📋 Workflow Steps Preview ",
+            font=("Courier", 10, "bold"),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary,
+            relief=tk.FLAT
+        )
+        preview_frame.grid(row=3, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+
+        # Steps text widget
+        self.workflow_steps_text = tk.Text(
+            preview_frame,
+            height=10,
+            font=("Courier", 9),
+            bg=self.bg_tertiary,
+            fg=self.text_color,
+            wrap=tk.WORD,
+            relief=tk.FLAT,
+            padx=10,
+            pady=10
+        )
+        self.workflow_steps_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+        # Target input
+        target_label = tk.Label(
+            frame,
+            text="Target:",
+            font=("Courier", 10, "bold"),
+            fg=self.accent_green,
+            bg=self.bg_secondary
+        )
+        target_label.grid(row=4, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.workflow_target = tk.Entry(
+            frame,
+            font=("Courier", 10),
+            bg=self.bg_primary,
+            fg=self.text_color,
+            insertbackground=self.accent_green,
+            selectbackground=self.accent_cyan,
+            selectforeground=self.bg_primary,
+            relief=tk.FLAT
+        )
+        self.workflow_target.grid(row=4, column=1, sticky=tk.EW, padx=10, pady=5)
+
+        # Control buttons frame
+        controls_frame = tk.Frame(frame, bg=self.bg_secondary)
+        controls_frame.grid(row=5, column=0, columnspan=2, pady=15)
+
+        # Run button
+        self.workflow_run_btn = tk.Button(
+            controls_frame,
+            text="▶ RUN WORKFLOW",
+            font=("Courier", 11, "bold"),
+            bg=self.accent_green,
+            fg=self.bg_primary,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=20,
+            pady=10,
+            cursor="hand2",
+            command=self.run_workflow
+        )
+        self.workflow_run_btn.pack(side=tk.LEFT, padx=5)
+
+        # Stop button
+        self.workflow_stop_btn = tk.Button(
+            controls_frame,
+            text="⬛ STOP",
+            font=("Courier", 11, "bold"),
+            bg=self.accent_red,
+            fg="white",
+            activebackground="#cc0044",
+            activeforeground="white",
+            relief=tk.FLAT,
+            padx=20,
+            pady=10,
+            cursor="hand2",
+            state=tk.DISABLED,
+            command=self.stop_workflow
+        )
+        self.workflow_stop_btn.pack(side=tk.LEFT, padx=5)
+
+        # Progress frame
+        progress_frame = tk.LabelFrame(
+            frame,
+            text=" 📊 Workflow Progress ",
+            font=("Courier", 10, "bold"),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary,
+            relief=tk.FLAT
+        )
+        progress_frame.grid(row=6, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+
+        # Progress label
+        self.workflow_progress_label = tk.Label(
+            progress_frame,
+            text="Status: Ready to run\nStep: 0/0\nElapsed: 0s",
+            font=("Courier", 9),
+            fg=self.text_color,
+            bg=self.bg_secondary,
+            justify=tk.LEFT
+        )
+        self.workflow_progress_label.pack(anchor=tk.W, padx=10, pady=5)
+
+        # Progress bar
+        self.workflow_progress = ttk.Progressbar(
+            progress_frame,
+            mode='determinate',
+            length=400
+        )
+        self.workflow_progress.pack(fill=tk.X, padx=10, pady=(0, 10))
+
+        # Info label
+        info_label = tk.Label(
+            frame,
+            text="\n💡 Tips:\n• Workflows automate multi-tool reconnaissance\n• Target format depends on workflow (IP, domain, URL)\n• Results appear in console output below\n• Save workflow results with the SAVE button",
+            font=("Courier", 8),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary,
+            justify=tk.LEFT
+        )
+        info_label.grid(row=7, column=0, columnspan=2, sticky=tk.W, padx=10, pady=10)
+
+        # Initialize with first workflow
+        self.on_workflow_selected(None)
+
+        return frame
+
+    def on_workflow_selected(self, event):
+        """Update workflow steps preview when selection changes."""
+        selected_idx = self.workflow_selector.current()
+        workflow_ids = list(self.predefined_workflows.keys())
+        
+        if selected_idx < 0 or selected_idx >= len(workflow_ids):
+            return
+        
+        workflow_id = workflow_ids[selected_idx]
+        workflow = self.predefined_workflows[workflow_id]
+        
+        # Update steps preview
+        self.workflow_steps_text.config(state=tk.NORMAL)
+        self.workflow_steps_text.delete('1.0', tk.END)
+        
+        steps_text = f"Workflow: {workflow['name']}\n"
+        steps_text += f"{workflow['description']}\n\n"
+        steps_text += "=" * 60 + "\n\n"
+        
+        for i, step in enumerate(workflow['steps'], 1):
+            condition = step.get('condition', '')
+            condition_text = f" (if {condition})" if condition else ""
+            
+            steps_text += f"Step {i}: {step['name']}{condition_text}\n"
+            steps_text += f"  Tool: {step['tool'].upper()}\n"
+            
+            # Show key config parameters
+            config = step['config']
+            for key, value in config.items():
+                if isinstance(value, bool):
+                    value_str = "Yes" if value else "No"
+                else:
+                    value_str = str(value)
+                steps_text += f"  • {key}: {value_str}\n"
+            
+            steps_text += "\n"
+        
+        self.workflow_steps_text.insert('1.0', steps_text)
+        self.workflow_steps_text.config(state=tk.DISABLED)
+
+    def run_workflow(self):
+        """Execute the selected workflow."""
+        if self.workflow_running:
+            messagebox.showwarning("Workflow Running", "A workflow is already running. Please stop it first.")
+            return
+        
+        # Get target
+        target = self.workflow_target.get().strip()
+        if not target:
+            messagebox.showerror("Error", "Please enter a target (IP, domain, or URL)")
+            return
+        
+        # Get selected workflow
+        selected_idx = self.workflow_selector.current()
+        workflow_ids = list(self.predefined_workflows.keys())
+        
+        if selected_idx < 0:
+            messagebox.showerror("Error", "Please select a workflow")
+            return
+        
+        workflow_id = workflow_ids[selected_idx]
+        workflow = self.predefined_workflows[workflow_id]
+        
+        # Initialize workflow execution
+        self.current_workflow = workflow
+        self.workflow_target = target
+        self.workflow_running = True
+        self.workflow_step_index = 0
+        self.workflow_results = {}
+        
+        # Update UI
+        self.workflow_run_btn.config(state=tk.DISABLED)
+        self.workflow_stop_btn.config(state=tk.NORMAL)
+        self.workflow_selector.config(state=tk.DISABLED)
+        
+        # Clear output
+        self.output_text.delete('1.0', tk.END)
+        self.append_output(f"{'=' * 60}\n")
+        self.append_output(f"STARTING WORKFLOW: {workflow['name']}\n")
+        self.append_output(f"Target: {target}\n")
+        self.append_output(f"Total Steps: {len(workflow['steps'])}\n")
+        self.append_output(f"{'=' * 60}\n\n")
+        
+        # Start workflow execution in separate thread
+        workflow_thread = threading.Thread(target=self.execute_workflow_steps, daemon=True)
+        workflow_thread.start()
+
+    def execute_workflow_steps(self):
+        """Execute workflow steps sequentially."""
+        import time
+        
+        workflow = self.current_workflow
+        target = self.workflow_target
+        total_steps = len(workflow['steps'])
+        start_time = time.time()
+        
+        for i, step in enumerate(workflow['steps']):
+            if not self.workflow_running:
+                self.append_output("\n⚠️  Workflow stopped by user\n")
+                break
+            
+            self.workflow_step_index = i + 1
+            
+            # Update progress
+            self.root.after(0, lambda i=i: self.update_workflow_progress(i, total_steps, time.time() - start_time))
+            
+            # Check condition
+            condition = step.get('condition')
+            if condition and not self.evaluate_workflow_condition(condition):
+                self.append_output(f"\n⏭️  Step {i + 1} SKIPPED: {step['name']} (condition not met: {condition})\n")
+                continue
+            
+            # Execute step
+            self.append_output(f"\n{'*' * 60}\n")
+            self.append_output(f"▶ Step {i + 1}/{total_steps}: {step['name']}\n")
+            self.append_output(f"{'*' * 60}\n\n")
+            
+            success = self.execute_workflow_step(step, target)
+            
+            if not success:
+                self.append_output(f"\n❌ Step {i + 1} FAILED\n")
+                if messagebox.askyesno("Step Failed", f"Step {i + 1} failed. Continue anyway?"):
+                    continue
+                else:
+                    break
+            else:
+                self.append_output(f"\n✓ Step {i + 1} COMPLETED\n")
+        
+        # Workflow finished
+        elapsed = time.time() - start_time
+        self.append_output(f"\n{'=' * 60}\n")
+        self.append_output(f"WORKFLOW COMPLETED\n")
+        self.append_output(f"Executed: {self.workflow_step_index}/{total_steps} steps\n")
+        self.append_output(f"Total Time: {int(elapsed)}s\n")
+        self.append_output(f"{'=' * 60}\n")
+        
+        # Reset UI
+        self.root.after(0, self.reset_workflow_ui)
+
+    def execute_workflow_step(self, step, target):
+        """Execute a single workflow step."""
+        tool = step['tool']
+        config = step['config']
+        
+        # Build command for this step
+        # This is a simplified version - full implementation would set all widget values
+        # and call run_scan for each tool
+        
+        try:
+            # Switch to the tool's tab
+            self.root.after(0, lambda: self.switch_tool(tool))
+            time.sleep(0.5)  # Give UI time to update
+            
+            # For now, just show what would be executed
+            self.append_output(f"Tool: {tool.upper()}\n")
+            self.append_output(f"Target: {target}\n")
+            for key, value in config.items():
+                self.append_output(f"  {key}: {value}\n")
+            self.append_output("\n[Simulated execution - Full integration coming soon]\n")
+            
+            time.sleep(2)  # Simulate execution time
+            return True
+            
+        except Exception as e:
+            self.append_output(f"Error: {str(e)}\n")
+            return False
+
+    def evaluate_workflow_condition(self, condition):
+        """Evaluate if a workflow condition is met."""
+        # Simplified condition evaluation
+        # Full implementation would check previous step results
+        if condition == "http_detected":
+            # Check if previous Nmap scan found HTTP ports
+            return True  # Placeholder
+        return True
+
+    def update_workflow_progress(self, step_index, total_steps, elapsed):
+        """Update workflow progress UI."""
+        progress = int((step_index + 1) / total_steps * 100)
+        self.workflow_progress['value'] = progress
+        
+        status_text = f"Status: Running\n"
+        status_text += f"Step: {step_index + 1}/{total_steps}\n"
+        status_text += f"Elapsed: {int(elapsed)}s"
+        
+        self.workflow_progress_label.config(text=status_text)
+
+    def stop_workflow(self):
+        """Stop the currently running workflow."""
+        if self.workflow_running:
+            self.workflow_running = False
+            self.update_status("Workflow stopped")
+
+    def reset_workflow_ui(self):
+        """Reset workflow UI after completion or stop."""
+        self.workflow_running = False
+        self.workflow_run_btn.config(state=tk.NORMAL)
+        self.workflow_stop_btn.config(state=tk.DISABLED)
+        self.workflow_selector.config(state="readonly")
+        self.workflow_progress['value'] = 0
+        self.workflow_progress_label.config(text="Status: Ready to run\nStep: 0/0\nElapsed: 0s")
 
     def create_settings_tab(self):
         frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
