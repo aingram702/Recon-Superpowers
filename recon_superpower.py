@@ -3353,6 +3353,10 @@ payload/                        # BLOCKED
         elif workflow_id == 'cloud_discovery':
             # Requires organization name or domain
             if not target or len(target) < 2 or len(target) > 100:
+                return f"Invalid organization name. Must be 2-100 characters."
+            # Basic sanitization
+            if any(char in target for char in ['<', '>', ';', '|', '&', '$', '`']):
+                return f"Invalid characters in organization name."
         
         # Additional length validation
         if len(target) > 500:
