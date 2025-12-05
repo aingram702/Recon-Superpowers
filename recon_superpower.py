@@ -134,6 +134,1480 @@ class ReconSuperpower:
         self.current_tool = None
         self.tool_container = None
 
+        # Cheat sheets for all tools
+        self.tool_cheatsheets = {
+            "nmap": """
+NMAP CHEAT SHEET
+═══════════════════════════════════════════════════════════
+
+📋 BASIC SCANS
+────────────────────────────────────────────────────────────
+nmap <target>                    # Basic scan (top 1000 ports)
+nmap -p- <target>               # All 65535 ports
+nmap -p 80,443 <target>         # Specific ports
+nmap -p 1-100 <target>          # Port range
+
+🔍 SCAN TYPES
+────────────────────────────────────────────────────────────
+-sS                             # TCP SYN scan (default, fast, stealthy)
+-sT                             # TCP Connect scan (no sudo required)
+-sU                             # UDP scan (slow but thorough)
+-sV                             # Version detection
+-sC                             # Default NSE scripts
+-sn                             # Ping scan (no port scan)
+-Pn                             # No ping (assume host is up)
+
+⚡ TIMING
+────────────────────────────────────────────────────────────
+-T0                             # Paranoid (slowest, most stealthy)
+-T1                             # Sneaky
+-T2                             # Polite
+-T3                             # Normal (default)
+-T4                             # Aggressive (faster)
+-T5                             # Insane (fastest, noisy)
+
+🎯 NSE SCRIPTS (NEW!)
+────────────────────────────────────────────────────────────
+--script=default                # Run default scripts
+--script=vuln                   # Vulnerability detection
+--script=discovery              # Network/service discovery
+--script=auth                   # Authentication testing
+--script=broadcast              # Broadcast scripts
+--script=exploit                # Exploit checks
+--script=safe                   # Only safe scripts
+--script=http-*                 # All HTTP scripts
+--script="ssh-* and safe"       # Multiple with AND
+--script-args=<args>            # Pass arguments to scripts
+
+🛡️ OS & VERSION DETECTION
+────────────────────────────────────────────────────────────
+-O                              # OS detection
+-sV --version-intensity 9       # Aggressive version scan
+-A                              # OS, version, scripts, traceroute
+
+📊 OUTPUT OPTIONS
+────────────────────────────────────────────────────────────
+-oN file.txt                    # Normal output
+-oX file.xml                    # XML output
+-oG file.grep                   # Greppable output
+-oA basename                    # All formats
+
+💡 COMMON COMBINATIONS
+────────────────────────────────────────────────────────────
+nmap -sS -sV -T4 -p- <target>           # Full port scan with versions
+nmap -sS -sC -sV -O <target>            # Standard comprehensive scan
+nmap -Pn -sS -p 80,443 --script=vuln <target>  # Web vuln scan
+nmap --script=discovery <target>         # Discovery scan
+""",
+            "shodan": """
+SHODAN CHEAT SHEET
+═══════════════════════════════════════════════════════════
+
+🔍 BASIC SEARCHES
+────────────────────────────────────────────────────────────
+apache                          # Search for Apache servers
+nginx                           # Search for Nginx servers
+port:22                         # All SSH servers
+"default password"              # Devices with default passwords
+
+🎯 FILTERS
+────────────────────────────────────────────────────────────
+country:US                      # United States only
+city:"New York"                 # Specific city
+geo:40.7,-74                    # Geographic coordinates
+net:192.168.0.0/16             # Network range (CIDR)
+hostname:example.com            # Hostname filter
+os:Windows                      # Operating system
+port:80,443                     # Multiple ports
+
+🏢 PRODUCT/SERVICE FILTERS
+────────────────────────────────────────────────────────────
+product:MySQL                   # MySQL databases
+product:Apache                  # Apache servers
+product:nginx                   # Nginx servers
+product:IIS                     # Microsoft IIS
+ssl:"Organization Name"         # SSL certificate org
+http.title:"Dashboard"          # Page title
+http.html:"admin"              # HTML content
+
+🌐 IOT & WEBCAMS
+────────────────────────────────────────────────────────────
+"webcamXP"                      # WebcamXP servers
+"Hikvision"                     # Hikvision DVRs
+has_screenshot:true             # Devices with screenshots
+"port:554 has_screenshot:true"  # RTSP streams with screenshots
+
+⚠️ VULNERABLE DEVICES
+────────────────────────────────────────────────────────────
+"230 login successful"          # Open FTP servers
+"MongoDB Server Information"    # Exposed MongoDB
+"product:MySQL"                 # MySQL databases
+vuln:CVE-2014-0160             # HeartBleed vulnerable
+
+💡 ADVANCED QUERIES
+────────────────────────────────────────────────────────────
+apache port:443 country:US      # Multiple filters
+nginx -country:CN               # Exclude countries (-)
+port:80 http.title:"login"     # Login pages
+ssl.cert.expired:true          # Expired certificates
+
+📊 FACETS (STATISTICS)
+────────────────────────────────────────────────────────────
+--facets country                # Group by country
+--facets org                    # Group by organization
+--facets port                   # Group by port
+--facets product                # Group by product
+
+🔐 SECURITY NOTE
+────────────────────────────────────────────────────────────
+⚠️ Private IPs (10.x, 172.16-31.x, 192.168.x, 127.x) are
+   BLOCKED by this tool for security reasons.
+⚠️ Only query public-facing systems you're authorized to test.
+""",
+            "dnsrecon": """
+DNSRECON CHEAT SHEET
+═══════════════════════════════════════════════════════════
+
+📋 SCAN TYPES
+────────────────────────────────────────────────────────────
+-t std                          # Standard enumeration
+-t axfr                         # Zone transfer attempt
+-t brt                          # Brute force subdomain names
+-t srv                          # SRV records enumeration
+-t rvl                          # Reverse lookup on range
+-t crt                          # crt.sh certificate search
+-t zonewalk                     # DNSSEC zone walking
+
+🔍 STANDARD ENUMERATION (-t std)
+────────────────────────────────────────────────────────────
+dnsrecon -d example.com -t std
+- A records (IPv4)
+- AAAA records (IPv6)
+- MX records (mail servers)
+- NS records (nameservers)
+- SOA records
+- SPF records
+- TXT records
+
+🌐 ZONE TRANSFER (-t axfr)
+──────────────────────────────────────────────────────────── 
+dnsrecon -d example.com -t axfr
+- Attempts full zone transfer from nameservers
+- Reveals all DNS records if successful
+- Often blocked but worth trying
+
+🔨 BRUTE FORCE SUBDOMAINS (-t brt)
+────────────────────────────────────────────────────────────
+dnsrecon -d example.com -t brt -D wordlist.txt
+- Tests subdomain names from wordlist
+- Use large wordlists for comprehensive results
+- Common wordlists:
+  /usr/share/wordlists/dnsmap.txt
+  /usr/share/seclists/Discovery/DNS/subdomains-top1million.txt
+
+📊 SRV RECORDS (-t srv)
+────────────────────────────────────────────────────────────
+dnsrecon -d example.com -t srv
+- Enumerates SRV records
+- Discovers services like:
+  _ldap._tcp
+  _kerberos._tcp
+  _sip._tcp
+
+🔄 REVERSE LOOKUP (-t rvl)
+────────────────────────────────────────────────────────────
+dnsrecon -r 192.168.1.0/24 -t rvl
+- PTR record lookups on IP range
+- Maps IPs back to hostnames
+- Useful for network mapping
+
+🔐 CERTIFICATE SEARCH (-t crt)
+────────────────────────────────────────────────────────────
+dnsrecon -d example.com -t crt
+- Queries crt.sh certificate transparency logs
+- Discovers subdomains from SSL certificates
+- No brute force needed
+
+🚶 DNSSEC ZONE WALK (-t zonewalk)
+────────────────────────────────────────────────────────────
+dnsrecon -d example.com -t zonewalk
+- Enumerate DNSSEC records
+- Walk the DNSSEC chain
+- Only works if DNSSEC is enabled
+
+⚙️ ADDITIONAL OPTIONS
+────────────────────────────────────────────────────────────
+-n nameserver                   # Use specific nameserver
+-r range                        # IP range for reverse lookup
+-D wordlist                     # Wordlist file for brute force
+-t type                         # Enumeration type
+-x output.xml                   # XML output
+-c output.csv                   # CSV output
+-j output.json                  # JSON output
+
+💡 TIPS
+────────────────────────────────────────────────────────────
+• Always try zone transfer first (axfr)
+• Use crt.sh search before brute force (faster)
+• Combine multiple techniques for best results
+• Large wordlists take time (be patient)
+• Custom nameserver can bypass some restrictions
+""",
+            "enum4linux": """
+ENUM4LINUX CHEAT SHEET
+═══════════════════════════════════════════════════════════
+
+📋 BASIC USAGE
+────────────────────────────────────────────────────────────
+enum4linux -a <target>          # All enumeration (recommended)
+enum4linux <target>              # Basic scan
+
+🎯 ENUMERATION OPTIONS
+────────────────────────────────────────────────────────────
+-U                              # User listing
+-S                              # Share enumeration
+-G                              # Group information
+-P                              # Password policy
+-o                              # OS information
+-i                              # Printer information
+-r                              # RID cycling
+-a                              # All of the above (comprehensive)
+
+👥 USER ENUMERATION (-U)
+────────────────────────────────────────────────────────────
+enum4linux -U <target>
+- Enumerates local users
+- Displays user details
+- Shows account status
+- Useful for password attacks
+
+📁 SHARE ENUMERATION (-S)
+────────────────────────────────────────────────────────────
+enum4linux -S <target>
+- Lists SMB shares
+- Shows share permissions
+- Identifies writable shares
+- Common shares: IPC$, C$, ADMIN$, Users
+
+👔 GROUP INFORMATION (-G)
+────────────────────────────────────────────────────────────
+enum4linux -G <target>
+- Local and domain groups
+- Group memberships
+- Built-in groups
+- Admin group members
+
+🔑 PASSWORD POLICY (-P)
+────────────────────────────────────────────────────────────
+enum4linux -P <target>
+- Minimum password length
+- Password complexity requirements
+- Account lockout threshold
+- Lockout duration
+- Password history
+
+🖥️ OS INFORMATION (-o)
+────────────────────────────────────────────────────────────
+enum4linux -o <target>
+- Operating system version
+- Windows version
+- Domain/workgroup name
+- Server type
+
+🔄 RID CYCLING (-r)
+────────────────────────────────────────────────────────────
+enum4linux -r -U <target>
+- Enumerate users via RID cycling
+- More comprehensive than standard -U
+- Can find hidden accounts
+
+🔐 AUTHENTICATED ENUMERATION
+────────────────────────────────────────────────────────────
+enum4linux -u username -p password -a <target>
+-u                              # Username
+-p                              # Password
+- Provides more detailed results
+- Accesses restricted information
+- Required for some enumerations
+
+💡 COMMON COMBINATIONS
+────────────────────────────────────────────────────────────
+enum4linux -a -u "" -p "" <target>      # Null session
+enum4linux -a -u guest -p "" <target>   # Guest account
+enum4linux -U -S -G -P <target>         # Core enum
+enum4linux -a -M <target>               # All + machine list
+
+📊 OUTPUT TIPS
+────────────────────────────────────────────────────────────
+• Pipe to file: enum4linux -a <target> > output.txt
+• Look for:
+  - Writable shares
+  - Weak password policies
+  - Service accounts
+  - Admin group members
+  - Guest access enabled
+
+⚠️ COMMON ISSUES
+────────────────────────────────────────────────────────────
+• "Access Denied" - Try with credentials
+• "Connection Refused" - SMB not running or blocked
+• Timeouts - Target may be filtering SMB traffic
+• Limited results - Use authenticated scan
+
+🎯 TARGET IDENTIFICATION
+────────────────────────────────────────────────────────────
+• Domain Controllers
+• Windows file servers
+• Samba servers (Linux/Unix)
+• Network attached storage (NAS)
+• Printers with SMB
+""",
+            "githarvester": """
+GITHARVESTER CHEAT SHEET
+═══════════════════════════════════════════════════════════
+
+🔍 GITHUB SEARCH SYNTAX
+────────────────────────────────────────────────────────────
+filename:config                 # Files named "config"
+extension:pem                   # Files with .pem extension
+path:etc                        # Files in etc directory
+language:python                 # Python files only
+size:>1000                      # Files larger than 1000 bytes
+
+🔑 FINDING CREDENTIALS
+────────────────────────────────────────────────────────────
+password                        # Generic password search
+API_KEY                         # API key references
+AWS_ACCESS_KEY                  # AWS credentials
+private key                     # Private keys
+BEGIN RSA PRIVATE KEY          # RSA private keys
+SECRET_KEY_BASE                 # Rails secret keys
+
+🌐 API KEYS & TOKENS
+────────────────────────────────────────────────────────────
+filename:.env                   # Environment files
+filename:config.yml password    # Config files with passwords
+extension:json password         # JSON with passwords
+GITHUB_TOKEN                    # GitHub personal tokens
+slack_token                     # Slack tokens
+api_key filename:config        # API keys in config
+
+🗄️ DATABASE CREDENTIALS
+────────────────────────────────────────────────────────────
+filename:database.yml           # Database configs
+mysql_password                  # MySQL passwords
+postgres://                     # PostgreSQL connection strings
+mongodb://                      # MongoDB connection strings
+redis://                        # Redis connection strings
+
+☁️ CLOUD CREDENTIALS
+────────────────────────────────────────────────────────────
+AWS_SECRET_ACCESS_KEY          # AWS secrets
+AZURE_CLIENT_SECRET            # Azure credentials
+GCP_SERVICE_ACCOUNT            # Google Cloud
+aws_access_key_id              # AWS access keys
+client_secret                  # OAuth secrets
+
+📧 EMAIL & PERSONAL INFO
+────────────────────────────────────────────────────────────
+filename:wp-config.php          # WordPress configs
+filename:config.php password    # PHP configs
+email filename:users           # User emails
+filename:shadow                # Unix shadow files
+
+🔐 CERTIFICATES & KEYS
+────────────────────────────────────────────────────────────
+BEGIN CERTIFICATE              # SSL certificates
+BEGIN PGP                      # PGP keys
+extension:pem private          # PEM private keys
+extension:key                  # Key files
+filename:id_rsa                # SSH private keys
+
+🎯 ORGANIZATIONAL SEARCHES
+────────────────────────────────────────────────────────────
+org:company-name password       # Search organization
+user:username secret           # Specific user
+repo:name credentials          # Specific repository
+
+💡ADVANCED SEARCH OPERATORS
+────────────────────────────────────────────────────────────
+"exact phrase"                  # Exact match
+NOT password                    # Exclusion
+password OR secret              # OR logic
+password AND api_key            # AND logic
+password -test                  # Exclude "test"
+
+🧰 REGEX PATTERNS (Use with -r flag)
+────────────────────────────────────────────────────────────
+[0-9]{4}-[0-9]{4}              # Credit card patterns
+([A-Z0-9]{20})                 # AWS Access Keys
+([A-Z0-9]{40})                 # AWS Secret Keys
+AKIA[0-9A-Z]{16}               # AWS specific format
+AIza[0-9A-Za-z\\-_]{35}        # Google API keys
+
+📊 FILTERING & SORTING
+────────────────────────────────────────────────────────────
+-o best                        # Best matches
+-o new                         # Newest first
+-o old                         # Oldest first
+-a username                    # Filter by account
+-p project                     # Filter by project
+
+⚠️ LEGAL & ETHICAL NOTES
+────────────────────────────────────────────────────────────
+✅ Only search public repositories
+✅ Use for security research on your own code
+✅ Report findings to repository owners responsibly
+❌ Do NOT use found credentials without permission
+❌ Do NOT access systems using discovered credentials
+
+🛡️ SECURITY FEATURES IN THIS TOOL
+────────────────────────────────────────────────────────────
+• Regex patterns validated (max 200 chars)
+• Dangerous patterns blocked (ReDoS prevention)
+• Query length limited (max 500 chars)
+• No nested quantifiers allowed
+
+💡 TIPS FOR EFFECTIVE SEARCHES
+────────────────────────────────────────────────────────────
+• Start broad, then narrow down
+• Use filename and extension filters
+• Combine multiple keywords
+• Check recently updated repos (sort by new)
+• Use regex for specific formats
+• Save interesting queries for later
+""",
+            "feroxbuster": """
+FEROXBUSTER CHEAT SHEET
+═══════════════════════════════════════════════════════════
+
+📋 BASIC USAGE
+────────────────────────────────────────────────────────────
+feroxbuster -u https://example.com -w wordlist.txt
+
+🎯 ESSENTIAL OPTIONS
+────────────────────────────────────────────────────────────
+-u, --url <URL>                 # Target URL
+-w, --wordlist <FILE>           # Wordlist file
+-t, --threads <NUM>             # Thread count (default: 50)
+-d, --depth <NUM>               # Recursion depth (default: 4)
+-x, --extensions <EXT>          # File extensions (comma-separated)
+
+📁 WORDLISTS
+────────────────────────────────────────────────────────────
+Common locations:
+/usr/share/seclists/Discovery/Web-Content/common.txt
+/usr/share/seclists/Discovery/Web-Content/big.txt
+/usr/share/seclists/Discovery/Web-Content/raft-large-words.txt
+/usr/share/wordlists/dirb/common.txt
+
+🔍 EXTENSIONS
+────────────────────────────────────────────────────────────
+-x php,html,txt                 # Web files
+-x php,html,js,css             # Web + assets
+-x asp,aspx,jsp                # Server-side scripts
+-x bak,old,zip,tar             # Backup files
+-x pdf,doc,docx                # Documents
+
+⚡ PERFORMANCE TUNING
+────────────────────────────────────────────────────────────
+-t 100                          # 100 threads (max in tool: 100)
+-t 50                           # Default, balanced
+-t 10                           # Slower, less aggressive
+--rate-limit 100               # Max requests per second
+--scan-limit 500               # Max concurrent scans
+
+🎯 RECURSION & DEPTH
+────────────────────────────────────────────────────────────
+-d 1                            # Only target URL
+-d 2                            # Found directories + 1 level
+-d 4                            # Default recursion
+-d 0                            # Infinite (dangerous!)
+--no-recursion                 # Disable completely
+
+🔐 AUTHENTICATION
+────────────────────────────────────────────────────────────
+-H "Cookie: session=xyz"        # Custom headers
+-H "Authorization: Bearer token" # Bearer token
+-b "session=xyz"               # Cookie (shorthand)
+--user-agent "Custom UA"       # Custom user agent
+
+🛑 FILTERING RESPONSES
+────────────────────────────────────────────────────────────
+-s 200,301,302                  # Include specific status codes
+-C 404,403                      # Hide specific status codes
+-S <SIZE>                       # Filter by response size
+-W <WORDS>                      # Filter by word count
+-L <LINES>                      # Filter by line count
+
+💾 OUTPUT OPTIONS
+────────────────────────────────────────────────────────────
+-o output.txt                   # Save results
+--json                          # JSON output
+--debug-log debug.log          # Debug logging
+-q, --quiet                     # Suppress banner
+-v, --verbosity                 # Increase verbosity
+
+⚙️ ADVANCED OPTIONS
+────────────────────────────────────────────────────────────
+-k, --insecure                  # Skip SSL verification
+-r, --redirects                 # Follow redirects
+-a, --user-agent <UA>          # Custom user agent
+-p, --proxy http://proxy:port  # Use proxy
+--random-agent                  # Random user agents
+--dont-filter                   # Show all responses
+
+🎨 SCAN METHODS
+────────────────────────────────────────────────────────────
+-m GET,POST                     # HTTP methods
+--auto-tune                     # Auto-adjust threads
+--auto-bail                     # Stop on errors
+--collect-backups              # Also search for .bak files
+--collect-words                # Collect words from responses
+
+💡 COMMON SCAN PATTERNS
+────────────────────────────────────────────────────────────
+# Basic directory scan
+feroxbuster -u http://example.com -w common.txt
+
+# With extensions
+feroxbuster -u http://example.com -w common.txt -x php,html
+
+# Deep scan with extensions
+feroxbuster -u http://example.com -w big.txt -x php,html,txt -d 3
+
+# Fast scan (high threads)
+feroxbuster -u http://example.com -w common.txt -t 100
+
+# Quiet mode with JSON output
+feroxbuster -u http://example.com -w common.txt -q --json -o results.json
+
+# Skip SSL, follow redirects
+feroxbuster -u https://example.com -w common.txt -k -r
+
+📊 INTERPRETING RESULTS
+────────────────────────────────────────────────────────────
+200 OK                          # Accessible resource
+301 Moved Permanently           # Redirect (follow it!)
+302 Found                       # Temporary redirect
+401 Unauthorized                # Auth required
+403 Forbidden                   # Exists but forbidden
+404 Not Found                   # Doesn't exist
+500 Internal Server Error       # Server issue
+
+⚠️ BEST PRACTICES
+────────────────────────────────────────────────────────────
+• Start with small wordlists (common.txt)
+• Monitor server load
+• Use appropriate thread counts
+• Check robots.txt first
+• Respect rate limits
+• Save results to file
+• Use recursion carefully
+
+🚀 PERFORMANCE TIPS
+────────────────────────────────────────────────────────────
+• Adjust threads based on target capacity
+• Use --auto-tune for optimal performance
+• Filter out noise (-C 404)
+• Limit depth on large sites (-d 2)
+• Use --scan-limit to prevent overload
+""",
+            "awsbucket": """
+AWS BUCKET DUMP CHEAT SHEET
+═══════════════════════════════════════════════════════════
+
+📋 BASIC USAGE
+────────────────────────────────────────────────────────────
+python3 AWSBucketDump.py -l buckets.txt
+
+🎯 MAIN OPTIONS
+────────────────────────────────────────────────────────────
+-l, --bucket-list <FILE>        # File containing bucket names
+-g, --grep <FILE>               # Grep for interesting keywords
+-D, --download                  # Download files ( use carefully!)
+-t, --threads <NUM>             # Thread count (max 20 in tool)
+
+📁 BUCKET LIST FORMAT
+────────────────────────────────────────────────────────────
+company-name
+company-backup
+company-dev
+company-prod
+example-assets
+example-logs
+
+One bucket name per line, no s3:// prefix
+
+🔍 WHAT IT FINDS
+────────────────────────────────────────────────────────────
+✅ Public buckets
+✅ Misconfigured permissions
+✅ Directory listings
+✅ File metadata
+✅ Bucket ACLs
+✅ Accessible objects
+
+🔑 GREP KEYWORDS FILE
+────────────────────────────────────────────────────────────
+Example keywords to search for:
+password
+secret
+key
+config
+database
+backup
+credentials
+token
+api
+private
+
+One keyword per line
+
+☁️ COMMON BUCKET NAMING PATTERNS
+────────────────────────────────────────────────────────────
+{company}
+{company}-backup
+{company}-backups
+{company}-dev
+{company}-prod
+{company}-staging
+{company}-test
+{company}-assets
+{company}-logs
+{company}-data
+{company}-files
+{company}-public
+{domain}
+{domain}-backup
+www-{domain}
+
+🎯 BUCKET DISCOVERY METHODS
+────────────────────────────────────────────────────────────
+1. DNS records (dig/dnsrecon)
+2. JavaScript files (website source)
+3. GitHub searches (buckets in code)
+4. SSL certificates (subdomains)
+5. Google dorking
+6. Wayback Machine
+7. Shodan searches
+8. Company name permutations
+
+🔒 PERMISSION TYPES
+────────────────────────────────────────────────────────────
+Public Read                     # List contents
+Public Write                    # Upload files (rare, dangerous)
+Authenticated Read              # AWS account required
+Private                        # Owner only
+
+📊 COMMON FINDINGS
+────────────────────────────────────────────────────────────
+• Database backups
+• Configuration files
+• Source code
+• AWS credentials
+• Customer data
+• Application logs
+• Backup archives
+• Development files
+
+💡 RESPONSIBLE TESTING
+────────────────────────────────────────────────────────────
+✅ Only test authorized targets
+✅ Use -g to filter for specific data
+✅ Avoid mass downloading (-D)
+✅ Document findings for client
+✅ Report to AWS if public exposure
+
+❌ DO NOT
+────────────────────────────────────────────────────────────
+❌ Download customer/personal data
+❌ Modify bucket contents
+❌ Share discovered credentials
+❌ Access unauthorized buckets
+❌ Upload malicious files
+
+⚙️ THREAD RECOMMENDATIONS
+────────────────────────────────────────────────────────────
+-t 5                            # Default, safe
+-t 10                           # Faster, moderate load
+-t 20                           # Maximum (tool limit)
+-t 1                            # Slow, minimal footprint
+
+📁 OUTPUT INTERPRETATION
+────────────────────────────────────────────────────────────
+[+] Bucket found: name          # Bucket exists and accessible
+[+] Public Read access          # Can list/read files
+[!] Public Write access         # Can upload (security issue!)
+[*] File: path/to/file         # Discovered file
+[-] Access Denied               # Bucket exists but private
+
+🛡️ SECURITY FEATURES IN TOOL
+────────────────────────────────────────────────────────────
+• Thread limit enforced (max 20)
+• Path validation
+• Safe directory restrictions
+• File size checking
+
+💾 SAVING RESULTS
+────────────────────────────────────────────────────────────
+python3 AWSBucketDump.py -l buckets.txt > results.txt
+python3 AWSBucketDump.py -l buckets.txt -g keywords.txt > filtered.txt
+
+🚨 LEGAL CONSIDERATIONS
+────────────────────────────────────────────────────────────
+• Accessing data without authorization is ILLEGAL
+• Downloading PII/sensitive data is ILLEGAL
+• Always get written permission first
+• Report findings through proper channels
+• Do NOT use discovered credentials
+
+🔍 POST-ENUMERATION
+────────────────────────────────────────────────────────────
+After finding accessible buckets:
+1. Document bucket names and permissions
+2. List file types and sizes
+3. Note sensitive data patterns
+4. Check for versioning enabled
+5. Verify bucket policies
+6. Report to client/owner
+7. Recommend remediation:
+   - Remove public access
+   - Enable encryption
+   - Implement bucket policies
+   - Enable logging
+   - Use least privilege
+""",
+            "tcpdump": """
+TCPDUMP CHEAT SHEET
+═══════════════════════════════════════════════════════════
+
+📋 BASIC USAGE
+────────────────────────────────────────────────────────────
+sudo tcpdump                    # Capture on default interface
+sudo tcpdump -i eth0            # Capture on specific interface
+sudo tcpdump -c 100             # Capture 100 packets
+sudo tcpdump -w capture.pcap    # Save to file
+
+🌐 INTERFACES
+────────────────────────────────────────────────────────────
+-i eth0                         # Ethernet interface
+-i wlan0                        # Wireless interface
+-i any                          # All interfaces
+-i lo                           # Loopback
+
+ip link show                    # List available interfaces
+
+🔍 BPF FILTERS (Basic - Tool Allows Simple Filters Only)
+────────────────────────────────────────────────────────────
+host 192.168.1.1                # Single host
+net 192.168.1.0/24              # Network range
+port 80                         # Specific port
+src 192.168.1.1                 # Source address
+dst 192.168.1.1                 # Destination address
+
+🌍 PROTOCOL FILTERS
+────────────────────────────────────────────────────────────
+tcp                             # TCP traffic only
+udp                             # UDP traffic only
+icmp                            # ICMP (ping) traffic
+arp                             # ARP traffic
+ip                              # IP traffic
+ip6                             # IPv6 traffic
+
+🔢 PORT FILTERS
+────────────────────────────────────────────────────────────
+port 80                         # HTTP
+port 443                        # HTTPS
+port 22                         # SSH
+port 21                         # FTP
+port 25                         # SMTP
+port 53                         # DNS
+port 3306                       # MySQL
+port 5432                       # PostgreSQL
+
+🎯 COMMON COMBINATIONS (Allowed by Tool)
+────────────────────────────────────────────────────────────
+tcp and port 80                 # HTTP traffic
+tcp and port 443                # HTTPS traffic
+udp and port 53                 # DNS queries
+host 192.168.1.1 and port 22    # SSH to specific host
+icmp                            # All ICMP/ping traffic
+tcp and dst port 80             # Outbound HTTP
+
+⚙️ OUTPUT OPTIONS
+────────────────────────────────────────────────────────────
+-v                              # Verbose output
+-vv                             # More verbose
+-vvv                            # Maximum verbosity
+-n                              # Don't resolve hostnames
+-nn                             # Don't resolve hosts or ports
+-X                              # Hex and ASCII output
+-XX                             # Hex and ASCII with headers
+
+💾 SAVING CAPTURES
+────────────────────────────────────────────────────────────
+-w file.pcap                    # Save to file
+-W 10                           # Rotate after 10 files
+-C 100                          # New file every 100 MB
+-G 3600                         # New file every hour
+
+📖 READING CAPTURES
+────────────────────────────────────────────────────────────
+tcpdump -r capture.pcap         # Read from file
+tcpdump -r capture.pcap port 80 # Filter while reading
+wireshark capture.pcap          # Open in Wireshark
+
+📊 DISPLAY OPTIONS
+────────────────────────────────────────────────────────────
+-A                              # Print in ASCII
+-X                              # Print in hex and ASCII
+-q                              # Quick output (less verbose)
+-t                              # Don't print timestamps
+-tttt                           # Print readable timestamps
+
+🎨 COMMON CAPTURE SCENARIOS
+────────────────────────────────────────────────────────────
+# HTTP traffic
+sudo tcpdump -i eth0 port 80 -w http.pcap
+
+# HTTPS traffic
+sudo tcpdump -i eth0 port 443 -vv
+
+# DNS queries
+sudo tcpdump -i eth0 udp port 53
+
+# SSH connections
+sudo tcpdump -i eth0 port 22
+
+# All traffic to/from host
+sudo tcpdump -i eth0 host 192.168.1.100
+
+# ICMP (ping)
+sudo tcpdump -i eth0 icmp
+
+# Capture 1000 packets
+sudo tcpdump -i eth0 -c 1000 -w capture.pcap
+
+⚠️ SECURITY NOTES (THIS TOOL)
+────────────────────────────────────────────────────────────
+🔒 Requires sudo/root privileges
+🔒 Interface names validated
+🔒 BPF filters restricted to simple patterns
+🔒 Complex filters blocked for security
+🔒 Output files must be in home directory
+
+🛡️ ALLOWED FILTER KEYWORDS
+────────────────────────────────────────────────────────────
+port, host, net, src, dst, tcp, udp, icmp,
+ip, ip6, arp, rarp, and, or, not
+
+No parentheses or complex expressions allowed
+
+💡 ANALYSIS TIPS
+────────────────────────────────────────────────────────────
+• Capture to file, analyze later
+• Use Wireshark for detailed analysis
+• Filter before capture (more efficient)
+• Use -n to speed up captures
+• Limit packet count for quick tests
+• Use -s0 to capture full packets
+
+🔍 TROUBLESHOOTING
+────────────────────────────────────────────────────────────
+Permission Denied
+→ Use sudo
+
+Interface not found
+→ Check: ip link show
+
+No packets captured
+→ Check filter syntax
+→ Verify traffic exists
+→ Check interface is up
+
+📚 COMMON USE CASES
+────────────────────────────────────────────────────────────
+• Network troubleshooting
+• Security monitoring
+• Protocol analysis
+• Bandwidth monitoring
+• Attack detection
+• Application debugging
+• Education/learning
+
+🚨 LEGAL & ETHICAL
+────────────────────────────────────────────────────────────
+✅ Own network only
+✅ Authorized testing
+✅ Security research
+✅ Educational purposes
+
+❌ Unauthorized network sniffing is ILLEGAL
+❌ Wiretapping laws apply
+❌ Get permission first
+""",
+            "gobuster": """
+GOBUSTER CHEAT SHEET
+═══════════════════════════════════════════════════════════
+
+📋 MODES
+────────────────────────────────────────────────────────────
+dir                             # Directory/file brute-forcing
+dns                             # DNS subdomain enumeration
+vhost                           # Virtual host brute-forcing
+s3                              # S3 bucket enumeration
+
+🗂️ DIRECTORY MODE (dir)
+────────────────────────────────────────────────────────────
+gobuster dir -u https://example.com -w wordlist.txt
+
+Options:
+-u, --url <URL>                 # Target URL
+-w, --wordlist <FILE>           # Wordlist
+-x, --extensions <EXT>          # File extensions
+-t, --threads <NUM>             # Threads (default 10)
+-k, --no-tls-validation        # Skip SSL verification
+-b, --status-codes <CODES>     # Exclude status codes
+
+🌐 DNS MODE (dns)
+────────────────────────────────────────────────────────────
+gobuster dns -d example.com -w wordlist.txt
+
+Options:
+-d, --domain <DOMAIN>           # Target domain
+-w, --wordlist <FILE>           # Subdomain wordlist
+-r, --resolver <IP>             # Custom DNS resolver
+-t, --threads <NUM>             # Threads
+-i, --show-ips                  # Show IP addresses
+
+🏠 VHOST MODE (vhost)
+────────────────────────────────────────────────────────────
+gobuster vhost -u https://example.com -w wordlist.txt
+
+Options:
+-u, --url <URL>                 # Base URL
+-w, --wordlist <FILE>           # Vhost wordlist
+-t, --threads <NUM>             # Threads
+-k, --no-tls-validation        # Skip SSL verification
+
+📁 COMMON WORDLISTS
+────────────────────────────────────────────────────────────
+# Directories
+/usr/share/wordlists/dirb/common.txt
+/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+/usr/share/seclists/Discovery/Web-Content/common.txt
+/usr/share/seclists/Discovery/Web-Content/big.txt
+
+# DNS/Subdomains
+/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt
+/usr/share/seclists/Discovery/DNS/namelist.txt
+
+🔍 FILE EXTENSIONS
+────────────────────────────────────────────────────────────
+-x php                          # Single extension
+-x php,html,txt                 # Multiple extensions
+-x php,asp,aspx,jsp             # Server-side scripts
+-x bak,old,zip,tar.gz           # Backups
+-x txt,pdf,doc,docx             # Documents
+
+⚡ PERFORMANCE OPTIONS
+────────────────────────────────────────────────────────────
+-t 50                           # Increase threads
+-t 10                           # Default threads
+--delay 100ms                   # Delay between requests
+--timeout 10s                   # Request timeout
+--no-progress                   # Disable progress bar
+
+🎯 STATUS CODE FILTERING
+────────────────────────────────────────────────────────────
+-b 404                          # Exclude 404
+-b 404,403                      # Exclude multiple
+-s 200,301,302                  # Include specific codes
+
+🔐 AUTHENTICATION
+────────────────────────────────────────────────────────────
+-U <username>                   # HTTP auth username
+-P <password>                   # HTTP auth password
+-c <cookie>                     # Cookie header
+-H "Name: Value"                # Custom header
+
+💡 COMMON PATTERNS
+────────────────────────────────────────────────────────────
+# Basic directory scan
+gobuster dir -u http://example.com -w common.txt
+
+# With extensions
+gobuster dir -u http://example.com -w common.txt -x php,html,txt
+
+# Skip SSL errors
+gobuster dir -u https://example.com -w common.txt -k
+
+# Subdomain enumeration
+gobuster dns -d example.com -w subdomains.txt
+
+# Virtual hosts
+gobuster vhost -u http://example.com -w vhosts.txt
+
+# Exclude 404s and 403s
+gobuster dir -u http://example.com -w common.txt -b 404,403
+
+# High thread count
+gobuster dir -u http://example.com -w big.txt -t 50
+
+📊 INTERPRETING RESULTS
+────────────────────────────────────────────────────────────
+Status: 200                     # Found, accessible
+Status: 301                     # Redirect (follow it!)
+Status: 302                     # Temporary redirect
+Status: 401                     # Authentication required
+Status: 403                     # Forbidden (exists!)
+Status: 500                     # Server error
+
+💾 OUTPUT OPTIONS
+────────────────────────────────────────────────────────────
+-o output.txt                   # Save results
+-q                              # Quiet (errors only)
+-v                              # Verbose output
+--no-progress                   # No progress bar
+
+⚙️ ADVANCED OPTIONS
+────────────────────────────────────────────────────────────
+-a, --useragent <UA>           # Custom user agent
+-r, --follow-redirect           # Follow redirects
+-e, --expanded                  # Expanded output
+-m, --method <METHOD>          # HTTP method (GET/POST)
+-p, --proxy <URL>              # Proxy URL
+-P, --password <PASS>          # HTTP auth password
+
+🎨 USEFUL COMBINATIONS
+────────────────────────────────────────────────────────────
+# Full web scan
+gobuster dir -u https://example.com -w big.txt -x php,html,js,txt -t 50 -k
+
+# Quick common check
+gobuster dir -u http://example.com -w common.txt -b 404
+
+# API endpoint discovery
+gobuster dir -u http://api.example.com -w api-endpoints.txt -b 404
+
+# Subdomain discovery
+gobuster dns -d example.com -w subdomains-10000.txt -t 50
+
+⚠️ BEST PRACTICES
+────────────────────────────────────────────────────────────
+• Start with small wordlists
+• Exclude 404s to reduce noise
+• Use appropriate thread count
+• Check robots.txt first
+• Monitor server load
+• Save results to file
+• Use -k for self-signed certs
+
+📈 WORDLIST RECOMMENDATIONS
+────────────────────────────────────────────────────────────
+Quick (1-2 min):
+→ common.txt (~4500 words)
+
+Medium (5-15 min):
+→ directory-list-2.3-medium.txt (~220k words)
+
+Deep (hours):
+→ directory-list-2.3-big.txt (~1.2M words)
+
+🚀 PERFORMANCE TIPS
+────────────────────────────────────────────────────────────
+• Increase threads for faster scans
+• Use smaller wordlists first
+• Filter out known false positives
+• Run during off-hours if possible
+• Check for rate limiting
+""",
+            "nikto": """
+NIKTO CHEAT SHEET
+═══════════════════════════════════════════════════════════
+
+📋 BASIC USAGE
+────────────────────────────────────────────────────────────
+nikto -h http://example.com     # Basic scan
+nikto -h example.com -p 80      # Specify port
+nikto -h example.com -ssl       # HTTPS scan
+
+🎯 ESSENTIAL OPTIONS
+────────────────────────────────────────────────────────────
+-h <host>                       # Target host/URL
+-p <port>                       # Port number
+-ssl                            # Force SSL
+-T <tuning>                     # Scan tuning
+-C <checks>                     # Check types
+
+🔐 SSL/HTTPS
+────────────────────────────────────────────────────────────
+-ssl                            # Use HTTPS
+-p 443                          # HTTPS port
+nikto -h example.com -ssl -p 443  # Full HTTPS scan
+
+⚙️ SCAN TUNING (-T Option)
+────────────────────────────────────────────────────────────
+0                               # File upload
+1                               # Interesting files
+2                               # Misconfiguration
+3                               # Information disclosure
+4                               # Injection (XSS/Script/HTML)
+5                               # Remote file retrieval
+6                               # Denial of service
+7                               # Remote file retrieval (inside web root)
+8                               # Command execution
+9                               # SQL injection
+a                               # Authentication bypass
+b                               # Software identification
+c                               # Remote source inclusion
+x                               # Reverse tuning (all except specified)
+
+Multiple: -T 124                # Tests 1, 2, and 4
+All: -T x                       # All tests
+
+🎨 COMMON SCAN TYPES
+────────────────────────────────────────────────────────────
+# Quick scan (common vulns)
+nikto -h http://example.com -T 1234
+
+# Comprehensive scan (all tests)
+nikto -h http://example.com -T x
+
+# Injection testing
+nikto -h http://example.com -T 4689
+
+# Information gathering only
+nikto -h http://example.com -T 13
+
+# SSL/TLS vulnerabilities
+nikto -h example.com -ssl -p 443
+
+💡 AUTHENTICATION
+────────────────────────────────────────────────────────────
+-id <user:pass>                 # HTTP basic auth
+-C <cookie>                     # Cookie
+Example:
+nikto -h http://example.com -id admin:password
+
+📊 EVASION & PERFORMANCE
+────────────────────────────────────────────────────────────
+-Pause <seconds>                # Pause between tests
+-timeout <seconds>              # Request timeout
+-maxtime                        # Maximum scan time
+-useragent <string>             # Custom user agent
+-evasion <techniques>           # IDS evasion
+
+Evasion Techniques:
+1                               # Random URL encoding
+2                               # Directory self-reference (/./  )
+3                               # Premature URL ending
+4                               # Prepend long random string
+5                               # Fake parameter
+6                               # TAB as request spacer
+7                               # Change case in URL
+8                               # Windows directory separator (\\\\)
+
+💾 OUTPUT OPTIONS
+────────────────────────────────────────────────────────────
+-o <file>                       # Output file
+-Format <format>                # Output format
+
+Formats:
+csv                             # CSV format
+htm                             # HTML format
+txt                             # Text format (default)
+xml                             # XML format
+
+Example:
+nikto -h example.com -o scan.html -Format htm
+
+🔍 SPECIFIC CHECKS
+────────────────────────────────────────────────────────────
+-Cgidirs <dirs>                 # CGI directories to scan
+-dbcheck                        # Check database file
+-list-plugins                   # List available plugins
+-Plugins <plugins>              # Specify plugins
+
+📋 COMMON FINDINGS
+────────────────────────────────────────────────────────────
+• Default files and directories
+• Insecure files
+• Server misconfigurations
+• Outdated server software
+• Dangerous HTTP methods
+• XSS vulnerabilities
+• SQL injection points
+• Directory listings
+• Backup files
+• Server information leakage
+
+⚠️ UNDERSTANDING OUTPUT
+────────────────────────────────────────────────────────────
++ OSVDB-xxx                     # Vulnerability ID
+- Nikto  v2.x.x                 # Version info
++ Server: Apache/2.4.x          # Server ID
++ Allowed HTTP Methods          # Available methods
++ OSVDB-xxx: file.php           # Vulnerable file
+
+Risk Indicators:
++                               # Finding
++ OSVDB                         # Verified vulnerability
++ Retrieved                     # Retrieved sensitive info
+
+💡 PRACTICAL EXAMPLES
+────────────────────────────────────────────────────────────
+# Basic web server scan
+nikto -h http://example.com
+
+# HTTPS scan on custom port
+nikto -h example.com -ssl -p 8443
+
+# Comprehensive vulnerability scan
+nikto -h http://example.com -T x -o full_scan.html -Format htm
+
+# Authenticated scan
+nikto -h http://example.com -id user:password -T x
+
+# Slow, stealthy scan
+nikto -h http://example.com -Pause 5 -evasion 1247
+
+# Quick common vulnerability check
+nikto -h http://example.com -T 1249
+
+# Multiple hosts from file
+nikto -h hosts.txt -o results.txt
+
+🎯 SCAN STRATEGY
+────────────────────────────────────────────────────────────
+1. Quick scan first (-T 124)
+2. Review findings
+3. Deep scan on interesting findings
+4 Full scan if time permits (-T x)
+5. Save and document results
+
+⚡ PERFORMANCE TUNING
+────────────────────────────────────────────────────────────
+• Nikto is thorough but slow
+• Use -Pause to reduce load
+• Consider -maxtime for time limits
+• Scan non-peak hours
+• Target specific tests when possible
+• Save results for review later
+
+🚨 DETECTION & LOGS
+────────────────────────────────────────────────────────────
+⚠️ Nikto is LOUD and easily detected
+• Creates many log entries
+• IDS/IPS will likely alert
+• WAFs may block requests
+• Not suitable for stealth
+• Best for authorized testing
+
+💡 TIPS
+────────────────────────────────────────────────────────────
+• Always save output (-o)
+• Use HTML format for reports
+• Review robots.txt first
+• Check for WAF/IDS
+• Scan from trusted IP if possible
+• Verify findings manually
+• Many false positives possible
+• Cross-reference with other tools
+
+🔒 LIMITATIONS
+────────────────────────────────────────────────────────────
+• Signature-based (needs updates)
+• Can't detect all vulnerabilities
+• Many false positives
+• Slow on large sites
+• Easily detected
+• Limited authentication support
+• No JavaScript execution
+""",
+            "metasploit": """
+METASPLOIT FRAMEWORK CHEAT SHEET
+═══════════════════════════════════════════════════════════
+
+🔍 AUXILIARY/SCANNER MODULES (RECON ONLY)
+────────────────────────────────────────────────────────────
+⚠️ This tool ONLY allows auxiliary/scanner modules
+⚠️ Exploitation modules are BLOCKED for safety
+
+📋 PORT SCANNERS
+────────────────────────────────────────────────────────────
+auxiliary/scanner/portscan/tcp
+- Standard TCP port scanner
+- Options: RHOSTS, PORTS, THREADS
+
+auxiliary/scanner/portscan/syn
+- SYN scan (faster, stealthier)
+- Requires root/sudo
+- Options: RHOSTS, INTERFACE, PORTS
+
+auxiliary/scanner/portscan/ack
+- ACK scan for firewall detection
+- Options: RHOSTS, PORTS
+
+🌐 SERVICE DETECTION
+────────────────────────────────────────────────────────────
+auxiliary/scanner/http/http_version
+- Detect HTTP server version
+- Options: RHOSTS, RPORT (default 80)
+
+auxiliary/scanner/ssh/ssh_version
+- SSH banner grabbing
+- Options: RHOSTS, RPORT (default 22)
+
+auxiliary/scanner/smb/smb_version
+- SMB version detection
+- Options: RHOSTS
+
+auxiliary/scanner/ftp/ftp_version
+- FTP server detection
+- Options: RHOSTS
+
+auxiliary/scanner/mysql/mysql_version
+- MySQL version detection
+- Options: RHOSTS
+
+auxiliary/scanner/postgres/postgres_version
+- PostgreSQL version detection
+- Options: RHOSTS
+
+📁 SMB ENUMERATION
+────────────────────────────────────────────────────────────
+auxiliary/scanner/smb/smb_enumshares
+- Enumerate SMB shares
+- Options: RHOSTS, SMBUser, SMBPass
+
+auxiliary/scanner/smb/smb_enumusers
+- Enumerate SMB users
+- Options: RHOSTS
+
+auxiliary/scanner/smb/smb_login
+- SMB authentication testing
+- Options: RHOSTS, SMBUser, SMBPass
+
+🔐 SSH ENUMERATION
+────────────────────────────────────────────────────────────
+auxiliary/scanner/ssh/ssh_login
+- SSH login attempts
+- Options: RHOSTS, USERNAME, PASSWORD
+
+auxiliary/scanner/ssh/ssh_enumusers
+- SSH user enumeration
+- Options: RHOSTS, USER_FILE
+
+🌩️ SNMP ENUMERATION
+────────────────────────────────────────────────────────────
+auxiliary/scanner/snmp/snmp_enum
+- SNMP enumeration
+- Options: RHOSTS
+
+auxiliary/scanner/snmp/snmp_login
+- SNMP community string testing
+- Options: RHOSTS
+
+⚙️ COMMON OPTIONS
+────────────────────────────────────────────────────────────
+RHOSTS                          # Target IP/hostname
+RPORT                           # Target port
+THREADS                         # Thread count (default 10)
+SMBUser                         # SMB username
+SMBPass                         # SMB password
+USERNAME                        # Generic username
+PASSWORD                        # Generic password
+USER_FILE                       # Username wordlist
+PASS_FILE                       # Password wordlist
+
+💡 USAGE EXAMPLES
+────────────────────────────────────────────────────────────
+Module: auxiliary/scanner/portscan/tcp
+RHOSTS: 192.168.1.100
+PORTS: 1-1000
+THREADS: 20
+
+Module: auxiliary/scanner/smb/smb_version
+RHOSTS: 192.168.1.0/24
+THREADS: 10
+
+Module: auxiliary/scanner/http/http_version
+RHOSTS: example.com
+RPORT: 8080
+
+📊 INTERPRETING RESULTS
+────────────────────────────────────────────────────────────
+[+]                             # Success/finding
+[-]                             # Failure/no result
+[*]                             # Information
+[!]                             # Warning/error
+
+🎯 RECOMMENDED MODULES
+────────────────────────────────────────────────────────────
+Network Discovery:
+→ auxiliary/scanner/portscan/tcp
+
+Web Servers:
+→ auxiliary/scanner/http/http_version
+→ auxiliary/scanner/http/robots_txt
+
+Windows/SMB:
+→ auxiliary/scanner/smb/smb_version
+→ auxiliary/scanner/smb/smb_enumshares
+
+SSH Systems:
+→ auxiliary/scanner/ssh/ssh_version
+→ auxiliary/scanner/ssh/ssh_login
+
+Databases:
+→ auxiliary/scanner/mysql/mysql_version
+→ auxiliary/scanner/postgres/postgres_version
+
+⚡ PERFORMANCE TIPS
+────────────────────────────────────────────────────────────
+• Adjust THREADS based on network
+• Start with 10 threads, increase if needed
+• Use specific PORTS to speed up scans
+• Target specific services when known
+• Save results from console output
+
+🔒 SECURITY NOTES
+────────────────────────────────────────────────────────────
+✅ Only reconnaissance modules allowed
+✅ No exploitation capabilities
+✅ Module paths validated
+✅ Input sanitization enforced
+
+❌ Exploit modules BLOCKED
+❌ Payload generation BLOCKED
+❌ Post-exploitation BLOCKED
+
+💾 MODULE CATEGORIES
+────────────────────────────────────────────────────────────
+auxiliary/scanner/               # Scanners (allowed)
+auxiliary/gather/                # Info gathering (allowed)
+exploit/                         # BLOCKED
+post/                           # BLOCKED
+payload/                        # BLOCKED
+
+📚 ADDITIONAL RESOURCES
+────────────────────────────────────────────────────────────
+• Metasploit Unleashed: offensive-security.com
+• Module documentation: metasploit.com
+• Community modules: github.com/rapid7/metasploit-framework
+
+⚠️ LEGAL REMINDER
+────────────────────────────────────────────────────────────
+• Only scan authorized systems
+• Active scanning can be detected
+• May trigger IDS/IPS alerts
+• Document all activities
+• Get written permission first
+"""
+        }
+
         # Load configuration and history
         self.load_config()
         self.load_history()
@@ -639,6 +2113,23 @@ class ReconSuperpower:
         )
         info_label.grid(row=7, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
+        # Cheat Sheet Button
+        cheat_btn = tk.Button(
+            frame,
+            text="📋 VIEW CHEAT SHEET",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.show_cheatsheet("nmap")
+        )
+        cheat_btn.grid(row=8, column=0, columnspan=2, pady=10)
+
         return frame
 
     def create_gobuster_tab(self):
@@ -683,12 +2174,11 @@ class ReconSuperpower:
 
         # Threads
         self.gobuster_threads = self.create_labeled_entry(frame, "Threads:", 3, "10")
-
         # Extensions
         self.gobuster_extensions = self.create_labeled_entry(frame, "Extensions:", 4, "php,html,txt")
 
         # Additional options
-        self.gobuster_options = self.create_labeled_entry(frame, "Extra Options:", 5, "")
+        self.gobuster_options = self.create_labeled_entry(frame, "Extra Options:", 5, "-k")
 
         # Info label
         info_label = tk.Label(
@@ -700,6 +2190,23 @@ class ReconSuperpower:
             justify=tk.LEFT
         )
         info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        # Cheat Sheet Button
+        cheat_btn = tk.Button(
+            frame,
+            text="📋 VIEW CHEAT SHEET",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.show_cheatsheet("gobuster")
+        )
+        cheat_btn.grid(row=7, column=0, columnspan=2, pady=10)
 
         return frame
 
@@ -751,6 +2258,23 @@ class ReconSuperpower:
             justify=tk.LEFT
         )
         info_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        # Cheat Sheet Button
+        cheat_btn = tk.Button(
+            frame,
+            text="📋 VIEW CHEAT SHEET",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.show_cheatsheet("nikto")
+        )
+        cheat_btn.grid(row=6, column=0, columnspan=2, pady=10)
 
         return frame
 
@@ -805,7 +2329,7 @@ class ReconSuperpower:
         self.msf_threads = self.create_labeled_entry(frame, "Threads:", 4, "10")
 
         # Additional options
-        self.msf_options = self.create_labeled_entry(frame, "Extra Options:", 5, "")
+        self.metasploit_options = self.create_labeled_entry(frame, "Extra Options (KEY=VALUE):", 5, "")
 
         # Info label
         info_label = tk.Label(
@@ -817,6 +2341,23 @@ class ReconSuperpower:
             justify=tk.LEFT
         )
         info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        # Cheat Sheet Button
+        cheat_btn = tk.Button(
+            frame,
+            text="📋 VIEW CHEAT SHEET",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.show_cheatsheet("metasploit")
+        )
+        cheat_btn.grid(row=7, column=0, columnspan=2, pady=10)
 
         return frame
 
@@ -885,6 +2426,23 @@ class ReconSuperpower:
         )
         info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
+        # Cheat Sheet Button
+        cheat_btn = tk.Button(
+            frame,
+            text="📋 VIEW CHEAT SHEET",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.show_cheatsheet("shodan")
+        )
+        cheat_btn.grid(row=7, column=0, columnspan=2, pady=10)
+
         return frame
 
     def create_dnsrecon_tab(self):
@@ -948,6 +2506,23 @@ class ReconSuperpower:
         )
         info_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
+        # Cheat Sheet Button
+        cheat_btn = tk.Button(
+            frame,
+            text="📋 VIEW CHEAT SHEET",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.show_cheatsheet("dnsrecon")
+        )
+        cheat_btn.grid(row=6, column=0, columnspan=2, pady=10)
+
         return frame
 
     def create_enum4linux_tab(self):
@@ -1005,6 +2580,23 @@ class ReconSuperpower:
         )
         info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
+        # Cheat Sheet Button
+        cheat_btn = tk.Button(
+            frame,
+            text="📋 VIEW CHEAT SHEET",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.show_cheatsheet("enum4linux")
+        )
+        cheat_btn.grid(row=7, column=0, columnspan=2, pady=10)
+
         return frame
 
     def create_githarvester_tab(self):
@@ -1049,6 +2641,23 @@ class ReconSuperpower:
             justify=tk.LEFT
         )
         info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        # Cheat Sheet Button
+        cheat_btn = tk.Button(
+            frame,
+            text="📋 VIEW CHEAT SHEET",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.show_cheatsheet("githarvester")
+        )
+        cheat_btn.grid(row=7, column=0, columnspan=2, pady=10)
 
         return frame
 
@@ -1101,6 +2710,23 @@ class ReconSuperpower:
             justify=tk.LEFT
         )
         info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        # Cheat Sheet Button
+        cheat_btn = tk.Button(
+            frame,
+            text="📋 VIEW CHEAT SHEET",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.show_cheatsheet("feroxbuster")
+        )
+        cheat_btn.grid(row=7, column=0, columnspan=2, pady=10)
 
         return frame
 
@@ -1173,6 +2799,23 @@ class ReconSuperpower:
         )
         info_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
+        # Cheat Sheet Button
+        cheat_btn = tk.Button(
+            frame,
+            text="📋 VIEW CHEAT SHEET",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.show_cheatsheet("awsbucket")
+        )
+        cheat_btn.grid(row=6, column=0, columnspan=2, pady=10)
+
         return frame
 
     def create_tcpdump_tab(self):
@@ -1223,6 +2866,23 @@ class ReconSuperpower:
             justify=tk.LEFT
         )
         info_label.grid(row=7, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        # Cheat Sheet Button
+        cheat_btn = tk.Button(
+            frame,
+            text="📋 VIEW CHEAT SHEET",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.show_cheatsheet("tcpdump")
+        )
+        cheat_btn.grid(row=8, column=0, columnspan=2, pady=10)
 
         return frame
 
@@ -1830,6 +3490,73 @@ KEYBOARD SHORTCUTS:
                 except (OSError, IOError) as e:
                     messagebox.showerror("Error", f"Failed to save file: {str(e)}")
 
+    def show_cheatsheet(self, tool_id):
+        """Display cheat sheet for the specified tool in a popup window."""
+        if tool_id not in self.tool_cheatsheets:
+            messagebox.showinfo("Info", f"No cheat sheet available for {tool_id}")
+            return
+        
+        # Create popup window
+        popup = tk.Toplevel(self.root)
+        popup.title(f"{tool_id.upper()} Cheat Sheet")
+        popup.geometry("800x600")
+        popup.configure(bg=self.bg_primary)
+        
+        # Make window modal
+        popup.transient(self.root)
+        popup.grab_set()
+        
+        # Title
+        title_label = tk.Label(
+            popup,
+            text=f"📋 {tool_id.upper()} CHEAT SHEET",
+            font=("Courier", 16, "bold"),
+            fg=self.accent_cyan,
+            bg=self.bg_primary
+        )
+        title_label.pack(pady=10)
+        
+        # Text widget with scrollbar
+        text_frame = tk.Frame(popup, bg=self.bg_secondary)
+        text_frame.pack(fill=tk.BOTH, expand=True, padx=15, pady=(0, 10))
+        
+        scrollbar = tk.Scrollbar(text_frame)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        text_widget = tk.Text(
+            text_frame,
+            font=("Courier", 10),
+            bg=self.bg_secondary,
+            fg=self.text_color,
+            wrap=tk.WORD,
+            yscrollcommand=scrollbar.set,
+            padx=10,
+            pady=10
+        )
+        text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.config(command=text_widget.yview)
+        
+        # Insert cheat sheet content
+        text_widget.insert('1.0', self.tool_cheatsheets[tool_id])
+        text_widget.config(state=tk.DISABLED)  # Make read-only
+        
+        # Close button
+        close_btn = tk.Button(
+            popup,
+            text="✖ CLOSE",
+            font=("Courier", 10, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.text_color,
+            activebackground=self.accent_red,
+            activeforeground="white",
+            relief=tk.FLAT,
+            padx=20,
+            pady=8,
+            cursor="hand2",
+            command=popup.destroy
+        )
+        close_btn.pack(pady=(0, 15))
+    
     def update_status(self, message, color=None):
         if color is None:
             color = self.accent_green
