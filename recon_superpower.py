@@ -3413,22 +3413,28 @@ payload/                        # BLOCKED
             self.workflow_results = {}
             self.workflow_start_time = time.time()
         
-        # Update UI
-        self.workflow_run_btn.config(state=tk.DISABLED)
-        self.workflow_stop_btn.config(state=tk.NORMAL)
-        self.workflow_selector.config(state=tk.DISABLED)
-        
-        # Clear output
-        self.output_text.delete('1.0', tk.END)
-        self.append_output(f"{'=' * 60}\n")
-        self.append_output(f"STARTING WORKFLOW: {workflow['name']}\n")
-        self.append_output(f"Target: {target}\n")
-        self.append_output(f"Total Steps: {len(workflow['steps'])}\n")
-        self.append_output(f"{'=' * 60}\n\n")
-        
-        # Start workflow execution in separate thread
-        workflow_thread = threading.Thread(target=self.execute_workflow_steps, daemon=True)
-        workflow_thread.start()
+            # Update UI
+            self.workflow_run_btn.config(state=tk.DISABLED)
+            self.workflow_stop_btn.config(state=tk.NORMAL)
+            self.workflow_selector.config(state=tk.DISABLED)
+            
+            # Clear output
+            self.output_text.delete('1.0', tk.END)
+            self.append_output(f"{'=' * 60}\n")
+            self.append_output(f"STARTING WORKFLOW: {workflow['name']}\n")
+            self.append_output(f"Target: {target}\n")
+            self.append_output(f"Total Steps: {len(workflow['steps'])}\n")
+            self.append_output(f"{'=' * 60}\n\n")
+            
+            # Start workflow execution in separate thread
+            workflow_thread = threading.Thread(target=self.execute_workflow_steps, daemon=True)
+            workflow_thread.start()
+            
+        except Exception as e:
+            # Reset workflow state on error
+            self.workflow_running = False
+            messagebox.showerror("Workflow Error", f"Failed to start workflow: {str(e)}")
+            self.update_status(f"Workflow error: {str(e)}")
 
     def execute_workflow_steps(self):
         """Execute workflow steps sequentially."""
