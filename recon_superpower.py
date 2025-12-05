@@ -3107,8 +3107,13 @@ payload/                        # BLOCKED
 
 
     def create_workflows_tab(self):
+        """Create the Workflows tab for automated multi-tool reconnaissance."""
         frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        
+        # Configure grid weights for proper expansion
         frame.columnconfigure(1, weight=1)
+        frame.rowconfigure(3, weight=1)  # Preview frame should expand
+        frame.rowconfigure(5, weight=0)  # Progress section
 
         # Header
         header = tk.Label(
@@ -3291,43 +3296,55 @@ payload/                        # BLOCKED
 
     def on_workflow_selected(self, event):
         """Update workflow steps preview when selection changes."""
-        selected_idx = self.workflow_selector.current()
-        workflow_ids = list(self.predefined_workflows.keys())
-        
-        if selected_idx < 0 or selected_idx >= len(workflow_ids):
-            return
-        
-        workflow_id = workflow_ids[selected_idx]
-        workflow = self.predefined_workflows[workflow_id]
-        
-        # Update steps preview
-        self.workflow_steps_text.config(state=tk.NORMAL)
-        self.workflow_steps_text.delete('1.0', tk.END)
-        
-        steps_text = f"Workflow: {workflow['name']}\n"
-        steps_text += f"{workflow['description']}\n\n"
-        steps_text += "=" * 60 + "\n\n"
-        
-        for i, step in enumerate(workflow['steps'], 1):
-            condition = step.get('condition', '')
-            condition_text = f" (if {condition})" if condition else ""
+        try:
+            selected_idx = self.workflow_selector.current()
+            workflow_ids = list(self.predefined_workflows.keys())
             
-            steps_text += f"Step {i}: {step['name']}{condition_text}\n"
-            steps_text += f"  Tool: {step['tool'].upper()}\n"
+            if selected_idx < 0 or selected_idx >= len(workflow_ids):
+                # Default to first workflow if invalid selection
+                selected_idx = 0
+                try:
+                    self.workflow_selector.current(0)
+                except:
+                    pass
             
-            # Show key config parameters
-            config = step['config']
-            for key, value in config.items():
-                if isinstance(value, bool):
-                    value_str = "Yes" if value else "No"
-                else:
-                    value_str = str(value)
-                steps_text += f"  • {key}: {value_str}\n"
+            workflow_id = workflow_ids[selected_idx]
+            workflow = self.predefined_workflows[workflow_id]
             
-            steps_text += "\n"
-        
-        self.workflow_steps_text.insert('1.0', steps_text)
-        self.workflow_steps_text.config(state=tk.DISABLED)
+            # Update steps preview
+            self.workflow_steps_text.config(state=tk.NORMAL)
+            self.workflow_steps_text.delete('1.0', tk.END)
+            
+            steps_text = f"Workflow: {workflow['name']}\n"
+            steps_text += f"{workflow['description']}\n\n"
+            steps_text += "=" * 60 + "\n\n"
+            
+            for i, step in enumerate(workflow['steps'], 1):
+                condition = step.get('condition', '')
+                condition_text = f" (if {condition})" if condition else ""
+                
+                steps_text += f"Step {i}: {step['name']}{condition_text}\n"
+                steps_text += f"  Tool: {step['tool'].upper()}\n"
+                
+                # Show key config parameters
+                config = step['config']
+                for key, value in config.items():
+                    if isinstance(value, bool):
+                        value_str = "Yes" if value else "No"
+                    else:
+                        value_str = str(value)
+                    steps_text += f"  • {key}: {value_str}\n"
+                
+                steps_text += "\n"
+            
+            self.workflow_steps_text.insert('1.0', steps_text)
+            self.workflow_steps_text.config(state=tk.DISABLED)
+            
+        except Exception as e:
+            # Log error but don't crash
+            print(f"Error in on_workflow_selected: {e}")
+            import traceback
+            traceback.print_exc()
 
     def validate_workflow_target(self, target, workflow_id):
         """
