@@ -3708,7 +3708,7 @@ payload/                        # BLOCKED
 
     def execute_workflow_step(self, step, target):
         """Execute a single workflow step by actually running the tool."""
-        import time
+        # time already imported at module level
         
         tool = step['tool']
         config = step['config']
@@ -3729,11 +3729,12 @@ payload/                        # BLOCKED
             
             # Call run_scan which will execute the tool
             self.root.after(0, self.run_scan)
+            time.sleep(0.5)  # Give run_scan time to start
             
-            # Wait for tool to complete (simplified - check process status)
+            # Wait for tool to complete (check process status)
             max_wait = config.get('timeout', 300)  # Default 5 minutes
             waited = 0
-            while self.is_running and waited < max_wait:
+            while self.is_running and waited < max_wait and self.workflow_running:
                 time.sleep(1)
                 waited += 1
             
@@ -3978,7 +3979,10 @@ payload/                        # BLOCKED
         """Stop the currently running workflow."""
         if self.workflow_running:
             self.workflow_running = False
+            self.append_output("\n⚠️  Workflow stopped by user\n")
             self.update_status("Workflow stopped")
+            # Reset UI state
+            self.root.after(0, self.reset_workflow_ui)
 
     def reset_workflow_ui(self):
         """Reset workflow UI after completion or stop."""
