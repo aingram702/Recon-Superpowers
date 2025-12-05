@@ -54,6 +54,7 @@ import shlex
 import re
 from urllib.parse import urlparse
 import json
+import time  # FIX: Added for workflow timing
 from pathlib import Path
 from collections import deque
 
