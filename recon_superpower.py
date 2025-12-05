@@ -3714,9 +3714,9 @@ payload/                        # BLOCKED
         config = step['config']
         
         try:
-            # Switch to the tool's tab
-            self.root.after(0, lambda: self.switch_tool(tool))
-            time.sleep(0.3)  # Give UI time to update
+            # Don't switch tabs - keep user on Workflows tab to see progress
+            # self.root.after(0, lambda: self.switch_tool(tool))
+            # time.sleep(0.3)  # Not needed without tab switch
             
             # Set tool-specific inputs based on config
             success = self.configure_tool_for_workflow(tool, target, config)
