@@ -3353,10 +3353,6 @@ payload/                        # BLOCKED
         elif workflow_id == 'cloud_discovery':
             # Requires organization name or domain
             if not target or len(target) < 2 or len(target) > 100:
-                return f"Invalid organization name. Must be 2-100 characters."
-            # Basic sanitization
-            if any(char in target for char in ['<', '>', ';', '|', '&', '$', '`']):
-                return f"Invalid characters in organization name."
         
         # Additional length validation
         if len(target) > 500:
@@ -3370,10 +3366,191 @@ payload/                        # BLOCKED
         
         return None  # Valid
 
+    def validate_extra_options(self, options):
+        """
+        Enhanced validation for extra options across all tools.
+        Prevents command injection via extra options.
+        """
+        if not options:
+            return True
+        
+        # Security: Reject shell metacharacters
+        dangerous_chars = [';', '|', '&', '$', '`', '\n', '\r', '$(', '${', '&&', '||']
+        for char in dangerous_chars:
+            if char in options:
+                return False
+        
+        # Max length check
+        if len(options) > 500:
+            return False
+        
+        return True
+    
+    def validate_metasploit_options(self, options):
+        """
+        FIX CRIT-3: Validate Metasploit KEY=VALUE options.
+        """
+        if not options:
+            return True
+        
+        # Split and validate each option
+        for opt in options.split():
+            # Must be KEY=VALUE format
+            if '=' not in opt:
+                return False
+            
+            key, value = opt.split('=', 1)
+            
+            # Validate key (whitelist allowed option names)
+            allowed_keys = ['RHOSTS', 'RPORT', 'LHOST', 'LPORT', 'THREADS', 'VERBOSE', 
+                           'SSL', 'TIMEOUT', 'USER', 'PASS', 'DOMAIN']
+            if key.upper() not in allowed_keys:
+                return False
+            
+            # Validate value (no shell metacharacters)
+            if not self.validate_extra_options(value):
+                return False
+            
+            # Max value length
+            if len(value) > 100:
+                return False
+        
+        return True
+    
+    def validate_file_extensions(self, extensions):
+        """
+        FIX HIGH-5: Validate file extensions for feroxbuster, gobuster.
+        """
+        if not extensions:
+            return True
+        
+        # Split by comma
+        ext_list = [e.strip() for e in extensions.split(',')]
+        
+        # Max 20 extensions
+        if len(ext_list) > 20:
+            return False
+        
+        # Validate each extension
+        for ext in ext_list:
+            # Must be alphanumeric + period
+            if not re.match(r'^[a-zA-Z0-9.]+$', ext):
+                return False
+            # Max length per extension
+            if len(ext) > 20:
+                return False
+        
+        return True
+    
+    def validate_github_account(self, account):
+        """
+        FIX HIGH-4: Validate GitHub username/organization.
+        """
+        if not account:
+            return True
+        
+        # GitHub username rules: alphanumeric and hyphens, max 39 chars
+        if not re.match(r'^[a-zA-Z0-9\-]{1,39}$', account):
+            return False
+        
+        # Can't start or end with hyphen
+        if account.startswith('-') or account.endswith('-'):
+            return False
+        
+        return True
+    
+    def validate_interface_name(self, interface):
+        """
+        FIX MED-5: Validate network interface name.
+        """
+        if not interface:
+            return False
+        
+        # Interface names: alphanumeric + colon + period, max 15 chars
+        if not re.match(r'^[a-zA-Z0-9:\.]{1,15}$', interface):
+            return False
+        
+        return True
+    
+    def validate_nse_script(self, script):
+        """
+        FIX MED-7: Validate NSE script name.
+        """
+        if not script:
+            return True
+        
+        # NSE script: alphanumeric, dash, underscore, period, max 100 chars
+        if not re.match(r'^[a-zA-Z0-9\-_.]{1,100}$', script):
+            return False
+        
+        # Must end with .nse if not a category
+        categories = ['default', 'safe', 'intrusive', 'vuln', 'exploit', 'auth', 
+                     'discovery', 'broadcast', 'dos', 'fuzzer', 'malware']
+        if script not in categories and not script.endswith('.nse'):
+            return False
+        
+        return True
+    
+    def validate_workflow_config_value(self, key, value):
+        """
+        FIX CRIT-4: Validate workflow configuration values.
+        """
+        # Numeric values
+        if key in ['threads', 'timeout', 'depth', 'port']:
+            if not isinstance(value, (int, str)):
+                return False
+            try:
+                num = int(value) if isinstance(value, str) else value
+                if num < 1 or num > 10000:
+                    return False
+            except:
+                return False
+        
+        # File paths
+        elif key in ['wordlist', 'bucket_list', 'grep_file']:
+            if not isinstance(value, str):
+                return False
+            # Validate path
+            if not self.validate_file_path(str(value), check_exists=False):
+                return False
+        
+        # Extensions
+        elif key in ['extensions']:
+            if not isinstance(value, str):
+                return False
+            if not self.validate_file_extensions(str(value)):
+                return False
+        
+        # Enum values
+        elif key in ['scan_type', 'search_type', 'mode']:
+            if not isinstance(value, str):
+                return False
+            # Must be alphanumeric
+            if not re.match(r'^[a-zA-Z0-9_]{1,50}$', str(value)):
+                return False
+        
+        # Boolean values
+        elif key in ['ssl', 'all_enum']:
+            if not isinstance(value, bool):
+                return False
+        
+        # String values (queries, queries, etc.)
+        else:
+            if not isinstance(value, str):
+                return False
+            # Max length
+            if len(str(value)) > 500:
+                return False
+            # No null bytes
+            if '\x00' in str(value):
+                return False
+        
+        return True
+  # Valid
+
     def run_workflow(self):
         """Execute the selected workflow."""
         # FIX HIGH-2: Thread-safe check and set
-        with self.scan_lock:
             if self.workflow_running:
                 messagebox.showwarning("Workflow Running", "A workflow is already running. Please stop it first.")
                 return
