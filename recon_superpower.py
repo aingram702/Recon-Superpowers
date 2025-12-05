@@ -2050,6 +2050,7 @@ payload/                        # BLOCKED
         self.tool_frames["feroxbuster"] = self.create_feroxbuster_tab()
         self.tool_frames["awsbucket"] = self.create_awsbucket_tab()
         self.tool_frames["tcpdump"] = self.create_tcpdump_tab()
+        self.tool_frames["workflows"] = self.create_workflows_tab()  # FIX: Was missing!
         self.tool_frames["settings"] = self.create_settings_tab()
 
         # Right panel - Output
