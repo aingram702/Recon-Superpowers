@@ -1,13 +1,13 @@
-# ⚡ The Recon Superpower v2.0
+# ⚡ The Recon Superpower v3.0
 
-A professional dark-themed GUI wrapper for **11 essential security reconnaissance tools** with advanced features, API integrations, and comprehensive security hardening.
+A professional dark-themed GUI wrapper for **11 essential security reconnaissance tools** with **automated workflows**, advanced features, API integrations, and comprehensive security hardening.
 
-![Version](https://img.shields.io/badge/version-2.0-brightgreen)
+![Version](https://img.shields.io/badge/version-3.0-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.6%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-orange)
 ![Security](https://img.shields.io/badge/security-hardened-brightgreen)
 ![Tools](https://img.shields.io/badge/tools-11-blue)
-![UI](https://img.shields.io/badge/UI-sidebar-purple)
+![Workflows](https://img.shields.io/badge/workflows-6-purple)
 
 ## ⚠️ Legal Disclaimer
 
@@ -54,6 +54,23 @@ By using this tool, you agree to use it responsibly and legally.
 - ✅ **BPF Filter Hardening** - Whitelist-based validation for TCPdump
 - ✅ **Interface Verification** - System interface existence checks
 - ✅ **Thread Limits** - Resource exhaustion prevention
+
+### 🔄 Automated Workflows (NEW in v3.0) ⭐
+- ✅ **6 Pre-defined Workflows** - Common reconnaissance patterns automated
+- ✅ **Sequential Execution** - Multi-tool chains with progress tracking  
+- ✅ **Smart Conditions** - Steps execute based on previous results
+- ✅ **Target Validation** - Workflow-specific format checking
+- ✅ **Timeout Controls** - Total and per-step timeout enforcement
+- ✅ **Interactive Progress** - Real-time status updates and step tracking
+- ✅ **Secure Execution** - Command injection prevention and validation
+
+**Available Workflows:**
+1. 🎯 **Full Network Reconnaissance** - Nmap → Gobuster → Nikto → DNSrecon
+2. 🌐 **Web Application Deep Scan** - Nikto → Gobuster → feroxbuster → Shodan
+3. 📡 **Domain Intelligence Gathering** - DNSrecon (std + brt) → Shodan → GitHarvester
+4. 🖥️ **Windows/SMB Enumeration** - Nmap (SMB) → enum4linux → Metasploit
+5. ☁️ **Cloud Asset Discovery** - AWSBucketDump → GitHarvester → Shodan
+6. ⚡ **Quick Host Discovery** - Nmap (fast) → Nikto (quick)
 
 ---
 
@@ -170,6 +187,151 @@ python3 recon_superpower.py
 ---
 
 ## 🔧 Tool Usage Guide
+
+---
+
+## 🔄 Using Workflows (Automated Multi-Tool Reconnaissance)
+
+**Workflows** automate multi-tool reconnaissance by chaining tools together in intelligent sequences. Perfect for comprehensive assessments without manual intervention.
+
+### Quick Start
+
+1. Click **🔄 Workflows** in the sidebar
+2. Select a workflow from the dropdown
+3. Review the workflow steps in the preview pane
+4. Enter your target (format depends on workflow)
+5. Click **▶ RUN WORKFLOW**
+6. Monitor progress in real-time
+7. Review consolidated results in console output
+
+### Workflow Descriptions
+
+#### 🎯 Full Network Reconnaissance
+**Best for:** Unknown networks, comprehensive assessment  
+**Target:** IP address or network range  
+**Duration:** ~20-40 minutes  
+
+**Steps:**
+1. Nmap port scan (ports 1-1000, SYN scan)
+2. Gobuster directory enum (if HTTP detected)
+3. Nikto vulnerability scan (if HTTP detected)
+4. DNSrecon DNS enumeration
+
+**Example Targets:**
+- `192.168.1.1`
+- `10.0.0.0/24`
+- `scanme.nmap.org`
+
+---
+
+#### 🌐 Web Application Deep Scan
+**Best for:** Web applications, API endpoints  
+**Target:** URL  
+**Duration:** ~30-60 minutes  
+
+**Steps:**
+1. Nikto web scan (all checks)
+2. Gobuster directory brute force
+3. feroxbuster recursive deep scan
+4. Shodan lookup for domain/IP
+
+**Example Targets:**
+- `http://example.com`
+- `https://192.168.1.100`
+
+---
+
+#### 📡 Domain Intelligence Gathering
+**Best for:** Domain reconnaissance,OSINT  
+**Target:** Domain name  
+**Duration:** ~15-30 minutes  
+
+**Steps:**
+1. DNSrecon standard enumeration
+2. DNSrecon subdomain brute force
+3. Shodan infrastructure search
+4. GitHarvester GitHub references
+
+**Example Targets:**
+- `example.com`
+- `subdomain.example.org`
+
+---
+
+#### 🖥️ Windows/SMB Enumeration
+**Best for:** Windows hosts, Active Directory  
+**Target:** IP address  
+**Duration:** ~10-20 minutes  
+
+**Steps:**
+1. Nmap SMB port scan (135,139,445)
+2. enum4linux comprehensive enumeration
+3. Metasploit SMB version detection
+
+**Example Targets:**
+- `192.168.1.10`
+- `dc01.domain.local`
+
+---
+
+#### ☁️ Cloud Asset Discovery
+**Best for:** Cloud security assessment  
+**Target:** Organization name  
+**Duration:** ~15-25 minutes  
+
+**Steps:**
+1. AWS S3 bucket enumeration
+2. GitHarvester credential search
+3. Shodan organization infrastructure
+
+**Example Targets:**
+- `MyCompany`
+- `example-corp`
+
+---
+
+#### ⚡ Quick Host Discovery
+**Best for:** Fast initial reconnaissance  
+**Target:** IP address or hostname  
+**Duration:** ~5-10 minutes  
+
+**Steps:**
+1. Nmap fast port scan (T5 timing)
+2. Nikto quick web scan (if HTTP detected)
+
+**Example Targets:**
+- `192.168.1.1`
+- `webserver.local`
+
+---
+
+### Workflow Features
+
+**🔒 Security:**
+- Target validation before execution
+- Command injection prevention
+- Workflow timeout: 2 hours max
+- Step timeout: 30 minutes max
+
+**📊 Progress Tracking:**
+- Real-time step counter
+- Progress bar with percentage
+- Elapsed time display
+- Current tool indicator
+
+**🎯 Smart Execution:**
+- Conditional steps (e.g., "if HTTP detected")
+- Previous result parsing
+- Error handling with continue/stop options
+- Thread-safe execution
+
+**💾 Results:**
+- Consolidated output in console
+- Step-by-step results
+- Export to file available
+- Copy to clipboard
+
+---
 
 ### 🔍 Nmap - Network Scanner
 **Enhanced with NSE Script Support**
