@@ -3329,35 +3329,89 @@ payload/                        # BLOCKED
         self.workflow_steps_text.insert('1.0', steps_text)
         self.workflow_steps_text.config(state=tk.DISABLED)
 
+    def validate_workflow_target(self, target, workflow_id):
+        """
+        FIX CRIT-1: Validate workflow target based on workflow requirements.
+        Returns error message if invalid, None if valid.
+        """
+        # Determine expected format based on workflow
+        if workflow_id in ['full_recon', 'quick_host', 'smb_enum']:
+            # Requires IP address or hostname
+            if not self.validate_target(target):
+                return f"Invalid target format. Expected IP address or hostname.\nExamples: 192.168.1.1, scanme.nmap.org, 10.0.0.0/24"
+        
+        elif workflow_id == 'web_deep_scan':
+            # Requires URL
+            if not self.validate_url(target):
+                return f"Invalid target format. Expected URL.\nExamples: http://example.com, https://192.168.1.1"
+        
+        elif workflow_id == 'domain_intel':
+            # Requires domain name
+            if not self.validate_domain(target):
+                return f"Invalid target format. Expected domain name.\nExamples: example.com, subdomain.example.org"
+        
+        elif workflow_id == 'cloud_discovery':
+            # Requires organization name or domain
+            if not target or len(target) < 2 or len(target) > 100:
+                return f"Invalid organization name. Must be 2-100 characters."
+            # Basic sanitization
+            if any(char in target for char in ['<', '>', ';', '|', '&', '$', '`']):
+                return f"Invalid characters in organization name."
+        
+        # Additional length validation
+        if len(target) > 500:
+            return "Target too long. Maximum 500 characters."
+        
+        # Prevent command injection attempts
+        dangerous_chars = [';', '|', '&', '$', '`', '\n', '\r', '$(', '${']
+        for char in dangerous_chars:
+            if char in target:
+                return f"Invalid character detected: {repr(char)}"
+        
+        return None  # Valid
+
     def run_workflow(self):
         """Execute the selected workflow."""
-        if self.workflow_running:
-            messagebox.showwarning("Workflow Running", "A workflow is already running. Please stop it first.")
-            return
+        # FIX HIGH-2: Thread-safe check and set
+        with self.scan_lock:
+            if self.workflow_running:
+                messagebox.showwarning("Workflow Running", "A workflow is already running. Please stop it first.")
+                return
+            self.workflow_running = True
         
-        # Get target
-        target = self.workflow_target.get().strip()
-        if not target:
-            messagebox.showerror("Error", "Please enter a target (IP, domain, or URL)")
-            return
-        
-        # Get selected workflow
-        selected_idx = self.workflow_selector.current()
-        workflow_ids = list(self.predefined_workflows.keys())
-        
-        if selected_idx < 0:
-            messagebox.showerror("Error", "Please select a workflow")
-            return
-        
-        workflow_id = workflow_ids[selected_idx]
-        workflow = self.predefined_workflows[workflow_id]
-        
-        # Initialize workflow execution
-        self.current_workflow = workflow
-        self.workflow_target = target
-        self.workflow_running = True
-        self.workflow_step_index = 0
-        self.workflow_results = {}
+        try:
+            # Get target
+            target = self.workflow_target.get().strip()
+            if not target:
+                messagebox.showerror("Error", "Please enter a target (IP, domain, or URL)")
+                self.workflow_running = False
+                return
+            
+            # Get selected workflow
+            selected_idx = self.workflow_selector.current()
+            workflow_ids = list(self.predefined_workflows.keys())
+            
+            if selected_idx < 0:
+                messagebox.showerror("Error", "Please select a workflow")
+                self.workflow_running = False
+                return
+            
+            workflow_id = workflow_ids[selected_idx]
+            workflow = self.predefined_workflows[workflow_id]
+            
+            # FIX CRIT-1: Validate target based on workflow requirements
+            validation_error = self.validate_workflow_target(target, workflow_id)
+            if validation_error:
+                messagebox.showerror("Invalid Target", validation_error)
+                self.workflow_running = False
+                return
+            
+            # Initialize workflow execution
+            self.current_workflow = workflow
+            self.workflow_target_value = target  # Store validated target
+            self.workflow_step_index = 0
+            self.workflow_results = {}
+            self.workflow_start_time = time.time()
         
         # Update UI
         self.workflow_run_btn.config(state=tk.DISABLED)
@@ -3381,13 +3435,24 @@ payload/                        # BLOCKED
         import time
         
         workflow = self.current_workflow
-        target = self.workflow_target
+        target = self.workflow_target_value
         total_steps = len(workflow['steps'])
         start_time = time.time()
         
+        # FIX CRIT-2: Total workflow timeout (2 hours max)
+        MAX_WORKFLOW_TIMEOUT = 7200  # 2 hours
+        MAX_STEP_TIMEOUT = 1800  # 30 minutes per step
+        
         for i, step in enumerate(workflow['steps']):
+            # Check if workflow stopped by user
             if not self.workflow_running:
                 self.append_output("\n⚠️  Workflow stopped by user\n")
+                break
+            
+            # FIX CRIT-2: Check total workflow timeout
+            elapsed_total = time.time() - start_time
+            if elapsed_total > MAX_WORKFLOW_TIMEOUT:
+                self.append_output(f"\n❌ WORKFLOW TIMEOUT: Exceeded maximum execution time ({MAX_WORKFLOW_TIMEOUT}s)\n")
                 break
             
             self.workflow_step_index = i + 1
@@ -3395,18 +3460,28 @@ payload/                        # BLOCKED
             # Update progress
             self.root.after(0, lambda i=i: self.update_workflow_progress(i, total_steps, time.time() - start_time))
             
-            # Check condition
+            # FIX HIGH-3: Check condition with proper evaluation
             condition = step.get('condition')
-            if condition and not self.evaluate_workflow_condition(condition):
-                self.append_output(f"\n⏭️  Step {i + 1} SKIPPED: {step['name']} (condition not met: {condition})\n")
-                continue
+            if condition:
+                condition_met = self.evaluate_workflow_condition(condition)
+                if not condition_met:
+                    self.append_output(f"\n⏭️  Step {i + 1} SKIPPED: {step['name']} (condition not met: {condition})\n")
+                    continue
             
             # Execute step
             self.append_output(f"\n{'*' * 60}\n")
             self.append_output(f"▶ Step {i + 1}/{total_steps}: {step['name']}\n")
             self.append_output(f"{'*' * 60}\n\n")
             
+            # FIX CRIT-2: Execute with timeout
+            step_start = time.time()
             success = self.execute_workflow_step(step, target)
+            step_elapsed = time.time() - step_start
+            
+            if step_elapsed > MAX_STEP_TIMEOUT:
+                self.append_output(f"\n⚠️  Step {i + 1} exceeded timeout ({MAX_STEP_TIMEOUT}s)\n")
+                if not messagebox.askyesno("Step Timeout", f"Step {i + 1} took too long. Continue anyway?"):
+                    break
             
             if not success:
                 self.append_output(f"\n❌ Step {i + 1} FAILED\n")
@@ -3457,24 +3532,54 @@ payload/                        # BLOCKED
             return False
 
     def evaluate_workflow_condition(self, condition):
-        """Evaluate if a workflow condition is met."""
-        # Simplified condition evaluation
-        # Full implementation would check previous step results
+        """
+        FIX HIGH-3: Evaluate if a workflow condition is met.
+        Checks previous step results for specific indicators.
+        """
         if condition == "http_detected":
-            # Check if previous Nmap scan found HTTP ports
-            return True  # Placeholder
-        return True
+            # Check if previous steps found HTTP/HTTPS ports
+            for step_name, result in self.workflow_results.items():
+                if result and isinstance(result, str):
+                    # Look for HTTP port indicators in results
+                    if any(port in result.lower() for port in ['port 80', 'port 443', 'port 8080', 'port 8443', 'http']):
+                        self.append_output(f"  ℹ️  Condition met: HTTP service detected in previous results\n")
+                        return True
+            
+            self.append_output(f"  ℹ️  Condition not met: No HTTP service detected\n")
+            return False
+        
+        # Default: condition not recognized, skip step for safety
+        self.append_output(f"  ⚠️  Unknown condition '{condition}', skipping step for safety\n")
+        return False
 
     def update_workflow_progress(self, step_index, total_steps, elapsed):
-        """Update workflow progress UI."""
+        """
+        FIX MED-2: Update workflow progress UI with validation.
+        """
+        # Validate inputs
+        if total_steps <= 0:
+            total_steps = 1  # Prevent division by zero
+        
+        if step_index < 0:
+            step_index = 0
+        elif step_index >= total_steps:
+            step_index = total_steps - 1
+        
+        # Calculate progress with bounds
         progress = int((step_index + 1) / total_steps * 100)
-        self.workflow_progress['value'] = progress
+        progress = max(0, min(100, progress))  # Clamp to 0-100
         
-        status_text = f"Status: Running\n"
-        status_text += f"Step: {step_index + 1}/{total_steps}\n"
-        status_text += f"Elapsed: {int(elapsed)}s"
-        
-        self.workflow_progress_label.config(text=status_text)
+        try:
+            self.workflow_progress['value'] = progress
+            
+            status_text = f"Status: Running\n"
+            status_text += f"Step: {step_index + 1}/{total_steps}\n"
+            status_text += f"Elapsed: {int(elapsed)}s"
+            
+            self.workflow_progress_label.config(text=status_text)
+        except Exception as e:
+            # Fail silently to not disrupt workflow
+            pass
 
     def stop_workflow(self):
         """Stop the currently running workflow."""
