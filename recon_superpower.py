@@ -129,6 +129,11 @@ class ReconSuperpower:
             }
         }
 
+        # Tool frames storage for sidebar navigation
+        self.tool_frames = {}
+        self.current_tool = None
+        self.tool_container = None
+
         # Load configuration and history
         self.load_config()
         self.load_history()
@@ -257,34 +262,102 @@ class ReconSuperpower:
         main_container = tk.Frame(self.root, bg=self.bg_primary)
         main_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
 
-        # Left panel - Tool selection and options
+        # Left panel - Tool selection sidebar + Tool configuration
         left_panel = tk.Frame(main_container, bg=self.bg_secondary, width=450)
         left_panel.pack(side=tk.LEFT, fill=tk.BOTH, padx=(0, 10), pady=0)
         left_panel.pack_propagate(False)
 
-        # Tool tabs
-        self.notebook = ttk.Notebook(left_panel)
-        self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        # Tool selector sidebar (narrower)
+        sidebar_frame = tk.Frame(left_panel, bg=self.bg_tertiary, width=150)
+        sidebar_frame.pack(side=tk.LEFT, fill=tk.Y, padx=0, pady=0)
+        sidebar_frame.pack_propagate(False)
 
-        # Style for notebook
-        style = ttk.Style()
-        style.theme_use('default')
-        style.configure('TNotebook', background=self.bg_secondary, borderwidth=0)
-        style.configure('TNotebook.Tab', background=self.bg_tertiary, foreground=self.text_color,
-                       padding=[20, 10], font=('Courier', 10, 'bold'))
-        style.map('TNotebook.Tab', background=[('selected', self.bg_primary)],
-                 foreground=[('selected', self.accent_green)])
+        # Sidebar header
+        sidebar_header = tk.Label(
+            sidebar_frame,
+            text="TOOLS",
+            font=("Courier", 10, "bold"),
+            fg=self.accent_cyan,
+            bg=self.bg_tertiary,
+            pady=10
+        )
+        sidebar_header.pack(fill=tk.X)
 
-        # Create tabs for each tool
-        self.nmap_frame = self.create_nmap_tab()
-        self.gobuster_frame = self.create_gobuster_tab()
-        self.nikto_frame = self.create_nikto_tab()
-        self.metasploit_frame = self.create_metasploit_tab()
+        # Scrollable tool list
+        tool_list_canvas = tk.Canvas(sidebar_frame, bg=self.bg_tertiary, highlightthickness=0)
+        scrollbar = tk.Scrollbar(sidebar_frame, orient="vertical", command=tool_list_canvas.yview)
+        tool_list_frame = tk.Frame(tool_list_canvas, bg=self.bg_tertiary)
 
-        self.notebook.add(self.nmap_frame, text="🔍 NMAP")
-        self.notebook.add(self.gobuster_frame, text="📁 GOBUSTER")
-        self.notebook.add(self.nikto_frame, text="🔐 NIKTO")
-        self.notebook.add(self.metasploit_frame, text="💥 METASPLOIT")
+        tool_list_frame.bind(
+            "<Configure>",
+            lambda e: tool_list_canvas.configure(scrollregion=tool_list_canvas.bbox("all"))
+        )
+
+        tool_list_canvas.create_window((0, 0), window=tool_list_frame, anchor="nw")
+        tool_list_canvas.configure(yscrollcommand=scrollbar.set)
+
+        tool_list_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Tool buttons in sidebar
+        self.tool_buttons = {}
+        tools = [
+            ("nmap", "🔍 Nmap"),
+            ("gobuster", "📁 Gobuster"),
+            ("nikto", "🔐 Nikto"),
+            ("metasploit", "💥 Metasploit"),
+            ("shodan", "🌐 Shodan"),
+            ("dnsrecon", "📡 DNSrecon"),
+            ("enum4linux", "🖥️  enum4linux"),
+            ("githarvester", "🔎 GitHub"),
+            ("feroxbuster", "🦀 feroxbuster"),
+            ("awsbucket", "☁️  AWS S3"),
+            ("tcpdump", "📦 TCPdump"),
+            ("settings", "⚙️  Settings")
+        ]
+
+        for tool_id, tool_name in tools:
+            btn = tk.Button(
+                tool_list_frame,
+                text=tool_name,
+                font=("Courier", 9, "bold"),
+                bg=self.bg_tertiary,
+                fg=self.text_color,
+                activebackground=self.bg_primary,
+                activeforeground=self.accent_green,
+                relief=tk.FLAT,
+                anchor=tk.W,
+                padx=10,
+                pady=12,
+                cursor="hand2",
+                borderwidth=0,
+                highlightthickness=0,
+                command=lambda t=tool_id: self.switch_tool(t)
+            )
+            btn.pack(fill=tk.X, padx=2, pady=2)
+            self.tool_buttons[tool_id] = btn
+            
+            # Add hover effects
+            btn.bind("<Enter>", lambda e, b=btn: b.config(bg=self.bg_primary) if b['bg'] != self.bg_primary else None)
+            btn.bind("<Leave>", lambda e, b=btn, t=tool_id: b.config(bg=self.bg_primary if self.current_tool == t else self.bg_tertiary))
+
+        # Tool configuration container (right side of left panel)
+        self.tool_container = tk.Frame(left_panel, bg=self.bg_secondary)
+        self.tool_container.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # Create all tool configuration frames (but don't pack them yet)
+        self.tool_frames["nmap"] = self.create_nmap_tab()
+        self.tool_frames["gobuster"] = self.create_gobuster_tab()
+        self.tool_frames["nikto"] = self.create_nikto_tab()
+        self.tool_frames["metasploit"] = self.create_metasploit_tab()
+        self.tool_frames["shodan"] = self.create_shodan_tab()
+        self.tool_frames["dnsrecon"] = self.create_dnsrecon_tab()
+        self.tool_frames["enum4linux"] = self.create_enum4linux_tab()
+        self.tool_frames["githarvester"] = self.create_githarvester_tab()
+        self.tool_frames["feroxbuster"] = self.create_feroxbuster_tab()
+        self.tool_frames["awsbucket"] = self.create_awsbucket_tab()
+        self.tool_frames["tcpdump"] = self.create_tcpdump_tab()
+        self.tool_frames["settings"] = self.create_settings_tab()
 
         # Right panel - Output
         right_panel = tk.Frame(main_container, bg=self.bg_secondary)
@@ -450,6 +523,29 @@ class ReconSuperpower:
         # Initial welcome message
         self.print_banner()
 
+        # Switch to nmap by default
+        self.switch_tool("nmap")
+
+    def switch_tool(self, tool_id):
+        """Switch between different tool configuration panels."""
+        # Hide current tool frame if any
+        if self.current_tool and self.current_tool in self.tool_frames:
+            self.tool_frames[self.current_tool].pack_forget()
+
+        # Update button colors
+        for tid, btn in self.tool_buttons.items():
+            if tid == tool_id:
+                btn.config(bg=self.bg_primary, fg=self.accent_green)
+            else:
+                btn.config(bg=self.bg_tertiary, fg=self.text_color)
+
+        # Show selected tool frame
+        if tool_id in self.tool_frames:
+            self.tool_frames[tool_id].pack(fill=tk.BOTH, expand=True)
+            self.current_tool = tool_id
+            self.update_status(f"{tool_id.upper()} selected")
+
+
     def create_labeled_entry(self, parent, label_text, row, default_value="", width=30):
         label = tk.Label(parent, text=label_text, font=("Courier", 10),
                         fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
@@ -464,7 +560,7 @@ class ReconSuperpower:
         return entry
 
     def create_nmap_tab(self):
-        frame = tk.Frame(self.notebook, bg=self.bg_secondary)
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
         frame.columnconfigure(1, weight=1)
 
         # Target
@@ -506,8 +602,31 @@ class ReconSuperpower:
         self.nmap_timing.grid(row=3, column=1, sticky=tk.EW, padx=10, pady=5)
         self.nmap_timing.current(3)
 
+        # NSE Scripts (NEW FEATURE)
+        label = tk.Label(frame, text="NSE Scripts:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=4, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.nmap_scripts = ttk.Combobox(frame, values=[
+            "(none)",
+            "default",
+            "vuln (Vulnerability scan)",
+            "discovery",
+            "auth",
+            "broadcast",
+            "exploit",
+            "safe",
+            "version",
+            "Custom (enter below)"
+        ], font=("Courier", 9), state="readonly", width=28)
+        self.nmap_scripts.grid(row=4, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.nmap_scripts.current(0)
+
+        # Custom script input
+        self.nmap_custom_script = self.create_labeled_entry(frame, "Custom Script:", 5, "")
+
         # Additional options
-        self.nmap_options = self.create_labeled_entry(frame, "Extra Options:", 4, "")
+        self.nmap_options = self.create_labeled_entry(frame, "Extra Options:", 6, "")
 
         # Info label
         info_label = tk.Label(
@@ -518,12 +637,12 @@ class ReconSuperpower:
             bg=self.bg_secondary,
             justify=tk.LEFT
         )
-        info_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+        info_label.grid(row=7, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
         return frame
 
     def create_gobuster_tab(self):
-        frame = tk.Frame(self.notebook, bg=self.bg_secondary)
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
         frame.columnconfigure(1, weight=1)
 
         # Target URL
@@ -585,7 +704,7 @@ class ReconSuperpower:
         return frame
 
     def create_nikto_tab(self):
-        frame = tk.Frame(self.notebook, bg=self.bg_secondary)
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
         frame.columnconfigure(1, weight=1)
 
         # Target
@@ -636,7 +755,7 @@ class ReconSuperpower:
         return frame
 
     def create_metasploit_tab(self):
-        frame = tk.Frame(self.notebook, bg=self.bg_secondary)
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
         frame.columnconfigure(1, weight=1)
 
         # Warning label
@@ -714,6 +833,520 @@ class ReconSuperpower:
                 return
             self.gobuster_wordlist.delete(0, tk.END)
             self.gobuster_wordlist.insert(0, filename)
+
+    def create_shodan_tab(self):
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+
+        # API Key status
+        api_status = tk.Label(
+            frame,
+            text="⚠️  Configure API key in Settings  ⚠️",
+            font=("Courier", 9, "bold"),
+            fg=self.accent_red if not self.config.get("shodan_api_key") else self.accent_green,
+            bg=self.bg_secondary,
+            justify=tk.CENTER
+        )
+        api_status.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+        self.shodan_api_status = api_status
+
+        # Search query
+        self.shodan_query = self.create_labeled_entry(frame, "Search Query:", 1, "apache port:443")
+
+        # Search type
+        label = tk.Label(frame, text="Search Type:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=2, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.shodan_type = ttk.Combobox(frame, values=[
+            "search (Query search)",
+            "host (Host lookup)"
+        ], font=("Courier", 9), state="readonly", width=28)
+        self.shodan_type.grid(row=2, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.shodan_type.current(0)
+
+        # Facets
+        self.shodan_facets = self.create_labeled_entry(frame, "Facets:", 3, "country,org")
+
+        # Limit
+        self.shodan_limit = self.create_labeled_entry(frame, "Result Limit:", 4, "100")
+
+        # Additional options
+        self.shodan_options = self.create_labeled_entry(frame, "Extra Options:", 5, "")
+
+        # Info label
+        info_label = tk.Label(
+            frame,
+            text="\n🌐 Shodan Search Engine\nAPI-based device discovery\n\nExample queries:\n• apache port:443\n• nginx country:US\n• port:22 'SSH-2.0'",
+            font=("Courier", 9),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary,
+            justify=tk.LEFT
+        )
+        info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        return frame
+
+    def create_dnsrecon_tab(self):
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+
+        # Domain
+        self.dnsrecon_domain = self.create_labeled_entry(frame, "Domain:", 0, "example.com")
+
+        # Scan type
+        label = tk.Label(frame, text="Scan Type:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=1, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.dnsrecon_type = ttk.Combobox(frame, values=[
+            "std (Standard enumeration)",
+            "axfr (Zone transfer)",
+            "brt (Brute force subdomains)",
+            "rvl (Reverse lookup)",
+            "srv (SRV records)",
+            "crt (crt.sh search)",
+            "zonewalk (DNSSEC zone walk)"
+        ], font=("Courier", 9), state="readonly", width=28)
+        self.dnsrecon_type.grid(row=1, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.dnsrecon_type.current(0)
+
+        # Wordlist for brute force
+        label = tk.Label(frame, text="Wordlist (brt):", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=2, column=0, sticky=tk.W, padx=10, pady=5)
+
+        wordlist_frame = tk.Frame(frame, bg=self.bg_secondary)
+        wordlist_frame.grid(row=2, column=1, sticky=tk.EW, padx=10, pady=5)
+
+        self.dnsrecon_wordlist = tk.Entry(wordlist_frame, font=("Courier", 10),
+                                         bg=self.bg_primary, fg=self.accent_cyan,
+                                         insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.dnsrecon_wordlist.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.dnsrecon_wordlist.insert(0, "/usr/share/wordlists/dnsmap.txt")
+
+        browse_btn = tk.Button(wordlist_frame, text="📂", font=("Courier", 9),
+                              bg=self.bg_primary, fg=self.text_color,
+                              relief=tk.FLAT, cursor="hand2",
+                              command=self.browse_wordlist)
+        browse_btn.pack(side=tk.RIGHT, padx=(5, 0))
+
+        # Name server
+        self.dnsrecon_ns = self.create_labeled_entry(frame, "Name Server:", 3, "")
+
+        # Additional options
+        self.dnsrecon_options = self.create_labeled_entry(frame, "Extra Options:", 4, "")
+
+        # Info label
+        info_label = tk.Label(
+            frame,
+            text="\n📡 DNS Reconnaissance\nComprehensive DNS enumeration\n\nCommon tasks:\n• Zone transfers\n• Subdomain brute-force\n• Reverse lookups",
+            font=("Courier", 9),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary,
+            justify=tk.LEFT
+        )
+        info_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        return frame
+
+    def create_enum4linux_tab(self):
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+
+        # Target IP
+        self.enum4linux_target = self.create_labeled_entry(frame, "Target IP:", 0, "")
+
+        # Quick option
+        self.enum4linux_all_var = tk.BooleanVar(value=True)
+        all_check = tk.Checkbutton(frame, text="All Enumeration (-a)", variable=self.enum4linux_all_var,
+                                   font=("Courier", 10), fg=self.text_color,
+                                   bg=self.bg_secondary, selectcolor=self.bg_primary,
+                                   activebackground=self.bg_secondary, activeforeground=self.accent_green)
+        all_check.grid(row=1, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
+
+        # Individual options
+        options_frame = tk.Frame(frame, bg=self.bg_secondary)
+        options_frame.grid(row=2, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
+
+        self.enum4linux_users_var = tk.BooleanVar()
+        self.enum4linux_shares_var = tk.BooleanVar()
+        self.enum4linux_groups_var = tk.BooleanVar()
+        self.enum4linux_pass_var = tk.BooleanVar()
+
+        tk.Checkbutton(options_frame, text="Users (-U)", variable=self.enum4linux_users_var,
+                      font=("Courier", 9), fg=self.text_color, bg=self.bg_secondary,
+                      selectcolor=self.bg_primary).pack(side=tk.LEFT, padx=5)
+        tk.Checkbutton(options_frame, text="Shares (-S)", variable=self.enum4linux_shares_var,
+                      font=("Courier", 9), fg=self.text_color, bg=self.bg_secondary,
+                      selectcolor=self.bg_primary).pack(side=tk.LEFT, padx=5)
+        tk.Checkbutton(options_frame, text="Groups (-G)", variable=self.enum4linux_groups_var,
+                      font=("Courier", 9), fg=self.text_color, bg=self.bg_secondary,
+                      selectcolor=self.bg_primary).pack(side=tk.LEFT, padx=5)
+        tk.Checkbutton(options_frame, text="Password Policy (-P)", variable=self.enum4linux_pass_var,
+                      font=("Courier", 9), fg=self.text_color, bg=self.bg_secondary,
+                      selectcolor=self.bg_primary).pack(side=tk.LEFT, padx=5)
+
+        # Credentials (optional)
+        self.enum4linux_user = self.create_labeled_entry(frame, "Username:", 3, "")
+        self.enum4linux_pass = self.create_labeled_entry(frame, "Password:", 4, "")
+
+        # Additional options
+        self.enum4linux_options = self.create_labeled_entry(frame, "Extra Options:", 5, "")
+
+        # Info label
+        info_label = tk.Label(
+            frame,
+            text="\n🖥️  SMB/Windows Enumeration\nEnumerate Windows/Samba systems\n\nEnumerates:\n• User lists\n• Share lists\n• Groups & policies",
+            font=("Courier", 9),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary,
+            justify=tk.LEFT
+        )
+        info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        return frame
+
+    def create_githarvester_tab(self):
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+
+        # Search query
+        self.githarvester_search = self.create_labeled_entry(frame, "GitHub Search:", 0, "filename:config")
+
+        # Custom regex
+        self.githarvester_regex = self.create_labeled_entry(frame, "Regex Pattern:", 1, "")
+
+        # Account/Organization
+        self.githarvester_account = self.create_labeled_entry(frame, "User/Org:", 2, "")
+
+        # Project
+        self.githarvester_project = self.create_labeled_entry(frame, "Project:", 3, "")
+
+        # Sort order
+        label = tk.Label(frame, text="Sort By:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=4, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.githarvester_sort = ttk.Combobox(frame, values=[
+            "best",
+            "new",
+            "old"
+        ], font=("Courier", 9), state="readonly", width=28)
+        self.githarvester_sort.grid(row=4, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.githarvester_sort.current(0)
+
+        # Additional options
+        self.githarvester_options = self.create_labeled_entry(frame, "Extra Options:", 5, "")
+
+        # Info label
+        info_label = tk.Label(
+            frame,
+            text="\n🔎 GitHub OSINT\nHarvest sensitive data from GitHub\n\nExample searches:\n• filename:shadow path:etc\n• extension:pem private\n• password",
+            font=("Courier", 9),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary,
+            justify=tk.LEFT
+        )
+        info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        return frame
+
+    def create_feroxbuster_tab(self):
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+
+        # Target URL
+        self.ferox_url = self.create_labeled_entry(frame, "Target URL:", 0, "http://")
+
+        # Wordlist
+        label = tk.Label(frame, text="Wordlist:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=1, column=0, sticky=tk.W, padx=10, pady=5)
+
+        wordlist_frame = tk.Frame(frame, bg=self.bg_secondary)
+        wordlist_frame.grid(row=1, column=1, sticky=tk.EW, padx=10, pady=5)
+
+        self.ferox_wordlist = tk.Entry(wordlist_frame, font=("Courier", 10),
+                                      bg=self.bg_primary, fg=self.accent_cyan,
+                                      insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.ferox_wordlist.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.ferox_wordlist.insert(0, "/usr/share/seclists/Discovery/Web-Content/common.txt")
+
+        browse_btn = tk.Button(wordlist_frame, text="📂", font=("Courier", 9),
+                              bg=self.bg_primary, fg=self.text_color,
+                              relief=tk.FLAT, cursor="hand2",
+                              command=self.browse_wordlist)
+        browse_btn.pack(side=tk.RIGHT, padx=(5, 0))
+
+        # Extensions
+        self.ferox_extensions = self.create_labeled_entry(frame, "Extensions:", 2, "php,html,txt")
+
+        # Threads
+        self.ferox_threads = self.create_labeled_entry(frame, "Threads:", 3, "50")
+
+        # Depth
+        self.ferox_depth = self.create_labeled_entry(frame, "Depth:", 4, "4")
+
+        # Additional options
+        self.ferox_options = self.create_labeled_entry(frame, "Extra Options:", 5, "")
+
+        # Info label
+        info_label = tk.Label(
+            frame,
+            text="\n🦀 feroxbuster (Rust)\nFast web content discovery\n\nFeatures:\n• Recursive scanning\n• Fast multi-threading\n• Extension filtering",
+            font=("Courier", 9),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary,
+            justify=tk.LEFT
+        )
+        info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        return frame
+
+    def create_awsbucket_tab(self):
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+
+        # Bucket list file
+        label = tk.Label(frame, text="Bucket List:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=0, column=0, sticky=tk.W, padx=10, pady=5)
+
+        bucketlist_frame = tk.Frame(frame, bg=self.bg_secondary)
+        bucketlist_frame.grid(row=0, column=1, sticky=tk.EW, padx=10, pady=5)
+
+        self.awsbucket_list = tk.Entry(bucketlist_frame, font=("Courier", 10),
+                                      bg=self.bg_primary, fg=self.accent_cyan,
+                                      insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.awsbucket_list.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.awsbucket_list.insert(0, "buckets.txt")
+
+        browse_btn = tk.Button(bucketlist_frame, text="📂", font=("Courier", 9),
+                              bg=self.bg_primary, fg=self.text_color,
+                              relief=tk.FLAT, cursor="hand2",
+                              command=self.browse_wordlist)
+        browse_btn.pack(side=tk.RIGHT, padx=(5, 0))
+
+        # Grep wordlist (optional)
+        label = tk.Label(frame, text="Grep Keywords:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=1, column=0, sticky=tk.W, padx=10, pady=5)
+
+        grep_frame = tk.Frame(frame, bg=self.bg_secondary)
+        grep_frame.grid(row=1, column=1, sticky=tk.EW, padx=10, pady=5)
+
+        self.awsbucket_grep = tk.Entry(grep_frame, font=("Courier", 10),
+                                      bg=self.bg_primary, fg=self.accent_cyan,
+                                      insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.awsbucket_grep.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.awsbucket_grep.insert(0, "")
+
+        browse_btn2 = tk.Button(grep_frame, text="📂", font=("Courier", 9),
+                               bg=self.bg_primary, fg=self.text_color,
+                               relief=tk.FLAT, cursor="hand2",
+                               command=self.browse_wordlist)
+        browse_btn2.pack(side=tk.RIGHT, padx=(5, 0))
+
+        # Download option
+        self.awsbucket_download_var = tk.BooleanVar()
+        download_check = tk.Checkbutton(frame, text="Download Files (-D)", variable=self.awsbucket_download_var,
+                                       font=("Courier", 10), fg=self.text_color,
+                                       bg=self.bg_secondary, selectcolor=self.bg_primary,
+                                       activebackground=self.bg_secondary, activeforeground=self.accent_green)
+        download_check.grid(row=2, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
+
+        # Threads
+        self.awsbucket_threads = self.create_labeled_entry(frame, "Threads:", 3, "5")
+
+        # Additional options
+        self.awsbucket_options = self.create_labeled_entry(frame, "Extra Options:", 4, "")
+
+        # Info label
+        info_label = tk.Label(
+            frame,
+            text="\n☁️  AWS S3 Bucket Dump\nEnumerate and dump S3 buckets\n\n⚠️ Use responsibly\nOnly test authorized targets",
+            font=("Courier", 9),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary,
+            justify=tk.LEFT
+        )
+        info_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        return frame
+
+    def create_tcpdump_tab(self):
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+
+        # Warning label
+        warning_label = tk.Label(
+            frame,
+            text="⚠️  REQUIRES ROOT/SUDO PRIVILEGES  ⚠️\nYou will be prompted for password",
+            font=("Courier", 9, "bold"),
+            fg=self.accent_red,
+            bg=self.bg_secondary,
+            justify=tk.CENTER
+        )
+        warning_label.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+
+        # Interface
+        self.tcpdump_interface = self.create_labeled_entry(frame, "Interface:", 1, "eth0")
+
+        # Capture filter
+        self.tcpdump_filter = self.create_labeled_entry(frame, "BPF Filter:", 2, "port 80")
+
+        # Packet count
+        self.tcpdump_count = self.create_labeled_entry(frame, "Packet Count:", 3, "100")
+
+        # Output file (optional)
+        self.tcpdump_output = self.create_labeled_entry(frame, "Output File:", 4, "capture.pcap")
+
+        # Verbose option
+        self.tcpdump_verbose_var = tk.BooleanVar()
+        verbose_check = tk.Checkbutton(frame, text="Verbose (-v)", variable=self.tcpdump_verbose_var,
+                                      font=("Courier", 10), fg=self.text_color,
+                                      bg=self.bg_secondary, selectcolor=self.bg_primary,
+                                      activebackground=self.bg_secondary, activeforeground=self.accent_green)
+        verbose_check.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
+
+        # Additional options
+        self.tcpdump_options = self.create_labeled_entry(frame, "Extra Options:", 6, "")
+
+        # Info label
+        info_label = tk.Label(
+            frame,
+            text="\n📦 Packet Capture\nCapture and analyze network traffic\n\nExample filters:\n• port 80\n• host 192.168.1.1\n• tcp and port 443",
+            font=("Courier", 9),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary,
+            justify=tk.LEFT
+        )
+        info_label.grid(row=7, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        return frame
+
+    def create_settings_tab(self):
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+
+        # Settings header
+        header = tk.Label(
+            frame,
+            text="⚙️  APPLICATION SETTINGS",
+            font=("Courier", 12, "bold"),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary
+        )
+        header.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=15)
+
+        # Shodan API Key
+        label = tk.Label(frame, text="Shodan API Key:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=1, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.settings_shodan_key = tk.Entry(frame, font=("Courier", 10),
+                                           bg=self.bg_primary, fg=self.accent_cyan,
+                                           insertbackground=self.accent_cyan, relief=tk.FLAT,
+                                           show="*", width=30)
+        self.settings_shodan_key.grid(row=1, column=1, sticky=tk.EW, padx=10, pady=5)
+        if self.config.get("shodan_api_key"):
+            self.settings_shodan_key.insert(0, self.config["shodan_api_key"])
+
+        # Show/Hide key button
+        self.show_key_var = tk.BooleanVar()
+        show_key_check = tk.Checkbutton(frame, text="Show API key", variable=self.show_key_var,
+                                       font=("Courier", 9), fg=self.text_color,
+                                       bg=self.bg_secondary, selectcolor=self.bg_primary,
+                                       command=lambda: self.settings_shodan_key.config(
+                                           show="" if self.show_key_var.get() else "*"))
+        show_key_check.grid(row=2, column=1, sticky=tk.W, padx=10, pady=2)
+
+        # Save settings button
+        save_btn = tk.Button(
+            frame,
+            text="💾 SAVE SETTINGS",
+            font=("Courier", 11, "bold"),
+            bg=self.accent_green,
+            fg=self.bg_primary,
+            activebackground=self.accent_cyan,
+            relief=tk.FLAT,
+            padx=20,
+            pady=10,
+            cursor="hand2",
+            command=self.save_settings
+        )
+        save_btn.grid(row=3, column=0, columnspan=2, padx=10, pady=20)
+
+        # Process timeout
+        self.settings_timeout = self.create_labeled_entry(frame, "Process Timeout (s):", 4, 
+                                                          str(self.config.get("timeout", 3600)))
+
+        # Max output lines
+        self.settings_maxlines = self.create_labeled_entry(frame, "Max Output Lines:", 5,
+                                                           str(self.config.get("max_output_lines", 10000)))
+
+        # Info label
+        info_label = tk.Label(
+            frame,
+            text="\n📝 Settings are saved to:\n~/.recon_superpower/config.json\n\nChanges take effect immediately",
+            font=("Courier", 9),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary,
+            justify=tk.LEFT
+        )
+        info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+
+        return frame
+
+    def save_settings(self):
+        """Save settings from the settings tab."""
+        # Update config
+        shodan_key = self.settings_shodan_key.get().strip()
+        if shodan_key:
+            # SECURITY FIX (MED-4): Validate Shodan API key format (32 hex characters)
+            if not re.match(r'^[a-fA-F0-9]{32}$', shodan_key):
+                messagebox.showerror("Invalid API Key",
+                    "Shodan API key must be exactly 32 hexadecimal characters.\\n"
+                    "Format: 0-9, A-F (case insensitive)\\n"
+                    "Example: 1234567890abcdef1234567890abcdef")
+                return
+            self.config["shodan_api_key"] = shodan_key
+        
+        try:
+            timeout = int(self.settings_timeout.get().strip())
+            if timeout > 0:
+                self.config["timeout"] = timeout
+                self.process_timeout = timeout
+        except ValueError:
+            pass
+
+        try:
+            maxlines = int(self.settings_maxlines.get().strip())
+            if maxlines > 0:
+                self.config["max_output_lines"] = maxlines
+                self.max_output_lines = maxlines
+        except ValueError:
+            pass
+
+        # Save to file
+        self.save_config()
+
+        # Update Shodan status if the tab exists
+        if "shodan" in self.tool_frames and hasattr(self, 'shodan_api_status'):
+            if self.config.get("shodan_api_key"):
+                self.shodan_api_status.config(
+                    text="✅  API Key Configured  ✅",
+                    fg=self.accent_green
+                )
+            else:
+                self.shodan_api_status.config(
+                    text="⚠️  Configure API key in Settings  ⚠️",
+                    fg=self.accent_red
+                )
+
+        messagebox.showinfo("Settings Saved", "Settings have been saved successfully!")
+        self.update_status("Settings saved")
 
     def validate_file_path(self, filepath):
         """
@@ -1137,7 +1770,7 @@ KEYBOARD SHORTCUTS:
 <body>
     <h1>⚡ Recon Superpower Output</h1>
     <p class="timestamp">Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-    <p class="timestamp">Tool: {self.notebook.tab(self.notebook.select(), "text")}</p>
+    <p class="timestamp">Tool: {self.current_tool.upper() if self.current_tool else 'UNKNOWN'}</p>
     <pre>{content}</pre>
 </body>
 </html>"""
@@ -1203,9 +1836,15 @@ KEYBOARD SHORTCUTS:
         self.status_label.config(text=f"[ {message} ]", fg=color)
 
     def build_command(self):
-        current_tab = self.notebook.index(self.notebook.select())
+        # Use current tool instead of tab index
+        tool_id = self.current_tool
+        
+        # Settings tab doesn't build commands
+        if tool_id == "settings":
+            messagebox.showinfo("Info", "This is the settings tab. Select a tool to run scans.")
+            return None
 
-        if current_tab == 0:  # Nmap
+        if tool_id == "nmap":
             target = self.nmap_target.get().strip()
             if not target:
                 messagebox.showerror("Error", "Please enter a target")
@@ -1231,6 +1870,24 @@ KEYBOARD SHORTCUTS:
             if ports:
                 cmd.extend(["-p", ports])
 
+            # NSE Scripts support (NEW FEATURE)
+            script_selection = self.nmap_scripts.get()
+            if script_selection and not script_selection.startswith("(none)"):
+                if script_selection.startswith("Custom"):
+                    # Use custom script from custom script field
+                    custom_script = self.nmap_custom_script.get().strip()
+                    if custom_script:
+                        # Validate script name (allow alphanumeric, hyphens, commas, underscores)
+                        if re.match(r'^[a-zA-Z0-9,\\-_]+$', custom_script):
+                            cmd.extend(["--script", custom_script])
+                        else:
+                            messagebox.showerror("Error", "Invalid script name. Use alphanumeric characters, hyphens, and commas only.")
+                            return None
+                else:
+                    # Use predefined script category
+                    script_name = script_selection.split()[0]  # Extract the script name before any description
+                    cmd.extend(["--script", script_name])
+
             # Security: Validate and parse extra options
             if extra:
                 valid, parsed_options = self.validate_extra_options(extra)
@@ -1245,7 +1902,7 @@ KEYBOARD SHORTCUTS:
 
             return cmd
 
-        elif current_tab == 1:  # Gobuster
+        elif tool_id == "gobuster":
             url = self.gobuster_url.get().strip()
             if not url:
                 messagebox.showerror("Error", "Please enter a target URL")
@@ -1302,7 +1959,7 @@ KEYBOARD SHORTCUTS:
 
             return cmd
 
-        elif current_tab == 2:  # Nikto
+        elif tool_id == "nikto":
             target = self.nikto_target.get().strip()
             if not target:
                 messagebox.showerror("Error", "Please enter a target")
@@ -1430,6 +2087,391 @@ KEYBOARD SHORTCUTS:
             msf_commands += "run; exit"
 
             cmd.append(msf_commands)
+
+            return cmd
+
+        elif tool_id == "shodan":
+            # Check API key
+            api_key = self.config.get("shodan_api_key")
+            if not api_key:
+                messagebox.showerror("Error", "Please configure your Shodan API key in Settings first.")
+                return None
+
+            query = self.shodan_query.get().strip()
+            if not query:
+                messagebox.showerror("Error", "Please enter a search query")
+                return None
+
+            # Security: Validate query length
+            if len(query) > 500:
+                messagebox.showerror("Error", "Search query too long (max 500 characters)")
+                return None
+
+            search_type = self.shodan_type.get().split()[0]
+            facets = self.shodan_facets.get().strip()
+            limit = self.shodan_limit.get().strip()
+
+            # SECURITY FIX (HIGH-3): Prevent SSRF - block private IPs for host lookups
+            if search_type == "host":
+                # Extract IP/hostname from query
+                ip_pattern = r'^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$'
+                match = re.match(ip_pattern, query)
+                if match:
+                    ip_parts = [int(x) for x in match.group(1).split('.')]
+                    # Block private IP ranges
+                    if (ip_parts[0] == 10 or  # 10.0.0.0/8
+                        (ip_parts[0] == 172 and 16 <= ip_parts[1] <= 31) or  # 172.16.0.0/12
+                        (ip_parts[0] == 192 and ip_parts[1] == 168) or  # 192.168.0.0/16
+                        ip_parts[0] == 127):  # 127.0.0.0/8 (localhost)
+                        messagebox.showerror("Security Error",
+                            "Cannot query private IP ranges via Shodan.\nPrivate IPs (10.x, 172.16-31.x, 192.168.x, 127.x) are blocked.")
+                        return None
+
+            # SECURITY FIX (CRIT-1): Use environment variable for API key to prevent exposure
+            # Set key as environment variable instead of command line argument
+            import os
+            os.environ['SHODAN_API_KEY'] = api_key
+            cmd = ["shodan", search_type, query]
+            
+            if facets and search_type == "search":
+                cmd.extend(["--facets", facets])
+            
+            if limit and search_type == "search":
+                cmd.extend(["--limit", limit])
+
+            # Note: shodan CLI reads SHODAN_API_KEY from environment automatically
+            return cmd
+
+        elif tool_id == "dnsrecon":
+            domain = self.dnsrecon_domain.get().strip()
+            if not domain:
+                messagebox.showerror("Error", "Please enter a domain")
+                return None
+
+            # SECURITY FIX (HIGH-4): Improved domain validation
+            # Check basic format
+            if not re.match(r'^[a-zA-Z0-9\.\-]+$', domain):
+                messagebox.showerror("Error", "Invalid domain format - use only alphanumeric, dots, and hyphens")
+                return None
+            
+            # Prevent excessive length
+            if len(domain) > 253:
+                messagebox.showerror("Error", "Domain name too long (max 253 characters)")
+                return None
+            
+            # Prevent consecutive dots
+            if '..' in domain:
+                messagebox.showerror("Error", "Invalid domain - consecutive dots not allowed")
+                return None
+            
+            # Prevent leading/trailing dots or hyphens
+            if domain.startswith(('.', '-')) or domain.endswith(('.', '-')):
+                messagebox.showerror("Error", "Invalid domain - cannot start/end with dot or hyphen")
+                return None
+            
+            # Validate each label (part between dots)
+            labels = domain.split('.')
+            for label in labels:
+                if len(label) == 0 or len(label) > 63:
+                    messagebox.showerror("Error", "Invalid domain label length (each part must be 1-63 chars)")
+                    return None
+
+            scan_type = self.dnsrecon_type.get().split()[0]
+            wordlist = self.dnsrecon_wordlist.get().strip()
+            nameserver = self.dnsrecon_ns.get().strip()
+
+            cmd = ["dnsrecon", "-d", domain, "-t", scan_type]
+
+            if wordlist and scan_type == "brt":
+                # Validate path BEFORE checking existence (HIGH-2 fix)
+                if not self.validate_file_path(wordlist):
+                    messagebox.showerror("Error", "Invalid wordlist path")
+                    return None
+                if not os.path.isfile(wordlist):
+                    messagebox.showerror("Error", "Wordlist file not found")
+                    return None
+                cmd.extend(["-D", wordlist])
+
+            if nameserver:
+                if not self.validate_target(nameserver):
+                    messagebox.showerror("Error", "Invalid nameserver")
+                    return None
+                cmd.extend(["-n", nameserver])
+
+            return cmd
+
+        elif tool_id == "enum4linux":
+            target = self.enum4linux_target.get().strip()
+            if not target:
+                messagebox.showerror("Error", "Please enter a target IP")
+                return None
+
+            if not self.validate_target(target):
+                messagebox.showerror("Error", "Invalid target IP format")
+                return None
+
+            cmd = ["enum4linux"]
+
+            if self.enum4linux_all_var.get():
+                cmd.append("-a")
+            else:
+                if self.enum4linux_users_var.get():
+                    cmd.append("-U")
+                if self.enum4linux_shares_var.get():
+                    cmd.append("-S")
+                if self.enum4linux_groups_var.get():
+                    cmd.append("-G")
+                if self.enum4linux_pass_var.get():
+                    cmd.append("-P")
+
+            username = self.enum4linux_user.get().strip()
+            password = self.enum4linux_pass.get().strip()
+
+            if username:
+                cmd.extend(["-u", username])
+            if password:
+                cmd.extend(["-p", password])
+
+            cmd.append(target)
+
+            return cmd
+
+        elif tool_id == "githarvester":
+            search = self.githarvester_search.get().strip()
+            if not search:
+                messagebox.showerror("Error", "Please enter a GitHub search query")
+                return None
+
+            # Security: Limit query length
+            if len(search) > 500:
+                messagebox.showerror("Error", "Search query too long (max 500 characters)")
+                return None
+
+            # Note: GitHarvester needs to be installed separately
+            # Assuming it's a Python script at a known location
+            cmd = ["python3", "githarvester.py"]
+
+            cmd.extend(["-s", search])
+
+            regex = self.githarvester_regex.get().strip()
+            if regex:
+                # SECURITY FIX (CRIT-2): Validate regex to prevent ReDoS
+                # Limit regex length
+                if len(regex) > 200:
+                    messagebox.showerror("Error", "Regex pattern too long (max 200 characters)")
+                    return None
+                
+                # Test regex compilation and complexity
+                try:
+                    import re as re_module
+                    # Try to compile the regex
+                    compiled = re_module.compile(regex)
+                    
+                    # Test for catastrophic backtracking with a timeout
+                    # (Python doesn't have native regex timeout, so we use simple checks)
+                    # Block obviously dangerous patterns
+                    dangerous_patterns = [
+                        r'(a+)+',      # Nested quantifiers
+                        r'(a*)*',      # Nested zero-or-more
+                        r'(a|a)*',     # Alternation repetition
+                        r'(.*)*',      # Greedy nested
+                    ]
+                    for dangerous in dangerous_patterns:
+                        if dangerous in regex:
+                            messagebox.showerror("Security Error",
+                                "Regex pattern contains potentially dangerous nested quantifiers.\n"
+                                "Please simplify your pattern to avoid catastrophic backtracking.")
+                            return None
+                except re_module.error as e:
+                    messagebox.showerror("Error", f"Invalid regex pattern: {str(e)}")
+                    return None
+                
+                cmd.extend(["-r", regex])
+
+            account = self.githarvester_account.get().strip()
+            if account:
+                if len(account) > 100:
+                    messagebox.showerror("Error", "Account name too long")
+                    return None
+                cmd.extend(["-a", account])
+
+            project = self.githarvester_project.get().strip()
+            if project:
+                if len(project) > 100:
+                    messagebox.showerror("Error", "Project name too long")
+                    return None
+                cmd.extend(["-p", project])
+
+            sort = self.githarvester_sort.get()
+            if sort:
+                cmd.extend(["-o", sort])
+
+            return cmd
+
+        elif tool_id == "feroxbuster":
+            url = self.ferox_url.get().strip()
+            if not url:
+                messagebox.showerror("Error", "Please enter a target URL")
+                return None
+
+            if not self.validate_url(url):
+                messagebox.showerror("Error", "Invalid URL format")
+                return None
+
+            # Validate path BEFORE checking existence
+            wordlist = self.ferox_wordlist.get().strip()
+            if not wordlist:
+                messagebox.showerror("Error", "Please select a wordlist file")
+                return None
+                
+            if not self.validate_file_path(wordlist):
+                messagebox.showerror("Error", "Invalid wordlist path")
+                return None
+            
+            if not os.path.isfile(wordlist):
+                messagebox.showerror("Error", "Wordlist file not found")
+                return None
+
+            cmd = ["feroxbuster", "-u", url, "-w", wordlist]
+
+            extensions = self.ferox_extensions.get().strip()
+            if extensions:
+                if not re.match(r'^[a-zA-Z0-9,]+$', extensions):
+                    messagebox.showerror("Error", "Invalid extensions format - use comma-separated extensions (e.g., php,html,txt)")
+                    return None
+                cmd.extend(["-x", extensions])
+
+            # SECURITY FIX (MED-1): Lower thread maximum to prevent resource exhaustion
+            threads = self.ferox_threads.get().strip()
+            if threads:
+                if not self.validate_numeric(threads, 1, 100):  # Reduced from 200
+                    messagebox.showerror("Error", "Thread count must be between 1 and 100")
+                    return None
+                # Warn on high thread count
+                if int(threads) > 50:
+                    result = messagebox.askyesno("Warning",
+                        f"High thread count ({threads}) may cause system slowdown.\nContinue?")
+                    if not result:
+                        return None
+                cmd.extend(["-t", threads])
+
+            depth = self.ferox_depth.get().strip()
+            if depth:
+                if not self.validate_numeric(depth, 1, 10):
+                    messagebox.showerror("Error", "Depth must be between 1 and 10")
+                    return None
+                cmd.extend(["-d", depth])
+
+            return cmd
+
+        elif tool_id == "awsbucket":
+            bucket_list = self.awsbucket_list.get().strip()
+            if not bucket_list:
+                messagebox.showerror("Error", "Please enter a bucket list file")
+                return None
+
+            if not os.path.isfile(bucket_list):
+                messagebox.showerror("Error", "Bucket list file not found")
+                return None
+
+            if not self.validate_file_path(bucket_list):
+                messagebox.showerror("Error", "Invalid bucket list path")
+                return None
+
+            # Note: AWSBucketDump needs to be installed separately
+            cmd = ["python3", "AWSBucketDump.py", "-l", bucket_list]
+
+            if self.awsbucket_download_var.get():
+                cmd.append("-D")
+
+            grep_file = self.awsbucket_grep.get().strip()
+            if grep_file and os.path.isfile(grep_file):
+                if self.validate_file_path(grep_file):
+                    cmd.extend(["-g", grep_file])
+
+            threads = self.awsbucket_threads.get().strip()
+            if threads:
+                if not self.validate_numeric(threads, 1, 20):
+                    messagebox.showerror("Error", "Thread count must be between 1 and 20")
+                    return None
+                cmd.extend(["-t", threads])
+
+            return cmd
+
+        elif tool_id == "tcpdump":
+            interface = self.tcpdump_interface.get().strip()
+            if not interface:
+                messagebox.showerror("Error", "Please enter a network interface")
+                return None
+
+            # SECURITY FIX (MED-3 & HIGH-1): Validate interface exists and strengthen BPF validation
+            # Check interface name format
+            if not re.match(r'^[a-zA-Z0-9\-]+$', interface):
+                messagebox.showerror("Error", "Invalid interface name. Use alphanumeric characters and hyphens only.")
+                return None
+            
+            # Verify interface exists on system
+            try:
+                net_path = f"/sys/class/net/{interface}"
+                if not os.path.exists(net_path):
+                    messagebox.showerror("Error",
+                        f"Network interface '{interface}' not found.\nCheck 'ip link show' for available interfaces.")
+                    return None
+            except:
+                pass  # If we can't check, proceed anyway
+
+            cmd = ["sudo", "tcpdump", "-i", interface]
+
+            count = self.tcpdump_count.get().strip()
+            if count:
+                if not self.validate_numeric(count, 1, 10000):
+                    messagebox.showerror("Error", "Packet count must be between 1 and 10000")
+                    return None
+                cmd.extend(["-c", count])
+
+            output_file = self.tcpdump_output.get().strip()
+            if output_file:
+                # Validate output path
+                abs_path = os.path.abspath(output_file)
+                home_dir = os.path.expanduser("~")
+                if not abs_path.startswith(home_dir):
+                    messagebox.showerror("Error", "Output file must be in your home directory")
+                    return None
+                cmd.extend(["-w", output_file])
+
+            if self.tcpdump_verbose_var.get():
+                cmd.append("-v")
+
+            bpf_filter = self.tcpdump_filter.get().strip()
+            if bpf_filter:
+                # SECURITY FIX (HIGH-1): Strengthen BPF filter validation
+                # Whitelist common BPF keywords
+                allowed_keywords = [
+                    'port', 'host', 'net', 'src', 'dst', 'tcp', 'udp', 'icmp',
+                    'ip', 'ip6', 'arp', 'rarp', 'and', 'or', 'not'
+                ]
+                
+                # More restrictive pattern - only allow alphanumeric, spaces, dots, basic operators
+                if not re.match(r'^[a-zA-Z0-9\s\.\-]+$', bpf_filter):
+                    messagebox.showerror("Security Error",
+                        "Invalid BPF filter. Parentheses and special characters not allowed.\n"
+                        "Use simple filters: 'port 80', 'host 192.168.1.1', 'tcp and port 443'")
+                    return None
+                
+                # Limit filter length
+                if len(bpf_filter) > 100:
+                    messagebox.showerror("Error", "BPF filter too long (max 100 characters)")
+                    return None
+                
+                # Validate filter contains at least one known keyword
+                filter_lower = bpf_filter.lower()
+                has_keyword = any(keyword in filter_lower for keyword in allowed_keywords)
+                if not has_keyword:
+                    messagebox.showerror("Error",
+                        f"BPF filter must contain valid keywords: {', '.join(allowed_keywords[:8])}...")
+                    return None
+                
+                cmd.append(bpf_filter)
 
             return cmd
 
