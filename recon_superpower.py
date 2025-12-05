@@ -3545,16 +3545,13 @@ payload/                        # BLOCKED
             # Max length
             if len(str(value)) > 500:
                 return False
-            # No null bytes
-            if '\x00' in str(value):
-                return False
-        
         return True
   # Valid
 
     def run_workflow(self):
         """Execute the selected workflow."""
         # FIX HIGH-2: Thread-safe check and set
+        with self.scan_lock:
             if self.workflow_running:
                 messagebox.showwarning("Workflow Running", "A workflow is already running. Please stop it first.")
                 return
