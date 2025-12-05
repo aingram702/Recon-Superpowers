@@ -3510,31 +3510,221 @@ payload/                        # BLOCKED
         self.root.after(0, self.reset_workflow_ui)
 
     def execute_workflow_step(self, step, target):
-        """Execute a single workflow step."""
+        """Execute a single workflow step by actually running the tool."""
+        import time
+        
         tool = step['tool']
         config = step['config']
-        
-        # Build command for this step
-        # This is a simplified version - full implementation would set all widget values
-        # and call run_scan for each tool
         
         try:
             # Switch to the tool's tab
             self.root.after(0, lambda: self.switch_tool(tool))
-            time.sleep(0.5)  # Give UI time to update
+            time.sleep(0.3)  # Give UI time to update
             
-            # For now, just show what would be executed
-            self.append_output(f"Tool: {tool.upper()}\n")
-            self.append_output(f"Target: {target}\n")
-            for key, value in config.items():
-                self.append_output(f"  {key}: {value}\n")
-            self.append_output("\n[Simulated execution - Full integration coming soon]\n")
+            # Set tool-specific inputs based on config
+            success = self.configure_tool_for_workflow(tool, target, config)
+            if not success:
+                self.append_output(f"⚠️  Failed to configure {tool}\n")
+                return False
             
-            time.sleep(2)  # Simulate execution time
+            # Execute the tool
+            self.append_output(f"Executing {tool.upper()}...\n")
+            
+            # Call run_scan which will execute the tool
+            self.root.after(0, self.run_scan)
+            
+            # Wait for tool to complete (simplified - check process status)
+            max_wait = config.get('timeout', 300)  # Default 5 minutes
+            waited = 0
+            while self.is_running and waited < max_wait:
+                time.sleep(1)
+                waited += 1
+            
+            # Store result for condition evaluation
+            if tool not in self.workflow_results:
+                self.workflow_results[tool] = ""
+            
+            # Capture output from the text widget
+            try:
+                output = self.output_text.get('1.0', tk.END)
+                # Store last 1000 chars for condition checking
+                self.workflow_results[tool] += output[-1000:]
+            except:
+                pass
+            
             return True
             
         except Exception as e:
-            self.append_output(f"Error: {str(e)}\n")
+            self.append_output(f"Error executing {tool}: {str(e)}\n")
+            return False
+    
+    def configure_tool_for_workflow(self, tool, target, config):
+        """Configure tool widgets with workflow parameters."""
+        try:
+            if tool == 'nmap':
+                # Set Nmap configuration
+                if hasattr(self, 'nmap_target'):
+                    self.nmap_target.delete(0, tk.END)
+                    self.nmap_target.insert(0, target)
+                if hasattr(self, 'nmap_scan_type'):
+                    scan_type = config.get('scan_type', 'SYN')
+                    types = {'SYN': 0, 'TCP': 1, 'UDP': 2, 'PING': 3, 'VERSION': 4}
+                    self.nmap_scan_type.current(types.get(scan_type, 0))
+                if hasattr(self, 'nmap_ports'):
+                    self.nmap_ports.delete(0, tk.END)
+                    self.nmap_ports.insert(0, config.get('ports', '1-1000'))
+                if hasattr(self, 'nmap_timing'):
+                    timing = config.get('timing', 'T3')
+                    timings = ['T0', 'T1', 'T2', 'T3', 'T4', 'T5']
+                    try:
+                        idx = timings.index(timing)
+                        self.nmap_timing.current(idx)
+                    except:
+                        self.nmap_timing.current(3)
+                return True
+                
+            elif tool == 'gobuster':
+                if hasattr(self, 'gobuster_url'):
+                    self.gobuster_url.delete(0, tk.END)
+                    # Ensure target is a URL
+                    if not target.startswith('http'):
+                        target = f"http://{target}"
+                    self.gobuster_url.insert(0, target)
+                if hasattr(self, 'gobuster_wordlist'):
+                    self.gobuster_wordlist.delete(0, tk.END)
+                    self.gobuster_wordlist.insert(0, config.get('wordlist', '/usr/share/wordlists/dirb/common.txt'))
+                if hasattr(self, 'gobuster_threads'):
+                    self.gobuster_threads.delete(0, tk.END)
+                    self.gobuster_threads.insert(0, config.get('threads', '10'))
+                if hasattr(self, 'gobuster_extensions'):
+                    self.gobuster_extensions.delete(0, tk.END)
+                    self.gobuster_extensions.insert(0, config.get('extensions', 'php,html'))
+                return True
+                
+            elif tool == 'nikto':
+                if hasattr(self, 'nikto_target'):
+                    self.nikto_target.delete(0, tk.END)
+                    # Ensure target is a URL
+                    if not target.startswith('http'):
+                        target = f"http://{target}"
+                    self.nikto_target.insert(0, target)
+                if hasattr(self, 'nikto_port'):
+                    self.nikto_port.delete(0, tk.END)
+                    self.nikto_port.insert(0, config.get('port', '80'))
+                if hasattr(self, 'nikto_ssl'):
+                    self.nikto_ssl.set(config.get('ssl', False))
+                if hasattr(self, 'nikto_tuning'):
+                    self.nikto_tuning.delete(0, tk.END)
+                    self.nikto_tuning.insert(0, config.get('tuning', 'x'))
+                return True
+                
+            elif tool == 'dnsrecon':
+                if hasattr(self, 'dnsrecon_domain'):
+                    self.dnsrecon_domain.delete(0, tk.END)
+                    self.dnsrecon_domain.insert(0, target)
+                if hasattr(self, 'dnsrecon_type'):
+                    scan_type = config.get('scan_type', 'std')
+                    types = {'std': 0, 'axfr': 1, 'brt': 2, 'srv': 3, 'rvl': 4, 'crt': 5, 'zonewalk': 6}
+                    self.dnsrecon_type.current(types.get(scan_type, 0))
+                if config.get('scan_type') == 'brt' and hasattr(self, 'dnsrecon_wordlist'):
+                    self.dnsrecon_wordlist.delete(0, tk.END)
+                    self.dnsrecon_wordlist.insert(0, config.get('wordlist', ''))
+                return True
+                
+            elif tool == 'shodan':
+                if hasattr(self, 'shodan_query'):
+                    self.shodan_query.delete(0, tk.END)
+                    query = config.get('query', target)
+                    # Replace placeholders
+                    query = query.replace('[TARGET_IP]', target)
+                    query = query.replace('[TARGET_DOMAIN]', target)
+                    self.shodan_query.insert(0, query)
+                if hasattr(self, 'shodan_search_type'):
+                    search_type = config.get('search_type', 'search')
+                    types = {'search': 0, 'host': 1, 'count': 2}
+                    self.shodan_search_type.current(types.get(search_type, 0))
+                return True
+                
+            elif tool == 'feroxbuster':
+                if hasattr(self, 'feroxbuster_url'):
+                    self.feroxbuster_url.delete(0, tk.END)
+                    if not target.startswith('http'):
+                        target = f"http://{target}"
+                    self.feroxbuster_url.insert(0, target)
+                if hasattr(self, 'feroxbuster_wordlist'):
+                    self.feroxbuster_wordlist.delete(0, tk.END)
+                    self.feroxbuster_wordlist.insert(0, config.get('wordlist', '/usr/share/seclists/Discovery/Web-Content/common.txt'))
+                if hasattr(self, 'feroxbuster_extensions'):
+                    self.feroxbuster_extensions.delete(0, tk.END)
+                    self.feroxbuster_extensions.insert(0, config.get('extensions', 'php,html'))
+                if hasattr(self, 'feroxbuster_threads'):
+                    self.feroxbuster_threads.delete(0, tk.END)
+                    self.feroxbuster_threads.insert(0, config.get('threads', '50'))
+                if hasattr(self, 'feroxbuster_depth'):
+                    self.feroxbuster_depth.delete(0, tk.END)
+                    self.feroxbuster_depth.insert(0, config.get('depth', '3'))
+                return True
+                
+            elif tool == 'enum4linux':
+                if hasattr(self, 'enum4linux_target'):
+                    self.enum4linux_target.delete(0, tk.END)
+                    self.enum4linux_target.insert(0, target)
+                if hasattr(self, 'enum4linux_all'):
+                    self.enum4linux_all.set(config.get('all_enum', True))
+                return True
+                
+            elif tool == 'metasploit':
+                if hasattr(self, 'msf_module'):
+                    self.msf_module.delete(0, tk.END)
+                    self.msf_module.insert(0, config.get('module', 'auxiliary/scanner/smb/smb_version'))
+                if hasattr(self, 'msf_target'):
+                    self.msf_target.delete(0, tk.END)
+                    self.msf_target.insert(0, target)
+                if hasattr(self, 'msf_threads'):
+                    self.msf_threads.delete(0, tk.END)
+                    self.msf_threads.insert(0, config.get('threads', '10'))
+                return True
+                
+            elif tool == 'githarvester':
+                if hasattr(self, 'githarvester_query'):
+                    self.githarvester_query.delete(0, tk.END)
+                    query = config.get('query', target)
+                    query = query.replace('[TARGET_DOMAIN]', target)
+                    query = query.replace('[TARGET_ORG]', target)
+                    self.githarvester_query.insert(0, query)
+                if hasattr(self, 'githarvester_account'):
+                    account = config.get('account', '')
+                    if account:
+                        account = account.replace('[TARGET_ORG]', target)
+                        self.githarvester_account.delete(0, tk.END)
+                        self.githarvester_account.insert(0, account)
+                if hasattr(self, 'githarvester_sort'):
+                    self.githarvester_sort.delete(0, tk.END)
+                    self.githarvester_sort.insert(0, config.get('sort', 'best'))
+                return True
+                
+            elif tool == 'awsbucket':
+                if hasattr(self, 'awsbucket_list'):
+                    self.awsbucket_list.delete(0, tk.END)
+                    self.awsbucket_list.insert(0, config.get('bucket_list', 'buckets.txt'))
+                if hasattr(self, 'awsbucket_threads'):
+                    self.awsbucket_threads.delete(0, tk.END)
+                    self.awsbucket_threads.insert(0, config.get('threads', '10'))
+                return True
+                
+            elif tool == 'tcpdump':
+                if hasattr(self, 'tcpdump_interface'):
+                    self.tcpdump_interface.delete(0, tk.END)
+                    self.tcpdump_interface.insert(0, config.get('interface', 'eth0'))
+                if hasattr(self, 'tcpdump_filter'):
+                    self.tcpdump_filter.delete(0, tk.END)
+                    self.tcpdump_filter.insert(0, config.get('filter', 'tcp port 80'))
+                return True
+            
+            return True
+            
+        except Exception as e:
+            self.append_output(f"Configuration error for {tool}: {str(e)}\n")
             return False
 
     def evaluate_workflow_condition(self, condition):
