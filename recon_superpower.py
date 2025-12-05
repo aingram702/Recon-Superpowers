@@ -5120,6 +5120,10 @@ KEYBOARD SHORTCUTS:
 
             account = self.githarvester_account.get().strip()
             if account:
+                # FIX HIGH-4: Validate GitHub username format
+                if not self.validate_github_account(account):
+                    messagebox.showerror("Error", "Invalid GitHub username/organization format")
+                    return None
                 if len(account) > 100:
                     messagebox.showerror("Error", "Account name too long")
                     return None
@@ -5165,10 +5169,11 @@ KEYBOARD SHORTCUTS:
             cmd = ["feroxbuster", "-u", url, "-w", wordlist]
 
             extensions = self.ferox_extensions.get().strip()
+            # FIX HIGH-5: Validate extensions
+            if extensions and not self.validate_file_extensions(extensions):
+                return None
+            
             if extensions:
-                if not re.match(r'^[a-zA-Z0-9,]+$', extensions):
-                    messagebox.showerror("Error", "Invalid extensions format - use comma-separated extensions (e.g., php,html,txt)")
-                    return None
                 cmd.extend(["-x", extensions])
 
             # SECURITY FIX (MED-1): Lower thread maximum to prevent resource exhaustion
@@ -5232,6 +5237,17 @@ KEYBOARD SHORTCUTS:
             interface = self.tcpdump_interface.get().strip()
             if not interface:
                 messagebox.showerror("Error", "Please enter a network interface")
+                return None
+            
+            # FIX MED-5: Validate interface name format
+            if not self.validate_interface_name(interface):
+                messagebox.showerror("Error", "Invalid interface name format")
+                return None
+            
+            # Security: Verify interface exists
+            interfaces = self.get_network_interfaces()
+            if interface not in interfaces:
+                messagebox.showerror("Error", f"Interface '{interface}' not found on system")
                 return None
 
             # SECURITY FIX (MED-3 & HIGH-1): Validate interface exists and strengthen BPF validation
