@@ -139,7 +139,7 @@ sudo apt install python3-tk
 
 1. **Clone or download the repository**
 ```bash
-cd ~/Software/StockTrader
+cd ~/Software/Recon-Superpowers
 ```
 
 2. **Make the script executable**
