@@ -1,12 +1,13 @@
-# ⚡ The Recon Superpower v1.2
+# ⚡ The Recon Superpower v2.0
 
-A professional dark-themed GUI wrapper for essential security reconnaissance tools: **Nmap**, **Gobuster**, **Nikto**, and **Metasploit Framework** (Auxiliary/Scanner modules).
+A professional dark-themed GUI wrapper for **11 essential security reconnaissance tools** with advanced features, API integrations, and comprehensive security hardening.
 
-![Version](https://img.shields.io/badge/version-1.2-green)
+![Version](https://img.shields.io/badge/version-2.0-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.6%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-orange)
 ![Security](https://img.shields.io/badge/security-hardened-brightgreen)
-![Tools](https://img.shields.io/badge/tools-4-blue)
+![Tools](https://img.shields.io/badge/tools-11-blue)
+![UI](https://img.shields.io/badge/UI-sidebar-purple)
 
 ## ⚠️ Legal Disclaimer
 
@@ -19,108 +20,93 @@ A professional dark-themed GUI wrapper for essential security reconnaissance too
 
 By using this tool, you agree to use it responsibly and legally.
 
-## 🆕 What's New in v1.2
+---
 
-### Metasploit Framework Integration 💥
-- ✅ **Auxiliary/Scanner Modules** - 16+ reconnaissance modules
-- ✅ **Port Scanning** - TCP/SYN port scanners
-- ✅ **Service Detection** - SMB, SSH, HTTP, FTP, MySQL, PostgreSQL version detection
-- ✅ **Enumeration** - SMB shares, SSH users, SNMP information
-- ✅ **Security Restricted** - Only auxiliary/scanner modules allowed (no exploitation)
-- ✅ **Full Validation** - Module path validation and input sanitization
+## 🚀 What's New in v2.0
 
-### What's New in v1.1
+### Major UI Redesign 🎨
+- ✅ **Vertical Sidebar Navigation** - Professional layout supporting unlimited tools
+- ✅ **11 Tools** - Expanded from 4 to 11 reconnaissance tools
+- ✅ **Hover Effects** - Enhanced visual feedback and user experience
+- ✅ **Settings Tab** - Centralized configuration management
+- ✅ **Scalable Design** - Easily extensible for future tools
 
-### Security Enhancements 🔒
-- ✅ **Comprehensive Security Hardening** - Fixed all critical vulnerabilities
-- ✅ **Command Injection Prevention** - Input validation with whitelisting
-- ✅ **Path Traversal Protection** - Secure file operations
-- ✅ **Thread Safety** - Race condition prevention
-- ✅ **Resource Exhaustion Prevention** - Timeouts and limits
+### 7 New Tools Added 🔧
+- ✅ **Shodan** - API-based device discovery and search engine
+- ✅ **DNSrecon** - Comprehensive DNS enumeration and reconnaissance
+- ✅ **enum4linux** - SMB/Windows system enumeration
+- ✅ **GitHarvester** - GitHub OSINT and sensitive data discovery
+- ✅ **feroxbuster** - Fast Rust-based web content discovery
+- ✅ **AWSBucketDump** - S3 bucket enumeration and dumping
+- ✅ **TCPdump** - Network packet capture and analysis
 
-### Usability Features ⚡
-- ✅ **Keyboard Shortcuts** - `Ctrl+R` Run, `Ctrl+S` Save, `Ctrl+F` Search, `Ctrl+C` Copy
-- ✅ **Search in Output** - Find and highlight text in scan results
-- ✅ **Copy to Clipboard** - One-click copying of results
-- ✅ **Multi-Format Export** - Save as Text, JSON, XML, or HTML
-- ✅ **Configuration Persistence** - Remembers window size, position, and settings
-- ✅ **Command History** - Quick access to recently used commands
-- ✅ **Recent Targets** - Track last 20 scanned targets/URLs
-- ✅ **Scan Profiles** - Pre-configured templates (Quick, Deep, Stealth scans)
-- ✅ **Syntax Highlighting** - Color-coded output for better readability
+### Enhanced Existing Tools ⚡
+- ✅ **Nmap NSE Scripts** - Full scripting engine support with categories and custom scripts
+- ✅ **API Integration** - Shodan API key management in Settings
+- ✅ **Improved Validation** - Enhanced input validation across all tools
 
-See [FEATURE_ENHANCEMENTS.md](FEATURE_ENHANCEMENTS.md) for complete details.
+### Security Hardening 🔒
+- ✅ **12 Vulnerabilities Remediated** - Comprehensive security audit completed
+- ✅ **API Key Protection** - Environment variable usage (no exposure in commands)
+- ✅ **ReDoS Prevention** - Regex pattern validation
+- ✅ **SSRF Blocking** - Private IP range restrictions
+- ✅ **Enhanced Domain Validation** - RFC-compliant checking
+- ✅ **BPF Filter Hardening** - Whitelist-based validation for TCPdump
+- ✅ **Interface Verification** - System interface existence checks
+- ✅ **Thread Limits** - Resource exhaustion prevention
 
-See [SECURITY_AUDIT.md](SECURITY_AUDIT.md) for security improvements.
+---
 
-## 🎯 Features
+## 🛠️ Integrated Tools (11 Total)
 
-### 🔍 Nmap Integration
-- Multiple scan types (SYN, TCP Connect, UDP, Version Detection, OS Detection)
-- Configurable timing templates
-- Custom port ranges
-- Additional command-line options support
+### Core Network Tools
+1. **🔍 Nmap** - Network mapper with NSE script support
+2. **📡 DNSrecon** - DNS enumeration and reconnaissance
+3. **📦 TCPdump** - Packet capture and network analysis
 
-### 📁 Gobuster Integration
-- Directory/file brute-forcing
-- DNS subdomain enumeration
-- Virtual host discovery
-- Custom wordlist support
-- Configurable threads and file extensions
+### Web Application Tools
+4. **📁 Gobuster** - Directory/DNS brute-forcing
+5. **🔐 Nikto** - Web server vulnerability scanning
+6. **🦀 feroxbuster** - Fast recursive web content discovery
 
-### 🔐 Nikto Integration
-- Web server vulnerability scanning
-- SSL/TLS support
-- Tunable scan types (XSS, SQL Injection, Misconfigurations)
-- Port specification
+### Cloud & OSINT
+7. **🌐 Shodan** - Internet-connected device search (API required)
+8. **🔎 GitHarvester** - GitHub repository OSINT
+9. **☁️ AWSBucketDump** - AWS S3 bucket enumeration
 
-### 💥 Metasploit Integration
-- Auxiliary/Scanner modules only (reconnaissance focused)
-- Port scanning (TCP/SYN)
-- Service version detection (SMB, SSH, HTTP, FTP, MySQL, PostgreSQL)
-- Service enumeration (shares, users, SNMP data)
-- Configurable threads and options
-- **Security Note:** Exploitation modules are blocked - reconnaissance only
+### System Enumeration
+10. **🖥️ enum4linux** - SMB/Windows enumeration
+11. **💥 Metasploit** - Framework auxiliary/scanner modules
 
-### 🎨 Interface Features
-- Dark hacker-themed UI
-- Real-time command output
-- Multi-format export (Text, JSON, XML, HTML)
-- Search and highlight in results
-- Copy to clipboard
-- Save scan results to file
-- Stop running scans
-- Clear output console
-- Status indicators
-- Configuration persistence
-
-### ⌨️ Keyboard Shortcuts
-- `Ctrl+R` - Run Scan
-- `Ctrl+S` - Save Output
-- `Ctrl+L` - Clear Console
-- `Ctrl+F` - Search in Output
-- `Ctrl+C` - Copy Selection/All
-- `Ctrl+Q` - Quit Application
-- `ESC` - Stop Running Scan
+---
 
 ## 📋 Prerequisites
 
 ### Required Tools
-These tools must be installed and accessible in your PATH:
 
 ```bash
-# On Kali Linux / Debian / Ubuntu
+# Core tools (Included in most pentesting distros)
 sudo apt update
 sudo apt install nmap gobuster nikto metasploit-framework
 
-# On Arch Linux
-sudo pacman -S nmap gobuster nikto metasploit
+# Additional tools for v2.0
+sudo apt install dnsrecon enum4linux tcpdump
 
-# On macOS (using Homebrew)
-brew install nmap gobuster nikto metasploit
+# feroxbuster (Rust-based, may need manual installation)
+# Download from: https://github.com/epi052/feroxbuster/releases
+wget https://github.com/epi052/feroxbuster/releases/download/v2.10.1/feroxbuster_amd64.deb
+sudo dpkg -i feroxbuster_amd64.deb
 
-# Note: Metasploit Framework is large (~1.5GB) and may take time to install
-# It is optional - the tool will work without it, just the Metasploit tab won't function
+# Shodan CLI (Python package)
+pip3 install shodan
+
+# GitHarvester (Clone from GitHub)
+git clone https://github.com/metac0rtex/GitHarvester
+# Update path in code: line ~2187
+
+# AWSBucketDump (Clone from GitHub)
+git clone https://github.com/jordanpotti/AWSBucketDump
+# Update path in code: line ~2260
 ```
 
 ### Python Requirements
@@ -135,11 +121,19 @@ python3 --version
 sudo apt install python3-tk
 ```
 
+### API Keys
+- **Shodan API Key**: Required for Shodan tool
+  - Get key from: https://account.shodan.io/
+  - Configure in Settings tab after launch
+
+---
+
 ## 🚀 Installation
 
-1. **Clone or download the repository**
+1. **Clone the repository**
 ```bash
-cd ~/Software/Recon-Superpowers
+git clone https://github.com/aingram702/Recon-Superpowers.git
+cd Recon-Superpowers
 ```
 
 2. **Make the script executable**
@@ -152,7 +146,13 @@ chmod +x recon_superpower.py
 nmap --version
 gobuster version
 nikto -Version
+dnsrecon --version
+enum4linux --version
+feroxbuster --version
+shodan info  # Requires API key
 ```
+
+---
 
 ## 💻 Usage
 
@@ -161,34 +161,190 @@ nikto -Version
 python3 recon_superpower.py
 ```
 
-Or make it directly executable:
-```bash
-./recon_superpower.py
-```
+### Interface Overview
+- **Left Sidebar**: 11 tools + Settings (click to switch)
+- **Center Panel**: Tool-specific configuration options
+- **Right Panel**: Real-time command output
+- **Bottom Bar**: Status indicator
 
-### Using Each Tool
+---
 
-#### 🔍 Nmap Scanner
-1. Select the **NMAP** tab
-2. Enter target IP or hostname (e.g., `192.168.1.1` or `scanme.nmap.org`)
-3. Choose scan type (SYN scan recommended for speed)
-4. Specify port range (e.g., `1-1000` or `80,443,8080`)
+## 🔧 Tool Usage Guide
+
+### 🔍 Nmap - Network Scanner
+**Enhanced with NSE Script Support**
+
+1. Select **Nmap** from sidebar
+2. Enter target (IP, hostname, or CIDR)
+3. Choose scan type (SYN scan recommended)
+4. Set port range (e.g., `1-1000`, `80,443,8080`)
 5. Select timing template (T3 Normal is default)
-6. Add any extra Nmap options if needed
+6. **NEW:** Choose NSE script category or enter custom script
 7. Click **RUN SCAN**
+
+**NSE Script Categories:**
+- `default` - Default scripts
+- `vuln` - Vulnerability detection
+- `discovery` - Network discovery
+- `auth` - Authentication testing
+- `exploit` - Exploit checks
+- `safe` - Safe scripts only
+- Custom - Enter your own script name
 
 **Example Targets:**
 - `scanme.nmap.org` - Nmap's official test server
-- `192.168.1.0/24` - Local network range
+- `192.168.1.0/24` - Network range
 - `10.0.0.1` - Single host
 
-#### 📁 Gobuster Scanner
-1. Select the **GOBUSTER** tab
+---
+
+### 🌐 Shodan - Device Search Engine **[NEW]**
+**Requires API Key**
+
+1. Configure API key in **Settings** tab first
+2. Select **Shodan** from sidebar
+3. Choose search type:
+   - `search` - Query-based search
+   - `host` - Specific IP lookup
+4. Enter search query
+5. Optional: Add facets (e.g., `country,org,port`)
+6. Set result limit
+7. Click **RUN SCAN**
+
+**Example Queries:**
+- `apache port:443` - Apache servers on port 443
+- `nginx country:US` - Nginx servers in United States
+- `port:22 'SSH-2.0'` - SSH servers
+- `product:MySQL` - MySQL databases
+
+**Security:** Private IP ranges (10.x, 172.16-31.x, 192.168.x, 127.x) are blocked
+
+---
+
+### 📡 DNSrecon - DNS Enumeration **[NEW]**
+
+1. Select **DNSrecon** from sidebar
+2. Enter domain name
+3. Choose scan type:
+   - `std` - Standard enumeration
+   - `axfr` - Zone transfer attempt
+   - `brt` - Brute force subdomains
+   - `rvl` - Reverse lookup
+   - `srv` - SRV record enumeration
+   - `crt` - crt.sh search
+   - `zonewalk` - DNSSEC zone walk
+4. For brute force: Select wordlist
+5. Optional: Specify custom nameserver
+6. Click **RUN SCAN**
+
+---
+
+### 🖥️ enum4linux - SMB Enumeration **[NEW]**
+
+1. Select **enum4linux** from sidebar
+2. Enter target IP address
+3. Choose enumeration options:
+   - **All Enumeration (-a)** - Comprehensive scan (recommended)
+   - OR select specific: Users, Shares, Groups, Password Policy
+4. Optional: Provide credentials for authenticated scan
+5. Click **RUN SCAN**
+
+**What it enumerates:**
+- User lists
+- Share lists
+- Group information
+- Password policies
+- Domain information
+
+---
+
+### 🔎 GitHarvester - GitHub OSINT **[NEW]**
+
+1. Select **GitHub** from sidebar
+2. Enter GitHub search query
+3. Optional: Custom regex pattern for filtering
+4. Optional: Filter by user/organization
+5. Optional: Filter by project
+6. Choose sort order (best/new/old)
+7. Click **RUN SCAN**
+
+**Example Searches:**
+- `filename:shadow path:etc` - Shadow files
+- `extension:pem private` - Private keys
+- `password filename:config` - Config files with passwords
+- `AWS_ACCESS_KEY` - AWS credentials
+
+**Security:** Regex patterns validated to prevent ReDoS attacks
+
+---
+
+### 🦀 feroxbuster - Web Content Discovery **[NEW]**
+**Fast Rust-based Scanner**
+
+1. Select **feroxbuster** from sidebar
+2. Enter target URL (include `http://` or `https://`)
+3. Select wordlist file
+4. Specify extensions (e.g., `php,html,txt,asp,aspx`)
+5. Set thread count (default 50, max 100)
+6. Set recursion depth (default 4)
+7. Click **RUN SCAN**
+
+**Features:**
+- Recursive scanning
+- Fast multi-threading
+- Extension filtering
+- Auto-filtering 404s
+
+---
+
+### ☁️ AWSBucketDump - S3 Enumeration **[NEW]**
+
+1. Select **AWS S3** from sidebar
+2. Specify bucket list file
+3. Optional: Grep keywords file for filtering
+4. Optional: Enable "Download Files" (use responsibly)
+5. Set thread count (default 5, max 20)
+6. Click **RUN SCAN**
+
+**Use Cases:**
+- Bucket enumeration
+- Permission testing
+- Data discovery
+- Security audits
+
+**⚠️ Warning:** Only test authorized targets. Downloading files without permission is illegal.
+
+---
+
+### 📦 TCPdump - Packet Capture **[NEW]**
+**Requires sudo/root privileges**
+
+1. Select **TCPdump** from sidebar
+2. Enter network interface (e.g., `eth0`, `wlan0`)
+3. Enter BPF filter (e.g., `port 80`, `host 192.168.1.1`)
+4. Set packet count limit
+5. Optional: Specify output PCAP file
+6. Enable verbose mode if desired
+7. Click **RUN SCAN** (will prompt for sudo password)
+
+**Example Filters:**
+- `port 80` - HTTP traffic
+- `tcp and port 443` - HTTPS traffic
+- `host 192.168.1.1 and port 22` - SSH to specific host
+- `icmp` - ICMP (ping) traffic
+
+**Security:** Interface names and BPF filters are validated. Only simple filters allowed.
+
+---
+
+### 📁 Gobuster - Directory Brute-forcing
+
+1. Select **Gobuster** from sidebar
 2. Enter target URL (must include `http://` or `https://`)
 3. Choose mode (Directory, DNS, or Virtual Host)
-4. Select or browse for a wordlist file
-5. Set number of threads (10 is default)
-6. Specify file extensions to search for (e.g., `php,html,txt`)
+4. Select wordlist file
+5. Set threads (default 10)
+6. Specify file extensions
 7. Click **RUN SCAN**
 
 **Common Wordlists on Kali:**
@@ -196,148 +352,304 @@ Or make it directly executable:
 - `/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt`
 - `/usr/share/seclists/Discovery/Web-Content/common.txt`
 
-#### 🔐 Nikto Scanner
-1. Select the **NIKTO** tab
+---
+
+### 🔐 Nikto - Web Vulnerability Scanner
+
+1. Select **Nikto** from sidebar
 2. Enter target URL or IP
 3. Specify port (default 80)
-4. Enable SSL if scanning HTTPS
-5. Choose scan tuning option
+4. Enable SSL for HTTPS targets
+5. Choose scan tuning (x = all tests)
 6. Click **RUN SCAN**
 
 **Scan Tuning Options:**
 - `1` - Interesting files
 - `2` - Misconfiguration
 - `3` - Information disclosure
-- `4` - Injection vulnerabilities
+- `4` - Injection vulnerabilities (XSS/SQLi)
 - `6` - XSS vulnerabilities
 - `9` - SQL injection
 - `x` - All tests (comprehensive)
 
-#### 💥 Metasploit Scanner
-1. Select the **METASPLOIT** tab
-2. Choose an auxiliary/scanner module from dropdown
-3. Enter target IP or hostname (RHOSTS)
-4. Configure ports (for port scanner modules)
-5. Set thread count (default 10)
-6. Add any extra options (as KEY=VALUE)
+---
+
+### 💥 Metasploit - Framework Scanner
+
+1. Select **Metasploit** from sidebar
+2. Choose auxiliary/scanner module
+3. Enter target (RHOSTS)
+4. Configure ports (for port scanners)
+5. Set thread count
+6. Add extra options (KEY=VALUE format)
 7. Click **RUN SCAN**
 
-**Available Modules:**
-- Port Scanners: TCP, SYN
-- Service Detection: SMB, SSH, HTTP, FTP, MySQL, PostgreSQL
-- Enumeration: SMB shares, SSH users, SNMP data
+**Available Module Categories:**
+- Port Scanners (TCP/SYN)
+- Service Detection (SMB, SSH, HTTP, FTP, MySQL, PostgreSQL)
+- Service Enumeration (shares, users, SNMP)
 
-**Example Modules:**
-- `auxiliary/scanner/portscan/tcp` - TCP port scanner
-- `auxiliary/scanner/smb/smb_version` - SMB version detection
-- `auxiliary/scanner/ssh/ssh_version` - SSH banner grabbing
-- `auxiliary/scanner/http/http_version` - HTTP server detection
+**Security Note:** Only auxiliary/scanner modules allowed - no exploitation.
 
-**Security Note:** Only auxiliary/scanner modules are available. Exploitation modules are blocked for safety.
+---
 
-### Scan Controls
-- **▶ RUN SCAN** - Start the configured scan
-- **⬛ STOP** - Terminate the running scan
-- **💾 SAVE** - Save console output to a text file
-- **🗑 CLEAR** - Clear the console output
+### ⚙️ Settings **[NEW]**
+
+1. Select **Settings** from sidebar
+2. **Shodan API Key**: Enter your 32-character hex API key
+3. **Process Timeout**: Set max scan duration (default 3600s)
+4. **Max Output Lines**: Memory management (default 10000)
+5. Click **SAVE SETTINGS**
+
+Settings are saved to: `~/.recon_superpower/config.json`
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+- `Ctrl+R` - Run Scan
+- `Ctrl+S` - Save Output
+- `Ctrl+L` - Clear Console
+- `Ctrl+F` - Search in Output
+- `Ctrl+C` - Copy Selection/All
+- `Ctrl+Q` - Quit Application
+- `ESC` - Stop Running Scan
+
+---
 
 ## 📖 Tips & Best Practices
 
+### General Tips
+- Always start with less aggressive scans
+- Monitor target system load
+- Respect rate limits
+- Save results for documentation
+- Use scan profiles for consistency
+
 ### Nmap Tips
-- Start with a basic scan (`-sS`) before running intensive scans
-- Use `-Pn` in Extra Options to skip ping if host seems down
-- For stealth, use slower timing templates (T0-T2)
-- Combine with `-sV` for version detection
+- Use NSE scripts for deeper reconnaissance
+- Combine `-sV` with `--script vuln` for vulnerability assessment
+- Start with quick scan, then deep scan on interesting ports
+- Use `-Pn` to skip ping if host seems down
 
-### Gobuster Tips
-- Start with smaller wordlists for faster results
-- Adjust thread count based on target capacity
-- Use `-k` in Extra Options to skip SSL certificate verification
-- Add `-b 404,403` to hide specific status codes
+### Shodan Tips
+- Narrow searches with facets
+- Use `net:` filter for specific networks
+- Combine multiple filters (e.g., `product:nginx country:US`)
+- Be aware of query credit limits
 
-### Nikto Tips
-- Nikto scans can be noisy and easily detected
-- Use `-Pause` in Extra Options to slow down requests
-- Save results with the SAVE button for reporting
-- Review findings carefully - may include false positives
+### DNSrecon Tips
+- Try zone transfer (axfr) first - often reveals everything
+- Use large wordlists for brute force (be patient)
+- Combine with other OSINT for subdomain discovery
+
+### Web Scanner Tips (Gobuster/feroxbuster)
+- Start with smaller wordlists
+- Adjust threads based on target capacity
+- Use `-k` to skip SSL  verification
+- Save results immediately - scans can be interrupted
+
+### TCPdump Tips
+- Run with minimal privileges when possible
+- Use specific filters to reduce noise
+- Limit packet count to avoid huge files
+- Analyze PCAP files with Wireshark
+
+---
 
 ## 🛠️ Troubleshooting
 
-### "Command not found" Error
-- Ensure the tool is installed: `which nmap` / `which gobuster` / `which nikto`
-- Install missing tools using your package manager
+### Tool Not Found Errors
+```bash
+# Check if tool is installed
+which nmap
+which shodan
+which dnsrecon
 
-### Permission Denied
-- Some Nmap scans require root/sudo privileges
-- Run as root: `sudo python3 recon_superpower.py`
-- Or use capability: `sudo setcap cap_net_raw,cap_net_admin=eip $(which nmap)`
+# Install missing tools
+sudo apt install <tool-name>
+```
 
-### Wordlist Not Found (Gobuster)
-- Verify the wordlist path exists
-- Use the browse button to locate wordlists
-- Install SecLists: `sudo apt install seclists`
+### Permission Denied (TCPdump/Nmap)
+```bash
+# Run with sudo for packet capture
+sudo python3 recon_superpower.py
+
+# Or set capabilities (Nmap only)
+sudo setcap cap_net_raw,cap_net_admin=eip $(which nmap)
+```
+
+### Shodan API Errors
+- Verify API key is correct (32 hex characters)
+- Check account has available query credits
+- Ensure network connectivity to Shodan API
+
+### GitHarvester/AWSBucketDump Not Found
+- Clone repositories as shown in Prerequisites
+- Update script paths in code (see comments in build_command method)
 
 ### GUI Not Launching
-- Ensure tkinter is installed: `python3 -m tkinter`
-- Install if missing: `sudo apt install python3-tk`
+```bash
+# Test tkinter
+python3 -m tkinter
+
+# Install if missing
+sudo apt install python3-tk
+```
+
+---
+
+## 🔒 Security & Privacy
+
+### Built-in Security Features
+- **Input Validation**: All user inputs validated
+- **Command Injection Prevention**: Whitelisting and sanitization
+- **Path Traversal Protection**: Restricted file operations
+- **API Key Protection**: Environment variables (not command-line)
+- **Private IP Blocking**: Prevents SSRF attacks
+- **Resource Limits**: Thread counts, timeouts, output size
+- **ReDoS Prevention**: Regex pattern validation
+
+### Privacy Considerations
+- API keys stored in `~/.recon_superpower/config.json` (plain text, local file)
+- Scan history stored locally
+- No telemetry or external reporting
+- All tool data stays on your system
+
+### Responsible Use
+1. **Get authorization** - Always obtain written permission
+2. **Rate limiting** - Don't overwhelm targets
+3. **Legal compliance** - Know your jurisdiction's laws
+4. **Data security** - Protect discovered information
+5. **Responsible disclosure** - Report vulnerabilities properly
+
+---
+
+## 📦 Output & Export
+
+### Saving Results
+- Click **💾 SAVE** to save console output
+- Default: `recon_output_YYYYMMDD_HHMMSS.txt`
+- Contains full output including commands
+
+### Export Formats
+- **📤 EXPORT** button offers multiple formats:
+  - Text (`.txt`)
+  - JSON (`.json`)
+  - XML (`.xml`)
+  - HTML (`.html`) - Styled with dark theme
+
+### Search & Copy
+- **🔍 SEARCH** - Find text in output with highlighting
+- **📋 COPY** - Copy selected text or all output
+
+---
 
 ## 🎨 Customization
 
-The application uses a dark hacker theme with customizable colors. Edit these variables in the code:
+### Theme Colors
+Edit these variables in the code to customize colors:
 
 ```python
 self.bg_primary = "#0a0e27"      # Main background
 self.bg_secondary = "#151b3d"    # Panel background
-self.accent_green = "#00ff41"    # Primary accent
-self.accent_cyan = "#00d9ff"     # Secondary accent
-self.accent_red = "#ff0055"      # Alert color
+self.bg_tertiary = "#1e2749"     # Sidebar background
+self.accent_green = "#00ff41"    # Primary accent (active elements)
+self.accent_cyan = "#00d9ff"     # Secondary accent (headers)
+self.accent_red = "#ff0055"      # Alert/stop color
 ```
-
-## 📝 Output Files
-
-Scan results can be saved using the **SAVE** button:
-- Default filename: `recon_output_YYYYMMDD_HHMMSS.txt`
-- Contains full console output including commands run
-- Suitable for reports and documentation
-
-## 🔒 Security Considerations
-
-1. **Always get written authorization** before scanning any target
-2. **Rate limiting**: Be respectful of target systems
-3. **Legal compliance**: Know your local laws regarding security testing
-4. **Data handling**: Secure any sensitive information discovered
-5. **Responsible disclosure**: Report vulnerabilities through proper channels
-
-## 🤝 Contributing
-
-This tool is designed for educational and authorized security testing. Feel free to:
-- Report bugs and issues
-- Suggest new features
-- Submit improvements
-- Share your use cases
-
-## 📄 License
-
-MIT License - Use responsibly and legally.
-
-## 🔗 Resources
-
-### Official Documentation
-- [Nmap Official Site](https://nmap.org/)
-- [Gobuster GitHub](https://github.com/OJ/gobuster)
-- [Nikto GitHub](https://github.com/sullo/nikto)
-
-### Learning Resources
-- [Nmap Book](https://nmap.org/book/)
-- [OWASP Testing Guide](https://owasp.org/www-project-web-security-testing-guide/)
-- [HackTheBox](https://www.hackthebox.eu/) - Practice your skills legally
-
-### Wordlists
-- [SecLists](https://github.com/danielmiessler/SecLists) - Comprehensive wordlist collection
-- [FuzzDB](https://github.com/fuzzdb-project/fuzzdb) - Fuzzing patterns and payloads
 
 ---
 
-**Remember: With great power comes great responsibility. Scan ethically, scan legally.**
+## 📊 Project Stats
 
-⚡ Happy (Authorized) Hacking! ⚡
+- **Lines of Code**: 2,500+
+- **Methods**: 49
+- **Security Validations**: 20+
+- **Integrated Tools**: 11
+- **File Size**: ~100KB
+- **Development Time**: v1.0 → v2.0 upgrade
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Areas for improvement:
+- Additional tool integrations
+- More NSE script templates
+- Enhanced UI features
+- Additional export formats
+- Automated testing
+
+---
+
+## 📄 License
+
+MIT License - See LICENSE file for details.
+
+Use this tool responsibly and legally.
+
+---
+
+## 🔗 Resources
+
+### Tool Documentation
+- [Nmap Reference](https://nmap.org/book/man.html)
+- [Gobuster GitHub](https://github.com/OJ/gobuster)
+- [Nikto Documentation](https://github.com/sullo/nikto/wiki)
+- [Metasploit Unleashed](https://www.metasploitunleashed.com/)
+- [Shodan Search Guide](https://www.shodan.io/search/filters)
+- [DNSrecon GitHub](https://github.com/darkoperator/dnsrecon)
+- [feroxbuster Docs](https://github.com/epi052/feroxbuster)
+
+### Learning Resources
+- [Nmap NSE Scripts](https://nmap.org/nsedoc/)
+- [OWASP Testing Guide](https://owasp.org/www-project-web-security-testing-guide/)
+- [HackTheBox](https://www.hackthebox.eu/) - Legal practice environment
+- [TryHackMe](https://tryhackme.com/) - Guided learning paths
+
+### Wordlists & Data
+- [SecLists](https://github.com/danielmiessler/SecLists) - Comprehensive collection
+- [FuzzDB](https://github.com/fuzzdb-project/fuzzdb) - Fuzzing patterns
+- [PayloadsAllTheThings](https://github.com/swisskyrepo/PayloadsAllTheThings)
+
+---
+
+## 📝 Changelog
+
+### v2.0 (2025-12-05)
+- Complete UI redesign with sidebar navigation
+- Added 7 new tools (Shodan, DNSrecon, enum4linux, GitHarvester, feroxbuster, AWSBucketDump, TCPdump)
+- Nmap NSE script support
+- Settings tab with API key management
+- Comprehensive security audit and vulnerability remediation
+- Enhanced input validation across all tools
+- Improved UX with hover effects
+
+### v1.2 (Previous)
+- Metasploit Framework integration
+- Scan profiles
+- Enhanced security
+
+### v1.1 (Previous)
+- Security hardening
+- Keyboard shortcuts
+- Multi-format export
+- Search functionality
+
+### v1.0 (Initial)
+- Core functionality with Nmap, Gobuster, Nikto
+
+---
+
+**Remember: With great power comes great responsibility. Scan ethically, scan legally, scan responsibly.**
+
+⚡ **Happy (Authorized) Reconnaissance!** ⚡
+
+---
+
+**Project**: Recon-Superpowers  
+**Version**: 2.0  
+**Author**: [Your Name]  
+**Repository**: https://github.com/aingram702/Recon-Superpowers  
+**License**: MIT
