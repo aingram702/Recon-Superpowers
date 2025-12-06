@@ -22,47 +22,40 @@ By using this tool, you agree to use it responsibly and legally.
 
 ---
 
-## 🚀 What's New in v2.0
+## 🚀 What's New in v3.0
 
-### Major UI Redesign 🎨
-- ✅ **Vertical Sidebar Navigation** - Professional layout supporting unlimited tools
-- ✅ **11 Tools** - Expanded from 4 to 11 reconnaissance tools
-- ✅ **Hover Effects** - Enhanced visual feedback and user experience
-- ✅ **Settings Tab** - Centralized configuration management
-- ✅ **Scalable Design** - Easily extensible for future tools
-
-### 7 New Tools Added 🔧
-- ✅ **Shodan** - API-based device discovery and search engine
-- ✅ **DNSrecon** - Comprehensive DNS enumeration and reconnaissance
-- ✅ **enum4linux** - SMB/Windows system enumeration
-- ✅ **GitHarvester** - GitHub OSINT and sensitive data discovery
-- ✅ **feroxbuster** - Fast Rust-based web content discovery
-- ✅ **AWSBucketDump** - S3 bucket enumeration and dumping
-- ✅ **TCPdump** - Network packet capture and analysis
-
-### Enhanced Existing Tools ⚡
-- ✅ **Nmap NSE Scripts** - Full scripting engine support with categories and custom scripts
-- ✅ **API Integration** - Shodan API key management in Settings
-- ✅ **Improved Validation** - Enhanced input validation across all tools
-
-### Security Hardening 🔒
-- ✅ **12 Vulnerabilities Remediated** - Comprehensive security audit completed
-- ✅ **API Key Protection** - Environment variable usage (no exposure in commands)
-- ✅ **ReDoS Prevention** - Regex pattern validation
-- ✅ **SSRF Blocking** - Private IP range restrictions
-- ✅ **Enhanced Domain Validation** - RFC-compliant checking
-- ✅ **BPF Filter Hardening** - Whitelist-based validation for TCPdump
-- ✅ **Interface Verification** - System interface existence checks
-- ✅ **Thread Limits** - Resource exhaustion prevention
-
-### 🔄 Automated Workflows (NEW in v3.0) ⭐
+### 🔄 Automated Workflows ⭐
 - ✅ **6 Pre-defined Workflows** - Common reconnaissance patterns automated
-- ✅ **Sequential Execution** - Multi-tool chains with progress tracking  
+- ✅ **Sequential Execution** - Multi-tool chains with progress tracking
 - ✅ **Smart Conditions** - Steps execute based on previous results
 - ✅ **Target Validation** - Workflow-specific format checking
-- ✅ **Timeout Controls** - Total and per-step timeout enforcement
 - ✅ **Interactive Progress** - Real-time status updates and step tracking
-- ✅ **Secure Execution** - Command injection prevention and validation
+
+### 🆕 New Feature Tabs
+- ✅ **Shellz** - Reverse shell generator for multiple languages
+- ✅ **Encoders** - Base64, URL, Hex, and other encoding tools
+- ✅ **Decoders** - Decode various encoding formats
+- ✅ **LOLOL** - Living Off The Land binaries reference (GTFOBins)
+- ✅ **Help** - Comprehensive application guide and cheat sheets
+
+### Enhanced Settings ⚙️
+- ✅ **Wordlist Path Configuration** - Set default wordlist directory
+- ✅ **Custom Tools Path** - Configure paths to custom tools
+- ✅ **Output Directory** - Set default output location
+- ✅ **UI Preferences** - Auto-save, timestamps, confirm exit options
+
+### UI Improvements 🎨
+- ✅ **TCPDump Interface Dropdown** - Auto-detect and select network interfaces
+- ✅ **Improved Cheat Sheets** - Better formatting and readability
+- ✅ **Scrollable Settings** - All settings in organized sections
+
+### 🔒 Security & Bug Fixes
+- ✅ **Fixed Shodan API Key Validation** - Now accepts valid alphanumeric API keys
+- ✅ **Fixed Browse Wordlist Buttons** - Correctly update the target entry field
+- ✅ **Improved Input Validation** - Enhanced security across all inputs
+- ✅ **Command Injection Prevention** - Comprehensive protection
+- ✅ **Timeout Controls** - Total and per-step timeout enforcement
+- ✅ **Secure Execution** - All subprocess calls use shell=False
 
 **Available Workflows:**
 1. 🎯 **Full Network Reconnaissance** - Nmap → Gobuster → Nikto → DNSrecon
@@ -725,12 +718,12 @@ self.accent_red = "#ff0055"      # Alert/stop color
 
 ## 📊 Project Stats
 
-- **Lines of Code**: 2,500+
-- **Methods**: 49
-- **Security Validations**: 20+
-- **Integrated Tools**: 11
-- **File Size**: ~100KB
-- **Development Time**: v1.0 → v2.0 upgrade
+- **Lines of Code**: 6,000+
+- **Methods**: 60+
+- **Security Validations**: 25+
+- **Integrated Tools**: 11+ (with new feature tabs)
+- **File Size**: ~200KB
+- **Workflows**: 6 automated reconnaissance patterns
 
 ---
 
@@ -779,6 +772,16 @@ Use this tool responsibly and legally.
 
 ## 📝 Changelog
 
+### v3.0 (2025-12-06)
+- Added automated workflows with 6 pre-defined reconnaissance patterns
+- New feature tabs: Shellz, Encoders, Decoders, LOLOL, Help
+- Enhanced Settings with path configuration and UI preferences
+- TCPDump interface dropdown with auto-detection
+- Fixed Shodan API key validation (alphanumeric support)
+- Fixed wordlist browse buttons across all tools
+- Improved cheat sheet UI and formatting
+- Added msfvenom payload generation to Metasploit tab
+
 ### v2.0 (2025-12-05)
 - Complete UI redesign with sidebar navigation
 - Added 7 new tools (Shodan, DNSrecon, enum4linux, GitHarvester, feroxbuster, AWSBucketDump, TCPdump)
@@ -810,8 +813,8 @@ Use this tool responsibly and legally.
 
 ---
 
-**Project**: Recon-Superpowers  
-**Version**: 2.0  
-**Author**: [Your Name]  
-**Repository**: https://github.com/aingram702/Recon-Superpowers  
+**Project**: Recon-Superpowers
+**Version**: 3.0
+**Author**: aingram702
+**Repository**: https://github.com/aingram702/Recon-Superpowers
 **License**: MIT
