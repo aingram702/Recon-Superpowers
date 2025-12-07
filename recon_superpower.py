@@ -2901,12 +2901,12 @@ Adjustable:  Yes (via Settings)
         main_container.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
 
         # Left panel - Tool selection sidebar + Tool configuration
-        left_panel = tk.Frame(main_container, bg=self.bg_secondary, width=450)
+        left_panel = tk.Frame(main_container, bg=self.bg_secondary, width=520)
         left_panel.pack(side=tk.LEFT, fill=tk.BOTH, padx=(0, 10), pady=0)
         left_panel.pack_propagate(False)
 
         # Tool selector sidebar (narrower)
-        sidebar_frame = tk.Frame(left_panel, bg=self.bg_tertiary, width=150)
+        sidebar_frame = tk.Frame(left_panel, bg=self.bg_tertiary, width=140)
         sidebar_frame.pack(side=tk.LEFT, fill=tk.Y, padx=0, pady=0)
         sidebar_frame.pack_propagate(False)
 
@@ -3287,7 +3287,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
-            justify=tk.LEFT
+            justify=tk.LEFT,
+            wraplength=320
         )
         info_label.grid(row=7, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
@@ -3365,7 +3366,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
-            justify=tk.LEFT
+            justify=tk.LEFT,
+            wraplength=320
         )
         info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
@@ -3433,7 +3435,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
-            justify=tk.LEFT
+            justify=tk.LEFT,
+            wraplength=320
         )
         info_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
@@ -3467,7 +3470,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9, "bold"),
             fg=self.accent_red,
             bg=self.bg_secondary,
-            justify=tk.CENTER
+            justify=tk.CENTER,
+            wraplength=320
         )
         warning_label.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
 
@@ -3612,7 +3616,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
-            justify=tk.LEFT
+            justify=tk.LEFT,
+            wraplength=320
         )
         info_label.grid(row=12, column=0, columnspan=2, sticky=tk.W, padx=10, pady=10)
 
@@ -3646,7 +3651,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9, "bold"),
             fg=self.accent_red,
             bg=self.bg_secondary,
-            justify=tk.CENTER
+            justify=tk.CENTER,
+            wraplength=320
         )
         warning_label.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
 
@@ -3695,7 +3701,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
-            justify=tk.LEFT
+            justify=tk.LEFT,
+            wraplength=320
         )
         info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
@@ -3791,7 +3798,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
-            justify=tk.LEFT
+            justify=tk.LEFT,
+            wraplength=320
         )
         info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
@@ -3871,7 +3879,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
-            justify=tk.LEFT
+            justify=tk.LEFT,
+            wraplength=320
         )
         info_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
@@ -3945,7 +3954,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
-            justify=tk.LEFT
+            justify=tk.LEFT,
+            wraplength=320
         )
         info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
@@ -4007,7 +4017,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
-            justify=tk.LEFT
+            justify=tk.LEFT,
+            wraplength=320
         )
         info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
@@ -4076,7 +4087,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
-            justify=tk.LEFT
+            justify=tk.LEFT,
+            wraplength=320
         )
         info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
@@ -4164,7 +4176,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
-            justify=tk.LEFT
+            justify=tk.LEFT,
+            wraplength=320
         )
         info_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
@@ -4227,7 +4240,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9, "bold"),
             fg=self.accent_red,
             bg=self.bg_secondary,
-            justify=tk.CENTER
+            justify=tk.CENTER,
+            wraplength=320
         )
         warning_label.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
 
@@ -4281,7 +4295,8 @@ Adjustable:  Yes (via Settings)
             font=("Courier", 9),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
-            justify=tk.LEFT
+            justify=tk.LEFT,
+            wraplength=320
         )
         info_label.grid(row=7, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
@@ -5730,7 +5745,8 @@ Configure in the Settings tab:
             font=("Courier", 8),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
-            justify=tk.LEFT
+            justify=tk.LEFT,
+            wraplength=320
         )
         info_label.grid(row=8, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
 
@@ -6719,7 +6735,8 @@ Configure in the Settings tab:
             font=("Courier", 9),
             fg=self.accent_cyan,
             bg=self.bg_secondary,
-            justify=tk.LEFT
+            justify=tk.LEFT,
+            wraplength=320
         )
         info_label.grid(row=row, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
 
