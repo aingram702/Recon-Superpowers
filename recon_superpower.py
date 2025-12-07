@@ -7010,6 +7010,34 @@ Configure in the Settings tab:
         except (ValueError, AttributeError):
             return False
 
+    def validate_domain(self, domain):
+        """
+        Security: Validate domain name input.
+        Allows standard domain names but blocks dangerous characters.
+        """
+        if not domain or len(domain) > 253:  # Max domain length per RFC
+            return False
+
+        # Security: Block NULL bytes
+        if '\x00' in domain:
+            return False
+
+        # Block shell metacharacters
+        dangerous_chars = [';', '&', '|', '$', '`', '\n', '\r', '(', ')', '<', '>', '{', '}', '[', ']', ' ']
+        if any(char in domain for char in dangerous_chars):
+            return False
+
+        # Domain must match pattern: alphanumeric, dots, hyphens only
+        if not re.match(r'^[a-zA-Z0-9][a-zA-Z0-9\.\-]*[a-zA-Z0-9]$', domain):
+            # Allow single-char domains like "a" for testing
+            if not re.match(r'^[a-zA-Z0-9]$', domain):
+                return False
+
+        # Domain must contain at least one dot (TLD required) unless testing
+        # Allow localhost and single-label names for internal testing
+
+        return True
+
     def validate_extra_options(self, options):
         """
         Security: Validate extra options to prevent command injection.
