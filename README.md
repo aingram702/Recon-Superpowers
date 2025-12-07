@@ -32,10 +32,11 @@ By using this tool, you agree to use it responsibly and legally.
 - ✅ **Interactive Progress** - Real-time status updates and step tracking
 
 ### 🆕 New Feature Tabs
-- ✅ **Shellz** - Reverse shell generator for multiple languages
-- ✅ **Encoders** - Base64, URL, Hex, and other encoding tools
-- ✅ **Decoders** - Decode various encoding formats
-- ✅ **LOLOL** - Living Off The Land binaries reference (GTFOBins)
+- ✅ **SQLmap Tab** - Full SQL injection testing with level/risk controls, tamper scripts, and database enumeration
+- ✅ **Shellz** - Reverse shell generator for 16+ languages (Bash, Python, PowerShell, PHP, etc.)
+- ✅ **Encoders** - Base64, URL, Hex, Binary, ROT13, Unicode encoding + MD5/SHA hashing
+- ✅ **Decoders** - Decode Base64, URL, Hex, Binary, ROT13, Unicode, and JWT tokens
+- ✅ **LOLOL** - Living Off The Land reference with GTFOBins (Linux), LOLBAS (Windows), and LOLAD (Active Directory)
 - ✅ **Help** - Comprehensive application guide and cheat sheets
 
 ### Enhanced Settings ⚙️
@@ -58,10 +59,10 @@ By using this tool, you agree to use it responsibly and legally.
 - ✅ **Secure Execution** - All subprocess calls use shell=False
 
 **Basic Workflows:**
-1. 🎯 **Full Network Reconnaissance** - Nmap → Gobuster → Nikto → DNSrecon
-2. 🌐 **Web Application Deep Scan** - Nikto → Gobuster → feroxbuster → Shodan
+1. 🎯 **Full Network Reconnaissance** - Nmap (full port + vuln) → DNS → Gobuster → Nikto → SQLmap → Shodan
+2. 🌐 **Web Application Deep Scan** - Nmap (web scripts) → Nikto → Gobuster → feroxbuster → SQLmap → Shodan
 3. 📡 **Domain Intelligence Gathering** - DNSrecon (std + brt) → Shodan → GitHarvester
-4. 🖥️ **Windows/SMB Enumeration** - Nmap (SMB) → enum4linux → Metasploit
+4. 🖥️ **Windows/SMB Enumeration** - Nmap (SMB scripts + vuln) → enum4linux → MSF Version → MSF Shares → MS17-010
 5. ☁️ **Cloud Asset Discovery** - AWSBucketDump → GitHarvester → Shodan
 6. ⚡ **Quick Host Discovery** - Nmap (fast) → Nikto (quick)
 
@@ -114,9 +115,9 @@ By using this tool, you agree to use it responsibly and legally.
 ```bash
 # Core tools (Included in most pentesting distros)
 sudo apt update
-sudo apt install nmap gobuster nikto metasploit-framework
+sudo apt install nmap gobuster nikto metasploit-framework sqlmap
 
-# Additional tools for v2.0
+# Additional tools for v3.0
 sudo apt install dnsrecon enum4linux tcpdump
 
 # feroxbuster (Rust-based, may need manual installation)
