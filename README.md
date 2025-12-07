@@ -7,7 +7,7 @@ A professional dark-themed GUI wrapper for **11 essential security reconnaissanc
 ![License](https://img.shields.io/badge/license-MIT-orange)
 ![Security](https://img.shields.io/badge/security-hardened-brightgreen)
 ![Tools](https://img.shields.io/badge/tools-11-blue)
-![Workflows](https://img.shields.io/badge/workflows-6-purple)
+![Workflows](https://img.shields.io/badge/workflows-19-purple)
 
 ## ⚠️ Legal Disclaimer
 
@@ -25,7 +25,7 @@ By using this tool, you agree to use it responsibly and legally.
 ## 🚀 What's New in v3.0
 
 ### 🔄 Automated Workflows ⭐
-- ✅ **6 Pre-defined Workflows** - Common reconnaissance patterns automated
+- ✅ **19 Pre-defined Workflows** - Basic and advanced attack patterns automated
 - ✅ **Sequential Execution** - Multi-tool chains with progress tracking
 - ✅ **Smart Conditions** - Steps execute based on previous results
 - ✅ **Target Validation** - Workflow-specific format checking
@@ -57,13 +57,28 @@ By using this tool, you agree to use it responsibly and legally.
 - ✅ **Timeout Controls** - Total and per-step timeout enforcement
 - ✅ **Secure Execution** - All subprocess calls use shell=False
 
-**Available Workflows:**
+**Basic Workflows:**
 1. 🎯 **Full Network Reconnaissance** - Nmap → Gobuster → Nikto → DNSrecon
 2. 🌐 **Web Application Deep Scan** - Nikto → Gobuster → feroxbuster → Shodan
 3. 📡 **Domain Intelligence Gathering** - DNSrecon (std + brt) → Shodan → GitHarvester
 4. 🖥️ **Windows/SMB Enumeration** - Nmap (SMB) → enum4linux → Metasploit
 5. ☁️ **Cloud Asset Discovery** - AWSBucketDump → GitHarvester → Shodan
 6. ⚡ **Quick Host Discovery** - Nmap (fast) → Nikto (quick)
+
+**Advanced Attack Workflows:**
+7. 🏢 **AD Reconnaissance** - Nmap (AD ports) → enum4linux → MSF LDAP → Kerberos
+8. 🌍 **Web Application Pentesting** - Nmap → Nikto → Gobuster → feroxbuster → Vhost
+9. 🔴 **External Perimeter Assessment** - DNS → Subdomain → Shodan → Nmap → GitHarvester
+10. 🔄 **Internal Network Sweep** - Host Discovery → Service Enum → Windows → MSF
+11. 🔌 **API Security Assessment** - Nmap → Gobuster (API) → feroxbuster → Nikto
+12. 🔑 **Credential Hunting** - GitHarvester → Shodan → Nmap → MSF FTP
+13. 🔒 **SSL/TLS Assessment** - Nmap (SSL scripts) → Nikto HTTPS → Shodan
+14. 📊 **Network Services Audit** - Full Port Scan → Version Detection → Nikto → SMB → SSH
+15. 🥷 **Stealth Reconnaissance** - Slow Nmap → DNS → Shodan → GitHub
+16. 📦 **Full Stack Assessment** - DNS → Nmap → Nikto → Gobuster → enum4linux → Shodan → Git
+17. 🔓 **Vulnerability Assessment** - Nmap (vuln) → Nikto → MSF SMB → Shodan
+18. 🗄️ **Database Discovery** - Nmap (DB ports) → MySQL → MSSQL → Shodan
+19. 📧 **Mail Server Reconnaissance** - DNS MX → Nmap (mail) → SMTP Enum → Shodan
 
 ---
 

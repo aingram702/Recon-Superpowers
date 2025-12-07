@@ -1611,37 +1611,85 @@ payload/                        # BLOCKED
 WORKFLOWS CHEAT SHEET
 ═══════════════════════════════════════════════════════════
 
-📋 AVAILABLE WORKFLOWS
+📋 BASIC WORKFLOWS
 ────────────────────────────────────────────────────────────
 1. 🎯 Full Network Reconnaissance
-   Target: IP address or network range
    Steps: Nmap → Gobuster → Nikto → DNSrecon
    Best for: Unknown networks, initial assessment
 
 2. 🌐 Web Application Deep Scan
-   Target: URL (http:// or https://)
    Steps: Nikto → Gobuster → feroxbuster → Shodan
    Best for: Web applications, API endpoints
 
 3. 📡 Domain Intelligence Gathering
-   Target: Domain name (e.g., example.com)
    Steps: DNSrecon (std + brt) → Shodan → GitHarvester
    Best for: Domain reconnaissance, OSINT
 
 4. 🖥️ Windows/SMB Enumeration
-   Target: IP address
    Steps: Nmap (SMB) → enum4linux → Metasploit
    Best for: Windows hosts, Active Directory
 
 5. ☁️ Cloud Asset Discovery
-   Target: Organization name
    Steps: AWSBucketDump → GitHarvester → Shodan
    Best for: Cloud security assessment
 
 6. ⚡ Quick Host Discovery
-   Target: IP address or hostname
    Steps: Nmap (fast) → Nikto (quick)
    Best for: Fast initial reconnaissance
+
+🔥 ADVANCED ATTACK WORKFLOWS
+────────────────────────────────────────────────────────────
+7. 🏢 Active Directory Reconnaissance
+   Steps: Nmap (AD ports) → enum4linux → MSF LDAP → Kerberos
+   Best for: AD pentesting, domain enumeration
+
+8. 🌍 Web Application Pentesting
+   Steps: Nmap → Nikto → Gobuster → feroxbuster → Vhost
+   Best for: Complete web app assessment
+
+9. 🔴 External Perimeter Assessment
+   Steps: DNS → Subdomain → Shodan → Nmap → GitHarvester
+   Best for: Red team external recon
+
+10. 🔄 Internal Network Sweep
+    Steps: Host Discovery → Service Enum → Windows → MSF
+    Best for: Internal network pentesting
+
+11. 🔌 API Security Assessment
+    Steps: Nmap → Gobuster (API) → feroxbuster → Nikto
+    Best for: REST API security testing
+
+12. 🔑 Credential Hunting
+    Steps: GitHarvester → Shodan → Nmap → MSF FTP
+    Best for: Finding exposed credentials
+
+13. 🔒 SSL/TLS Assessment
+    Steps: Nmap (SSL scripts) → Nikto HTTPS → Shodan
+    Best for: Certificate and encryption testing
+
+14. 📊 Network Services Audit
+    Steps: Full Port Scan → Version Detection → Nikto → SMB → SSH
+    Best for: Comprehensive service enumeration
+
+15. 🥷 Stealth Reconnaissance
+    Steps: Slow Nmap → DNS → Shodan → GitHub
+    Best for: Evading detection (T1 timing)
+
+16. 📦 Full Stack Assessment
+    Steps: DNS → Nmap → Nikto → Gobuster → enum4linux → Shodan → Git
+    Best for: Complete infrastructure assessment
+
+17. 🔓 Vulnerability Assessment
+    Steps: Nmap (vuln) → Nikto → MSF SMB → Shodan
+    Best for: Comprehensive vuln scanning
+
+18. 🗄️ Database Discovery
+    Steps: Nmap (DB ports) → MySQL → MSSQL → Shodan
+    Best for: Finding database services
+
+19. 📧 Mail Server Reconnaissance
+    Steps: DNS MX → Nmap (mail) → SMTP Enum → Shodan
+    Best for: Email infrastructure enumeration
 
 🎯 TARGET FORMATS
 ────────────────────────────────────────────────────────────
@@ -1917,6 +1965,584 @@ Adjustable:  Yes (via Settings)
                             "tuning": "124"
                         },
                         "condition": "http_detected"
+                    }
+                ]
+            },
+            "ad_recon": {
+                "name": "Active Directory Reconnaissance",
+                "description": "Full AD enumeration: LDAP → Kerberos → SMB → Users",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "AD Services Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "53,88,135,139,389,445,464,636,3268,3269",
+                            "timing": "T4",
+                            "scripts": "ldap-rootdse,smb-os-discovery"
+                        }
+                    },
+                    {
+                        "tool": "enum4linux",
+                        "name": "SMB/LDAP Enumeration",
+                        "config": {
+                            "all_enum": True
+                        }
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "LDAP Query",
+                        "config": {
+                            "module": "auxiliary/gather/ldap_query",
+                            "threads": "5"
+                        }
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "Kerberos Enumeration",
+                        "config": {
+                            "module": "auxiliary/gather/kerberos_enumusers",
+                            "threads": "5"
+                        }
+                    }
+                ]
+            },
+            "web_pentest": {
+                "name": "Web Application Pentesting",
+                "description": "Complete web app assessment with vuln scanning",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "Web Service Detection",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "80,443,8080,8443,8000,8888",
+                            "timing": "T4",
+                            "scripts": "http-headers,http-methods,http-title"
+                        }
+                    },
+                    {
+                        "tool": "nikto",
+                        "name": "Web Vulnerability Scan",
+                        "config": {
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "x"
+                        }
+                    },
+                    {
+                        "tool": "gobuster",
+                        "name": "Directory Discovery",
+                        "config": {
+                            "mode": "dir",
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt",
+                            "extensions": "php,asp,aspx,jsp,html,js",
+                            "threads": "30"
+                        }
+                    },
+                    {
+                        "tool": "feroxbuster",
+                        "name": "Deep Content Discovery",
+                        "config": {
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
+                            "extensions": "php,html,js,json,xml,txt,bak,old",
+                            "threads": "50",
+                            "depth": "4"
+                        }
+                    },
+                    {
+                        "tool": "gobuster",
+                        "name": "Vhost Discovery",
+                        "config": {
+                            "mode": "vhost",
+                            "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt",
+                            "threads": "20"
+                        }
+                    }
+                ]
+            },
+            "external_perimeter": {
+                "name": "External Perimeter Assessment",
+                "description": "External recon for red team operations",
+                "steps": [
+                    {
+                        "tool": "dnsrecon",
+                        "name": "DNS Reconnaissance",
+                        "config": {
+                            "scan_type": "std"
+                        }
+                    },
+                    {
+                        "tool": "dnsrecon",
+                        "name": "Subdomain Enumeration",
+                        "config": {
+                            "scan_type": "brt",
+                            "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Internet Exposure Analysis",
+                        "config": {
+                            "search_type": "search",
+                            "query": "hostname:[TARGET_DOMAIN]"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "External Port Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "21,22,23,25,53,80,110,139,143,443,445,993,995,1433,3306,3389,5432,8080",
+                            "timing": "T3"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "Code Leak Search",
+                        "config": {
+                            "query": "[TARGET_DOMAIN] password OR secret OR api_key",
+                            "sort": "new"
+                        }
+                    }
+                ]
+            },
+            "internal_sweep": {
+                "name": "Internal Network Sweep",
+                "description": "Internal network discovery and enumeration",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "Host Discovery",
+                        "config": {
+                            "scan_type": "Ping",
+                            "ports": "",
+                            "timing": "T4"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "Service Enumeration",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "21,22,23,25,53,80,88,110,135,139,143,389,443,445,636,1433,3306,3389,5432,5900,8080",
+                            "timing": "T4",
+                            "scripts": "default"
+                        }
+                    },
+                    {
+                        "tool": "enum4linux",
+                        "name": "Windows Enumeration",
+                        "config": {
+                            "all_enum": True
+                        },
+                        "condition": "smb_detected"
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "Service Version Scan",
+                        "config": {
+                            "module": "auxiliary/scanner/portscan/tcp",
+                            "threads": "20"
+                        }
+                    }
+                ]
+            },
+            "api_security": {
+                "name": "API Security Assessment",
+                "description": "REST API security testing workflow",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "API Endpoint Discovery",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "80,443,8080,8443,3000,5000,8000",
+                            "timing": "T4",
+                            "scripts": "http-headers,http-methods"
+                        }
+                    },
+                    {
+                        "tool": "gobuster",
+                        "name": "API Path Discovery",
+                        "config": {
+                            "mode": "dir",
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt",
+                            "extensions": "json",
+                            "threads": "30"
+                        }
+                    },
+                    {
+                        "tool": "feroxbuster",
+                        "name": "Deep API Enumeration",
+                        "config": {
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
+                            "extensions": "json,xml",
+                            "threads": "40",
+                            "depth": "3"
+                        }
+                    },
+                    {
+                        "tool": "nikto",
+                        "name": "API Vulnerability Check",
+                        "config": {
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "3"
+                        }
+                    }
+                ]
+            },
+            "credential_hunt": {
+                "name": "Credential Hunting",
+                "description": "Search for exposed credentials across services",
+                "steps": [
+                    {
+                        "tool": "githarvester",
+                        "name": "GitHub Credential Search",
+                        "config": {
+                            "query": "[TARGET] password OR secret OR token OR api_key OR apikey",
+                            "sort": "new"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Exposed Service Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "org:[TARGET_ORG] port:21,22,23,3306,5432,27017"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "Authentication Service Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "21,22,23,25,110,143,389,636,1433,3306,3389,5432,5900",
+                            "timing": "T4",
+                            "scripts": "ftp-anon,ssh-auth-methods,smtp-open-relay"
+                        }
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "Anonymous Access Check",
+                        "config": {
+                            "module": "auxiliary/scanner/ftp/anonymous",
+                            "threads": "10"
+                        }
+                    }
+                ]
+            },
+            "ssl_assessment": {
+                "name": "SSL/TLS Assessment",
+                "description": "Certificate and encryption testing",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "SSL Service Discovery",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "443,465,636,989,990,993,995,8443",
+                            "timing": "T4",
+                            "scripts": "ssl-cert,ssl-enum-ciphers,ssl-known-key"
+                        }
+                    },
+                    {
+                        "tool": "nikto",
+                        "name": "HTTPS Vulnerability Scan",
+                        "config": {
+                            "port": "443",
+                            "ssl": True,
+                            "tuning": "x"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "SSL Certificate Analysis",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    }
+                ]
+            },
+            "service_audit": {
+                "name": "Network Services Audit",
+                "description": "Comprehensive service enumeration",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "Full Port Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "1-65535",
+                            "timing": "T4"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "Service Version Detection",
+                        "config": {
+                            "scan_type": "Version",
+                            "ports": "1-1000",
+                            "timing": "T3",
+                            "scripts": "default,vuln"
+                        }
+                    },
+                    {
+                        "tool": "nikto",
+                        "name": "Web Service Audit",
+                        "config": {
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "x"
+                        },
+                        "condition": "http_detected"
+                    },
+                    {
+                        "tool": "enum4linux",
+                        "name": "SMB Service Audit",
+                        "config": {
+                            "all_enum": True
+                        },
+                        "condition": "smb_detected"
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "SSH Version Check",
+                        "config": {
+                            "module": "auxiliary/scanner/ssh/ssh_version",
+                            "threads": "10"
+                        },
+                        "condition": "ssh_detected"
+                    }
+                ]
+            },
+            "stealth_recon": {
+                "name": "Stealth Reconnaissance",
+                "description": "Low and slow recon for evading detection",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "Stealth Port Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "21,22,23,25,53,80,110,139,143,443,445,3389",
+                            "timing": "T1"
+                        }
+                    },
+                    {
+                        "tool": "dnsrecon",
+                        "name": "Passive DNS Lookup",
+                        "config": {
+                            "scan_type": "std"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Passive Infrastructure Intel",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "Passive OSINT",
+                        "config": {
+                            "query": "[TARGET_DOMAIN]",
+                            "sort": "best"
+                        }
+                    }
+                ]
+            },
+            "full_stack": {
+                "name": "Full Stack Assessment",
+                "description": "Complete infrastructure assessment",
+                "steps": [
+                    {
+                        "tool": "dnsrecon",
+                        "name": "DNS Intelligence",
+                        "config": {
+                            "scan_type": "std"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "Comprehensive Port Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "1-10000",
+                            "timing": "T4",
+                            "scripts": "default"
+                        }
+                    },
+                    {
+                        "tool": "nikto",
+                        "name": "Web Application Scan",
+                        "config": {
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "x"
+                        },
+                        "condition": "http_detected"
+                    },
+                    {
+                        "tool": "gobuster",
+                        "name": "Content Discovery",
+                        "config": {
+                            "mode": "dir",
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/big.txt",
+                            "extensions": "php,html,asp,aspx,jsp,txt,bak",
+                            "threads": "40"
+                        },
+                        "condition": "http_detected"
+                    },
+                    {
+                        "tool": "enum4linux",
+                        "name": "Windows Enumeration",
+                        "config": {
+                            "all_enum": True
+                        },
+                        "condition": "smb_detected"
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Threat Intelligence",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "Code Repository Search",
+                        "config": {
+                            "query": "[TARGET_DOMAIN]",
+                            "sort": "new"
+                        }
+                    }
+                ]
+            },
+            "vuln_assessment": {
+                "name": "Vulnerability Assessment",
+                "description": "Comprehensive vulnerability scanning",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "Vulnerability Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "1-1000",
+                            "timing": "T4",
+                            "scripts": "vuln"
+                        }
+                    },
+                    {
+                        "tool": "nikto",
+                        "name": "Web Vulnerability Scan",
+                        "config": {
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "x"
+                        },
+                        "condition": "http_detected"
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "SMB Vulnerability Check",
+                        "config": {
+                            "module": "auxiliary/scanner/smb/smb_ms17_010",
+                            "threads": "10"
+                        },
+                        "condition": "smb_detected"
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Known Vulnerability Search",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    }
+                ]
+            },
+            "database_hunt": {
+                "name": "Database Discovery",
+                "description": "Find and enumerate database services",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "Database Port Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "1433,1521,3306,5432,5984,6379,9042,27017,28017",
+                            "timing": "T4",
+                            "scripts": "mysql-info,ms-sql-info,oracle-tns-version"
+                        }
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "MySQL Enumeration",
+                        "config": {
+                            "module": "auxiliary/scanner/mysql/mysql_version",
+                            "threads": "10"
+                        }
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "MSSQL Enumeration",
+                        "config": {
+                            "module": "auxiliary/scanner/mssql/mssql_ping",
+                            "threads": "10"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Exposed Database Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "org:[TARGET_ORG] port:3306,5432,27017"
+                        }
+                    }
+                ]
+            },
+            "mail_server_recon": {
+                "name": "Mail Server Reconnaissance",
+                "description": "Email infrastructure enumeration",
+                "steps": [
+                    {
+                        "tool": "dnsrecon",
+                        "name": "MX Record Lookup",
+                        "config": {
+                            "scan_type": "std"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "Mail Service Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "25,110,143,465,587,993,995",
+                            "timing": "T4",
+                            "scripts": "smtp-commands,smtp-enum-users,pop3-capabilities,imap-capabilities"
+                        }
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "SMTP User Enumeration",
+                        "config": {
+                            "module": "auxiliary/scanner/smtp/smtp_enum",
+                            "threads": "5"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Mail Server Intelligence",
+                        "config": {
+                            "search_type": "search",
+                            "query": "hostname:[TARGET_DOMAIN] port:25,587"
+                        }
                     }
                 ]
             }
