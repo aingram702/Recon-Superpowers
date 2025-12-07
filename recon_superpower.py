@@ -120,6 +120,13 @@ class ReconSuperpower:
                 "SSL Scan": {"443", True, "x", ""},
                 "Targeted": {"80", False, "4,6,9", ""}
             },
+            "sqlmap": {
+                "Basic": {"--batch", "--smart", "1"},
+                "Full Scan": {"--batch --forms --crawl=3", "--level=5 --risk=3", "5"},
+                "Quick Test": {"--batch", "--level=1 --risk=1", "1"},
+                "Database Enum": {"--batch --dbs", "--level=3 --risk=2", "3"},
+                "Table Dump": {"--batch --tables", "--level=3 --risk=2", "3"}
+            },
             "metasploit": {
                 "Port Scanner": {"auxiliary/scanner/portscan/tcp", "RHOSTS", "PORTS=1-1000"},
                 "SMB Version": {"auxiliary/scanner/smb/smb_version", "RHOSTS", ""},
@@ -1427,6 +1434,152 @@ nikto -h hosts.txt -o results.txt
 • Limited authentication support
 • No JavaScript execution
 """,
+            "sqlmap": """
+SQLMAP CHEAT SHEET
+═══════════════════════════════════════════════════════════
+
+📋 BASIC USAGE
+────────────────────────────────────────────────────────────
+sqlmap -u "URL?param=value"           # Test single parameter
+sqlmap -u "URL" --forms               # Auto-detect forms
+sqlmap -u "URL" --crawl=3             # Crawl and test (depth 3)
+sqlmap -r request.txt                 # From Burp/ZAP request file
+
+🎯 TARGET SPECIFICATION
+────────────────────────────────────────────────────────────
+-u URL                                # Target URL with parameters
+-d "mysql://user:pass@host:port/db"   # Direct database connection
+-l logfile                            # Parse from Burp proxy log
+-r request.txt                        # Load HTTP request from file
+-g "inurl:php?id="                    # Google dork results
+--data="param=value"                  # POST data
+--cookie="COOKIE"                     # HTTP Cookie header
+--headers="Header: value"             # Extra headers
+
+🔍 DETECTION LEVELS
+────────────────────────────────────────────────────────────
+--level=1                             # Default (limited tests)
+--level=2                             # Cookie testing
+--level=3                             # User-Agent/Referer testing
+--level=4                             # More payloads
+--level=5                             # Maximum (slow but thorough)
+
+--risk=1                              # Default (safe tests only)
+--risk=2                              # Time-based tests
+--risk=3                              # OR-based tests (may modify data)
+
+⚙️ INJECTION TECHNIQUES
+────────────────────────────────────────────────────────────
+--technique=BEUSTQ                    # Techniques to test
+  B = Boolean-based blind
+  E = Error-based
+  U = UNION query-based
+  S = Stacked queries
+  T = Time-based blind
+  Q = Inline queries
+
+📊 ENUMERATION
+────────────────────────────────────────────────────────────
+-b, --banner                          # Database banner
+--current-user                        # Current DB user
+--current-db                          # Current database
+--is-dba                              # Is current user DBA?
+--users                               # Enumerate users
+--passwords                           # Enumerate password hashes
+--privileges                          # Enumerate privileges
+--dbs                                 # Enumerate databases
+-D DB --tables                        # Tables in database
+-D DB -T TBL --columns                # Columns in table
+-D DB -T TBL --dump                   # Dump table contents
+--dump-all                            # Dump everything
+
+🛡️ BYPASS TECHNIQUES
+────────────────────────────────────────────────────────────
+--tamper=SCRIPT                       # Use tamper script(s)
+  space2comment                       # Replace spaces with /**/
+  randomcase                          # Random case keywords
+  between                             # Use BETWEEN instead of >
+  charencode                          # URL-encode characters
+  equaltolike                         # Replace = with LIKE
+  base64encode                        # Base64 encode payload
+
+--random-agent                        # Random User-Agent
+--delay=SECONDS                       # Delay between requests
+--timeout=SECONDS                     # Request timeout
+--retries=NUM                         # Retries on timeout
+
+🔐 AUTHENTICATION
+────────────────────────────────────────────────────────────
+--auth-type=TYPE                      # HTTP auth type (Basic/Digest/NTLM)
+--auth-cred="user:pass"               # HTTP auth credentials
+--csrf-token=TOKEN                    # CSRF token parameter name
+--csrf-url=URL                        # URL to get CSRF token
+
+📁 FILE OPERATIONS (if permitted)
+────────────────────────────────────────────────────────────
+--file-read="/etc/passwd"             # Read file from server
+--file-write="local.txt"              # Write file to server
+--file-dest="/var/www/shell.php"      # Destination path
+
+💻 OS COMMAND EXECUTION (if permitted)
+────────────────────────────────────────────────────────────
+--os-cmd=COMMAND                      # Execute OS command
+--os-shell                            # Interactive OS shell
+--os-pwn                              # OOB shell/meterpreter
+
+⚡ OPTIMIZATION
+────────────────────────────────────────────────────────────
+--batch                               # Never ask for user input
+--smart                               # Thorough only if positive
+--threads=THREADS                     # Concurrent connections (1-10)
+-o                                    # Turn on all optimization
+--predict-output                      # Predict query output
+--keep-alive                          # Use persistent connections
+
+📄 OUTPUT OPTIONS
+────────────────────────────────────────────────────────────
+-v LEVEL                              # Verbosity (0-6)
+--output-dir=PATH                     # Custom output directory
+--save=FILE                           # Save options to INI file
+--flush-session                       # Flush session files
+--forms                               # Parse and test forms
+
+🎭 COMMON PRESETS
+────────────────────────────────────────────────────────────
+# Quick test
+sqlmap -u "URL" --batch --smart
+
+# Full assessment
+sqlmap -u "URL" --batch --level=5 --risk=3 --forms
+
+# Database enumeration
+sqlmap -u "URL" --batch --dbs --level=3
+
+# Dump specific table
+sqlmap -u "URL" -D database -T table --dump --batch
+
+# Bypass WAF
+sqlmap -u "URL" --tamper=space2comment,randomcase --random-agent
+
+🚨 IMPORTANT NOTES
+────────────────────────────────────────────────────────────
+⚠️ ALWAYS use --batch for automated testing
+⚠️ High risk levels may MODIFY data
+⚠️ --dump can be VERY slow on large tables
+⚠️ Use --threads carefully (max 10 recommended)
+⚠️ ONLY test systems you have permission to test
+⚠️ SQLi can cause data loss - be careful with risk=3
+
+💡 TIPS
+────────────────────────────────────────────────────────────
+• Start with --level=1 --risk=1, increase if needed
+• Use --batch for non-interactive operation
+• Save requests from Burp/ZAP for complex auth
+• Check robots.txt for hidden parameters
+• Test POST parameters with --data
+• Use --tamper scripts against WAFs
+• Document findings immediately
+""",
             "metasploit": """
 METASPLOIT FRAMEWORK CHEAT SHEET
 ═══════════════════════════════════════════════════════════
@@ -1644,7 +1797,7 @@ WORKFLOWS CHEAT SHEET
    Best for: AD pentesting, domain enumeration
 
 8. 🌍 Web Application Pentesting
-   Steps: Nmap → Nikto → Gobuster → feroxbuster → Vhost
+   Steps: Nmap → Nikto → Gobuster → feroxbuster → Vhost → SQLmap
    Best for: Complete web app assessment
 
 9. 🔴 External Perimeter Assessment
@@ -1690,6 +1843,10 @@ WORKFLOWS CHEAT SHEET
 19. 📧 Mail Server Reconnaissance
     Steps: DNS MX → Nmap (mail) → SMTP Enum → Shodan
     Best for: Email infrastructure enumeration
+
+20. 💉 SQL Injection Assessment
+    Steps: Nmap → Nikto → Gobuster → SQLmap
+    Best for: SQL injection testing and database enumeration
 
 🎯 TARGET FORMATS
 ────────────────────────────────────────────────────────────
@@ -2058,6 +2215,17 @@ Adjustable:  Yes (via Settings)
                             "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt",
                             "threads": "20"
                         }
+                    },
+                    {
+                        "tool": "sqlmap",
+                        "name": "SQL Injection Testing",
+                        "config": {
+                            "level": "2",
+                            "risk": "1",
+                            "batch": True,
+                            "forms": True
+                        },
+                        "condition": "http_detected"
                     }
                 ]
             },
@@ -2545,6 +2713,55 @@ Adjustable:  Yes (via Settings)
                         }
                     }
                 ]
+            },
+            "sqli_assessment": {
+                "name": "SQL Injection Assessment",
+                "description": "Complete SQLi testing: discovery → enumeration → exploitation",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "Web Service Discovery",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "80,443,8080,8443,3306,5432,1433,1521",
+                            "timing": "T4",
+                            "scripts": "http-sql-injection"
+                        }
+                    },
+                    {
+                        "tool": "nikto",
+                        "name": "Web Application Scan",
+                        "config": {
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "9"
+                        },
+                        "condition": "http_detected"
+                    },
+                    {
+                        "tool": "gobuster",
+                        "name": "Find Dynamic Pages",
+                        "config": {
+                            "mode": "dir",
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
+                            "extensions": "php,asp,aspx,jsp,cgi",
+                            "threads": "20"
+                        },
+                        "condition": "http_detected"
+                    },
+                    {
+                        "tool": "sqlmap",
+                        "name": "SQL Injection Test",
+                        "config": {
+                            "level": "3",
+                            "risk": "2",
+                            "batch": True,
+                            "forms": True,
+                            "dbs": True
+                        },
+                        "condition": "http_detected"
+                    }
+                ]
             }
         }
 
@@ -2726,6 +2943,7 @@ Adjustable:  Yes (via Settings)
             ("nmap", "🔍 Nmap"),
             ("gobuster", "📁 Gobuster"),
             ("nikto", "🔐 Nikto"),
+            ("sqlmap", "💉 SQLmap"),
             ("metasploit", "💥 Metasploit"),
             ("shodan", "🌐 Shodan"),
             ("dnsrecon", "📡 DNSrecon"),
@@ -2776,6 +2994,7 @@ Adjustable:  Yes (via Settings)
         self.tool_frames["nmap"] = self.create_nmap_tab()
         self.tool_frames["gobuster"] = self.create_gobuster_tab()
         self.tool_frames["nikto"] = self.create_nikto_tab()
+        self.tool_frames["sqlmap"] = self.create_sqlmap_tab()
         self.tool_frames["metasploit"] = self.create_metasploit_tab()
         self.tool_frames["shodan"] = self.create_shodan_tab()
         self.tool_frames["dnsrecon"] = self.create_dnsrecon_tab()
@@ -3234,6 +3453,185 @@ Adjustable:  Yes (via Settings)
             command=lambda: self.show_cheatsheet("nikto")
         )
         cheat_btn.grid(row=6, column=0, columnspan=2, pady=10)
+
+        return frame
+
+    def create_sqlmap_tab(self):
+        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        frame.columnconfigure(1, weight=1)
+
+        # Warning label
+        warning_label = tk.Label(
+            frame,
+            text="⚠️  SQL INJECTION TESTING  ⚠️\nOnly test systems you have authorization to test",
+            font=("Courier", 9, "bold"),
+            fg=self.accent_red,
+            bg=self.bg_secondary,
+            justify=tk.CENTER
+        )
+        warning_label.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+
+        # Target URL
+        self.sqlmap_url = self.create_labeled_entry(frame, "Target URL:", 1, "http://target.com/page.php?id=1")
+
+        # POST Data (optional)
+        self.sqlmap_data = self.create_labeled_entry(frame, "POST Data:", 2, "")
+
+        # Cookie (optional)
+        self.sqlmap_cookie = self.create_labeled_entry(frame, "Cookie:", 3, "")
+
+        # Level dropdown
+        level_label = tk.Label(frame, text="Level (1-5):", font=("Courier", 10),
+                              fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        level_label.grid(row=4, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.sqlmap_level = ttk.Combobox(frame, values=[
+            "1 (Default - Basic tests)",
+            "2 (Cookie testing)",
+            "3 (User-Agent/Referer)",
+            "4 (More payloads)",
+            "5 (Maximum - Thorough)"
+        ], font=("Courier", 9), state="readonly", width=28)
+        self.sqlmap_level.grid(row=4, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.sqlmap_level.current(0)
+
+        # Risk dropdown
+        risk_label = tk.Label(frame, text="Risk (1-3):", font=("Courier", 10),
+                             fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        risk_label.grid(row=5, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.sqlmap_risk = ttk.Combobox(frame, values=[
+            "1 (Safe tests only)",
+            "2 (Time-based tests)",
+            "3 (OR-based - May modify data!)"
+        ], font=("Courier", 9), state="readonly", width=28)
+        self.sqlmap_risk.grid(row=5, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.sqlmap_risk.current(0)
+
+        # Technique dropdown
+        tech_label = tk.Label(frame, text="Technique:", font=("Courier", 10),
+                             fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        tech_label.grid(row=6, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.sqlmap_technique = ttk.Combobox(frame, values=[
+            "BEUSTQ (All techniques)",
+            "B (Boolean-based blind)",
+            "E (Error-based)",
+            "U (UNION query-based)",
+            "S (Stacked queries)",
+            "T (Time-based blind)",
+            "Q (Inline queries)"
+        ], font=("Courier", 9), state="readonly", width=28)
+        self.sqlmap_technique.grid(row=6, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.sqlmap_technique.current(0)
+
+        # Threads
+        self.sqlmap_threads = self.create_labeled_entry(frame, "Threads (1-10):", 7, "1")
+
+        # Checkboxes frame
+        check_frame = tk.Frame(frame, bg=self.bg_secondary)
+        check_frame.grid(row=8, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
+
+        # Batch mode (always recommended)
+        self.sqlmap_batch_var = tk.BooleanVar(value=True)
+        batch_check = tk.Checkbutton(check_frame, text="--batch (No prompts)", variable=self.sqlmap_batch_var,
+                                     font=("Courier", 9), fg=self.text_color,
+                                     bg=self.bg_secondary, selectcolor=self.bg_primary,
+                                     activebackground=self.bg_secondary, activeforeground=self.accent_green)
+        batch_check.pack(side=tk.LEFT, padx=5)
+
+        # Forms detection
+        self.sqlmap_forms_var = tk.BooleanVar()
+        forms_check = tk.Checkbutton(check_frame, text="--forms", variable=self.sqlmap_forms_var,
+                                     font=("Courier", 9), fg=self.text_color,
+                                     bg=self.bg_secondary, selectcolor=self.bg_primary,
+                                     activebackground=self.bg_secondary, activeforeground=self.accent_green)
+        forms_check.pack(side=tk.LEFT, padx=5)
+
+        # Random agent
+        self.sqlmap_random_agent_var = tk.BooleanVar()
+        agent_check = tk.Checkbutton(check_frame, text="--random-agent", variable=self.sqlmap_random_agent_var,
+                                     font=("Courier", 9), fg=self.text_color,
+                                     bg=self.bg_secondary, selectcolor=self.bg_primary,
+                                     activebackground=self.bg_secondary, activeforeground=self.accent_green)
+        agent_check.pack(side=tk.LEFT, padx=5)
+
+        # Second row of checkboxes
+        check_frame2 = tk.Frame(frame, bg=self.bg_secondary)
+        check_frame2.grid(row=9, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
+
+        # Database enumeration
+        self.sqlmap_dbs_var = tk.BooleanVar()
+        dbs_check = tk.Checkbutton(check_frame2, text="--dbs", variable=self.sqlmap_dbs_var,
+                                   font=("Courier", 9), fg=self.text_color,
+                                   bg=self.bg_secondary, selectcolor=self.bg_primary,
+                                   activebackground=self.bg_secondary, activeforeground=self.accent_green)
+        dbs_check.pack(side=tk.LEFT, padx=5)
+
+        # Tables
+        self.sqlmap_tables_var = tk.BooleanVar()
+        tables_check = tk.Checkbutton(check_frame2, text="--tables", variable=self.sqlmap_tables_var,
+                                      font=("Courier", 9), fg=self.text_color,
+                                      bg=self.bg_secondary, selectcolor=self.bg_primary,
+                                      activebackground=self.bg_secondary, activeforeground=self.accent_green)
+        tables_check.pack(side=tk.LEFT, padx=5)
+
+        # Banner
+        self.sqlmap_banner_var = tk.BooleanVar()
+        banner_check = tk.Checkbutton(check_frame2, text="--banner", variable=self.sqlmap_banner_var,
+                                      font=("Courier", 9), fg=self.text_color,
+                                      bg=self.bg_secondary, selectcolor=self.bg_primary,
+                                      activebackground=self.bg_secondary, activeforeground=self.accent_green)
+        banner_check.pack(side=tk.LEFT, padx=5)
+
+        # Tamper script dropdown
+        tamper_label = tk.Label(frame, text="Tamper Script:", font=("Courier", 10),
+                               fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        tamper_label.grid(row=10, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.sqlmap_tamper = ttk.Combobox(frame, values=[
+            "(None)",
+            "space2comment",
+            "randomcase",
+            "between",
+            "charencode",
+            "equaltolike",
+            "base64encode",
+            "space2comment,randomcase"
+        ], font=("Courier", 9), state="readonly", width=28)
+        self.sqlmap_tamper.grid(row=10, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.sqlmap_tamper.current(0)
+
+        # Extra options
+        self.sqlmap_options = self.create_labeled_entry(frame, "Extra Options:", 11, "")
+
+        # Info label
+        info_label = tk.Label(
+            frame,
+            text="\n💉 SQL Injection Scanner\nAutomatic SQLi detection & exploitation\n\nFeatures:\n• Multiple injection techniques\n• Database enumeration\n• WAF bypass capabilities",
+            font=("Courier", 9),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary,
+            justify=tk.LEFT
+        )
+        info_label.grid(row=12, column=0, columnspan=2, sticky=tk.W, padx=10, pady=10)
+
+        # Cheat Sheet Button
+        cheat_btn = tk.Button(
+            frame,
+            text="📋 VIEW CHEAT SHEET",
+            font=("Courier", 9, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.show_cheatsheet("sqlmap")
+        )
+        cheat_btn.grid(row=13, column=0, columnspan=2, pady=10)
 
         return frame
 
@@ -5963,7 +6361,39 @@ Configure in the Settings tab:
                     self.tcpdump_filter.delete(0, tk.END)
                     self.tcpdump_filter.insert(0, config.get('filter', 'tcp port 80'))
                 return True
-            
+
+            elif tool == 'sqlmap':
+                if hasattr(self, 'sqlmap_url'):
+                    self.sqlmap_url.delete(0, tk.END)
+                    # Ensure target is a URL
+                    if not target.startswith('http'):
+                        target = f"http://{target}"
+                    self.sqlmap_url.insert(0, target)
+                if hasattr(self, 'sqlmap_level'):
+                    level = str(config.get('level', '1'))
+                    levels = {'1': 0, '2': 1, '3': 2, '4': 3, '5': 4}
+                    self.sqlmap_level.current(levels.get(level, 0))
+                if hasattr(self, 'sqlmap_risk'):
+                    risk = str(config.get('risk', '1'))
+                    risks = {'1': 0, '2': 1, '3': 2}
+                    self.sqlmap_risk.current(risks.get(risk, 0))
+                if hasattr(self, 'sqlmap_threads'):
+                    self.sqlmap_threads.delete(0, tk.END)
+                    self.sqlmap_threads.insert(0, config.get('threads', '1'))
+                if hasattr(self, 'sqlmap_batch_var'):
+                    self.sqlmap_batch_var.set(config.get('batch', True))
+                if hasattr(self, 'sqlmap_forms_var'):
+                    self.sqlmap_forms_var.set(config.get('forms', False))
+                if hasattr(self, 'sqlmap_random_agent_var'):
+                    self.sqlmap_random_agent_var.set(config.get('random_agent', False))
+                if hasattr(self, 'sqlmap_dbs_var'):
+                    self.sqlmap_dbs_var.set(config.get('dbs', False))
+                if hasattr(self, 'sqlmap_tables_var'):
+                    self.sqlmap_tables_var.set(config.get('tables', False))
+                if hasattr(self, 'sqlmap_banner_var'):
+                    self.sqlmap_banner_var.set(config.get('banner', False))
+                return True
+
             return True
             
         except Exception as e:
@@ -6728,7 +7158,7 @@ KEYBOARD SHORTCUTS:
                 # Parse output into structured JSON
                 export_data = {
                     "timestamp": datetime.now().isoformat(),
-                    "tool": self.notebook.tab(self.notebook.select(), "text"),
+                    "tool": self.current_tool or "unknown",
                     "output": content,
                     "lines": content.count('\n')
                 }
@@ -6768,7 +7198,7 @@ KEYBOARD SHORTCUTS:
                 import xml.etree.ElementTree as ET
                 root = ET.Element("ReconOutput")
                 ET.SubElement(root, "Timestamp").text = datetime.now().isoformat()
-                ET.SubElement(root, "Tool").text = self.notebook.tab(self.notebook.select(), "text")
+                ET.SubElement(root, "Tool").text = self.current_tool or "unknown"
                 ET.SubElement(root, "Output").text = content
 
                 tree = ET.ElementTree(root)
@@ -7144,7 +7574,132 @@ KEYBOARD SHORTCUTS:
 
             return cmd
 
-        elif current_tab == 3:  # Metasploit
+        elif tool_id == "sqlmap":
+            url = self.sqlmap_url.get().strip()
+            if not url:
+                messagebox.showerror("Error", "Please enter a target URL")
+                return None
+
+            # Security: Validate URL format
+            if not self.validate_url(url):
+                messagebox.showerror("Security Error",
+                    "Invalid URL format or dangerous characters detected.\n"
+                    "URL must start with http:// or https://")
+                return None
+
+            # Get options
+            level = self.sqlmap_level.get().split()[0]
+            risk = self.sqlmap_risk.get().split()[0]
+            technique = self.sqlmap_technique.get().split()[0]
+            threads = self.sqlmap_threads.get().strip()
+            tamper = self.sqlmap_tamper.get()
+            post_data = self.sqlmap_data.get().strip()
+            cookie = self.sqlmap_cookie.get().strip()
+            extra = self.sqlmap_options.get().strip()
+
+            # Security: Validate level (1-5)
+            if not self.validate_numeric(level, 1, 5):
+                messagebox.showerror("Error", "Level must be between 1 and 5")
+                return None
+
+            # Security: Validate risk (1-3)
+            if not self.validate_numeric(risk, 1, 3):
+                messagebox.showerror("Error", "Risk must be between 1 and 3")
+                return None
+
+            # Security: Validate threads (1-10)
+            if threads and not self.validate_numeric(threads, 1, 10):
+                messagebox.showerror("Error", "Thread count must be between 1 and 10")
+                return None
+
+            # Security: Validate technique (must be valid SQLmap technique chars)
+            if technique and not re.match(r'^[BEUSTQ]+$', technique):
+                messagebox.showerror("Error", "Invalid technique. Use: B, E, U, S, T, Q or combination")
+                return None
+
+            # Security: Validate POST data (no shell metacharacters)
+            if post_data and not re.match(r'^[a-zA-Z0-9_=&\-\.\%\+]+$', post_data):
+                messagebox.showerror("Security Error",
+                    "POST data contains invalid characters.\n"
+                    "Use only alphanumeric characters and standard URL encoding.")
+                return None
+
+            # Security: Validate cookie (no shell metacharacters)
+            if cookie and not re.match(r'^[a-zA-Z0-9_=;\-\.\%\+\s]+$', cookie):
+                messagebox.showerror("Security Error",
+                    "Cookie contains invalid characters.\n"
+                    "Use only alphanumeric characters and standard cookie format.")
+                return None
+
+            # Security: Validate tamper script name
+            if tamper and tamper != "(None)" and not re.match(r'^[a-zA-Z0-9_,]+$', tamper):
+                messagebox.showerror("Error", "Invalid tamper script name")
+                return None
+
+            # Build command
+            cmd = ["sqlmap", "-u", url]
+
+            # Add level and risk
+            cmd.extend(["--level", level])
+            cmd.extend(["--risk", risk])
+
+            # Add technique if not all
+            if technique != "BEUSTQ":
+                cmd.extend(["--technique", technique])
+
+            # Add threads
+            if threads:
+                cmd.extend(["--threads", threads])
+
+            # Add batch mode
+            if self.sqlmap_batch_var.get():
+                cmd.append("--batch")
+
+            # Add forms detection
+            if self.sqlmap_forms_var.get():
+                cmd.append("--forms")
+
+            # Add random agent
+            if self.sqlmap_random_agent_var.get():
+                cmd.append("--random-agent")
+
+            # Add database enumeration
+            if self.sqlmap_dbs_var.get():
+                cmd.append("--dbs")
+
+            # Add tables enumeration
+            if self.sqlmap_tables_var.get():
+                cmd.append("--tables")
+
+            # Add banner
+            if self.sqlmap_banner_var.get():
+                cmd.append("--banner")
+
+            # Add POST data
+            if post_data:
+                cmd.extend(["--data", post_data])
+
+            # Add cookie
+            if cookie:
+                cmd.extend(["--cookie", cookie])
+
+            # Add tamper script
+            if tamper and tamper != "(None)":
+                cmd.extend(["--tamper", tamper])
+
+            # Security: Validate and parse extra options
+            if extra:
+                valid, parsed_options = self.validate_extra_options(extra)
+                if not valid:
+                    messagebox.showerror("Security Error",
+                        "Extra options contain dangerous characters or invalid syntax.\n"
+                        "Avoid using: ; & | $ ` < > and command substitution.")
+                    return None
+                cmd.extend(parsed_options)
+
+            return cmd
+
+        elif tool_id == "metasploit":
             module = self.msf_module.get().strip()
             target = self.msf_target.get().strip()
 
@@ -7664,21 +8219,25 @@ KEYBOARD SHORTCUTS:
         self.add_to_history(command=cmd)
 
         # Add target/URL to history based on tool
-        current_tab = self.notebook.index(self.notebook.select())
-        if current_tab == 0:  # Nmap
+        tool_id = self.current_tool
+        if tool_id == "nmap":
             target = self.nmap_target.get().strip()
             if target:
                 self.add_to_history(target=target)
-        elif current_tab == 1:  # Gobuster
+        elif tool_id == "gobuster":
             url = self.gobuster_url.get().strip()
             if url:
                 self.add_to_history(url=url)
-        elif current_tab == 2:  # Nikto
+        elif tool_id == "nikto":
             target = self.nikto_target.get().strip()
             if target:
                 self.add_to_history(url=target if target.startswith('http') else None,
                                    target=target if not target.startswith('http') else None)
-        elif current_tab == 3:  # Metasploit
+        elif tool_id == "sqlmap":
+            url = self.sqlmap_url.get().strip()
+            if url:
+                self.add_to_history(url=url)
+        elif tool_id == "metasploit":
             target = self.msf_target.get().strip()
             if target:
                 self.add_to_history(target=target)

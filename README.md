@@ -1,13 +1,13 @@
 # ⚡ The Recon Superpower v3.0
 
-A professional dark-themed GUI wrapper for **11 essential security reconnaissance tools** with **automated workflows**, advanced features, API integrations, and comprehensive security hardening.
+A professional dark-themed GUI wrapper for **12 essential security reconnaissance tools** with **automated workflows**, advanced features, API integrations, and comprehensive security hardening.
 
 ![Version](https://img.shields.io/badge/version-3.0-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.6%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-orange)
 ![Security](https://img.shields.io/badge/security-hardened-brightgreen)
-![Tools](https://img.shields.io/badge/tools-11-blue)
-![Workflows](https://img.shields.io/badge/workflows-19-purple)
+![Tools](https://img.shields.io/badge/tools-12-blue)
+![Workflows](https://img.shields.io/badge/workflows-20-purple)
 
 ## ⚠️ Legal Disclaimer
 
@@ -25,7 +25,7 @@ By using this tool, you agree to use it responsibly and legally.
 ## 🚀 What's New in v3.0
 
 ### 🔄 Automated Workflows ⭐
-- ✅ **19 Pre-defined Workflows** - Basic and advanced attack patterns automated
+- ✅ **20 Pre-defined Workflows** - Basic and advanced attack patterns automated
 - ✅ **Sequential Execution** - Multi-tool chains with progress tracking
 - ✅ **Smart Conditions** - Steps execute based on previous results
 - ✅ **Target Validation** - Workflow-specific format checking
@@ -67,7 +67,7 @@ By using this tool, you agree to use it responsibly and legally.
 
 **Advanced Attack Workflows:**
 7. 🏢 **AD Reconnaissance** - Nmap (AD ports) → enum4linux → MSF LDAP → Kerberos
-8. 🌍 **Web Application Pentesting** - Nmap → Nikto → Gobuster → feroxbuster → Vhost
+8. 🌍 **Web Application Pentesting** - Nmap → Nikto → Gobuster → feroxbuster → Vhost → SQLmap
 9. 🔴 **External Perimeter Assessment** - DNS → Subdomain → Shodan → Nmap → GitHarvester
 10. 🔄 **Internal Network Sweep** - Host Discovery → Service Enum → Windows → MSF
 11. 🔌 **API Security Assessment** - Nmap → Gobuster (API) → feroxbuster → Nikto
@@ -79,10 +79,11 @@ By using this tool, you agree to use it responsibly and legally.
 17. 🔓 **Vulnerability Assessment** - Nmap (vuln) → Nikto → MSF SMB → Shodan
 18. 🗄️ **Database Discovery** - Nmap (DB ports) → MySQL → MSSQL → Shodan
 19. 📧 **Mail Server Reconnaissance** - DNS MX → Nmap (mail) → SMTP Enum → Shodan
+20. 💉 **SQL Injection Assessment** - Nmap → Nikto → Gobuster → SQLmap
 
 ---
 
-## 🛠️ Integrated Tools (11 Total)
+## 🛠️ Integrated Tools (12 Total)
 
 ### Core Network Tools
 1. **🔍 Nmap** - Network mapper with NSE script support
@@ -92,16 +93,17 @@ By using this tool, you agree to use it responsibly and legally.
 ### Web Application Tools
 4. **📁 Gobuster** - Directory/DNS brute-forcing
 5. **🔐 Nikto** - Web server vulnerability scanning
-6. **🦀 feroxbuster** - Fast recursive web content discovery
+6. **💉 SQLmap** - Automatic SQL injection detection and exploitation
+7. **🦀 feroxbuster** - Fast recursive web content discovery
 
 ### Cloud & OSINT
-7. **🌐 Shodan** - Internet-connected device search (API required)
-8. **🔎 GitHarvester** - GitHub repository OSINT
-9. **☁️ AWSBucketDump** - AWS S3 bucket enumeration
+8. **🌐 Shodan** - Internet-connected device search (API required)
+9. **🔎 GitHarvester** - GitHub repository OSINT
+10. **☁️ AWSBucketDump** - AWS S3 bucket enumeration
 
 ### System Enumeration
-10. **🖥️ enum4linux** - SMB/Windows enumeration
-11. **💥 Metasploit** - Framework auxiliary/scanner modules
+11. **🖥️ enum4linux** - SMB/Windows enumeration
+12. **💥 Metasploit** - Framework auxiliary/scanner modules
 
 ---
 
