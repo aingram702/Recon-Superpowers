@@ -159,7 +159,7 @@ sudo apt install python3-tk
 
 ## 🚀 Installation
 
-0. **Run Install Scripts for Dependencies**
+1. **Run Install Scripts for Dependencies**
 ###### For Windows PCs
 ```powershell
 .\install_windows.ps1
@@ -168,7 +168,6 @@ sudo apt install python3-tk
 ```bash
 ./install_linux.sh
 ```
-
 
 2. **Clone the repository**
 ```bash
