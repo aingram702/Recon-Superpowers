@@ -1920,15 +1920,23 @@ Adjustable:  Yes (via Settings)
         self.predefined_workflows = {
             "full_recon": {
                 "name": "Full Network Reconnaissance",
-                "description": "Comprehensive scan: ports → services → web → DNS",
+                "description": "Comprehensive scan: ports → services → web → DNS → SQLi",
                 "steps": [
                     {
                         "tool": "nmap",
-                        "name": "Port Scan",
+                        "name": "Comprehensive Port Scan",
                         "config": {
                             "scan_type": "SYN",
-                            "ports": "1-1000",
-                            "timing": "T3"
+                            "ports": "1-65535",
+                            "timing": "T4",
+                            "scripts": "default,version,vuln"
+                        }
+                    },
+                    {
+                        "tool": "dnsrecon",
+                        "name": "DNS Enumeration",
+                        "config": {
+                            "scan_type": "std"
                         }
                     },
                     {
@@ -1936,8 +1944,9 @@ Adjustable:  Yes (via Settings)
                         "name": "Directory Enumeration",
                         "config": {
                             "mode": "dir",
-                            "wordlist": "/usr/share/wordlists/dirb/common.txt",
-                            "threads": "20"
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt",
+                            "extensions": "php,asp,aspx,jsp,html,js,txt,bak",
+                            "threads": "30"
                         },
                         "condition": "http_detected"
                     },
@@ -1947,26 +1956,49 @@ Adjustable:  Yes (via Settings)
                         "config": {
                             "port": "80",
                             "ssl": False,
-                            "tuning": "124"
+                            "tuning": "x"
                         },
                         "condition": "http_detected"
                     },
                     {
-                        "tool": "dnsrecon",
-                        "name": "DNS Enumeration",
+                        "tool": "sqlmap",
+                        "name": "SQL Injection Scan",
                         "config": {
-                            "scan_type": "std"
+                            "level": "2",
+                            "risk": "2",
+                            "batch": True,
+                            "forms": True,
+                            "dbs": True
+                        },
+                        "condition": "http_detected"
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Shodan Intelligence",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
                         }
                     }
                 ]
             },
             "web_deep_scan": {
                 "name": "Web Application Deep Scan",
-                "description": "Nikto → Gobuster → feroxbuster → Shodan lookup",
+                "description": "Nmap → Nikto → Gobuster → feroxbuster → SQLmap → Shodan",
                 "steps": [
                     {
+                        "tool": "nmap",
+                        "name": "Web Service Fingerprinting",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "80,443,8080,8443,8000,3000,5000,9000",
+                            "timing": "T4",
+                            "scripts": "http-enum,http-headers,http-methods,http-title,http-robots.txt,http-sitemap-generator"
+                        }
+                    },
+                    {
                         "tool": "nikto",
-                        "name": "Initial Web Scan",
+                        "name": "Comprehensive Web Scan",
                         "config": {
                             "port": "80",
                             "ssl": False,
@@ -1978,8 +2010,9 @@ Adjustable:  Yes (via Settings)
                         "name": "Directory Brute Force",
                         "config": {
                             "mode": "dir",
-                            "wordlist": "/usr/share/wordlists/dirb/common.txt",
-                            "extensions": "php,html,txt"
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt",
+                            "extensions": "php,asp,aspx,jsp,html,js,txt,xml,json,bak,old,inc",
+                            "threads": "40"
                         }
                     },
                     {
@@ -1987,14 +2020,25 @@ Adjustable:  Yes (via Settings)
                         "name": "Recursive Deep Scan",
                         "config": {
                             "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
-                            "extensions": "php,html,js",
+                            "extensions": "php,html,js,json,xml,txt,bak,old,zip,tar,gz",
                             "threads": "50",
-                            "depth": "3"
+                            "depth": "4"
+                        }
+                    },
+                    {
+                        "tool": "sqlmap",
+                        "name": "SQL Injection Testing",
+                        "config": {
+                            "level": "3",
+                            "risk": "2",
+                            "batch": True,
+                            "forms": True,
+                            "random_agent": True
                         }
                     },
                     {
                         "tool": "shodan",
-                        "name": "Shodan Lookup",
+                        "name": "Shodan Intelligence",
                         "config": {
                             "search_type": "host",
                             "query": "[TARGET_IP]"
@@ -2041,20 +2085,21 @@ Adjustable:  Yes (via Settings)
             },
             "smb_enum": {
                 "name": "Windows/SMB Enumeration",
-                "description": "SMB port scan → enum4linux → Metasploit",
+                "description": "Comprehensive SMB/Windows enumeration with vuln checks",
                 "steps": [
                     {
                         "tool": "nmap",
-                        "name": "SMB Port Scan",
+                        "name": "SMB/Windows Service Scan",
                         "config": {
                             "scan_type": "SYN",
-                            "ports": "135,139,445",
-                            "timing": "T4"
+                            "ports": "21,22,23,25,53,80,88,111,135,139,389,443,445,464,593,636,1433,3268,3269,3389,5985,5986",
+                            "timing": "T4",
+                            "scripts": "smb-os-discovery,smb-enum-shares,smb-enum-users,smb-protocols,smb-security-mode,smb-vuln-ms17-010,smb-vuln-ms08-067"
                         }
                     },
                     {
                         "tool": "enum4linux",
-                        "name": "SMB Enumeration",
+                        "name": "Full SMB Enumeration",
                         "config": {
                             "all_enum": True
                         }
@@ -2065,6 +2110,22 @@ Adjustable:  Yes (via Settings)
                         "config": {
                             "module": "auxiliary/scanner/smb/smb_version",
                             "threads": "10"
+                        }
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "SMB Share Enumeration",
+                        "config": {
+                            "module": "auxiliary/scanner/smb/smb_enumshares",
+                            "threads": "10"
+                        }
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "MS17-010 EternalBlue Check",
+                        "config": {
+                            "module": "auxiliary/scanner/smb/smb_ms17_010",
+                            "threads": "5"
                         }
                     }
                 ]
@@ -2852,7 +2913,7 @@ Adjustable:  Yes (via Settings)
         if "window_geometry" in self.config:
             try:
                 self.root.geometry(self.config["window_geometry"])
-            except:
+            except (tk.TclError, ValueError, KeyError):
                 pass  # Use default if restoration fails
 
     def setup_keyboard_shortcuts(self):
@@ -2948,7 +3009,7 @@ Adjustable:  Yes (via Settings)
             ("shodan", "🌐 Shodan"),
             ("dnsrecon", "📡 DNSrecon"),
             ("enum4linux", "🖥️ enum4linux"),
-            ("githarvester", "🔎 GitHub"),
+            ("githarvester", "🔎 GitHarvester"),
             ("feroxbuster", "🦀 feroxbuster"),
             ("awsbucket", "☁️ AWS S3"),
             ("tcpdump", "📦 TCPdump"),
@@ -5766,7 +5827,7 @@ Configure in the Settings tab:
                 selected_idx = 0
                 try:
                     self.workflow_selector.current(0)
-                except:
+                except (tk.TclError, ValueError):
                     pass
             
             workflow_id = workflow_ids[selected_idx]
@@ -5985,7 +6046,7 @@ Configure in the Settings tab:
                 num = int(value) if isinstance(value, str) else value
                 if num < 1 or num > 10000:
                     return False
-            except:
+            except (ValueError, TypeError):
                 return False
         
         # File paths
@@ -6206,7 +6267,7 @@ Configure in the Settings tab:
                 output = self.output_text.get('1.0', tk.END)
                 # Store last 1000 chars for condition checking
                 self.workflow_results[tool] += output[-1000:]
-            except:
+            except tk.TclError:
                 pass
             
             return True
@@ -6236,7 +6297,7 @@ Configure in the Settings tab:
                     try:
                         idx = timings.index(timing)
                         self.nmap_timing.current(idx)
-                    except:
+                    except (ValueError, tk.TclError):
                         self.nmap_timing.current(3)
                 return True
                 
@@ -6949,6 +7010,34 @@ Configure in the Settings tab:
         except (ValueError, AttributeError):
             return False
 
+    def validate_domain(self, domain):
+        """
+        Security: Validate domain name input.
+        Allows standard domain names but blocks dangerous characters.
+        """
+        if not domain or len(domain) > 253:  # Max domain length per RFC
+            return False
+
+        # Security: Block NULL bytes
+        if '\x00' in domain:
+            return False
+
+        # Block shell metacharacters
+        dangerous_chars = [';', '&', '|', '$', '`', '\n', '\r', '(', ')', '<', '>', '{', '}', '[', ']', ' ']
+        if any(char in domain for char in dangerous_chars):
+            return False
+
+        # Domain must match pattern: alphanumeric, dots, hyphens only
+        if not re.match(r'^[a-zA-Z0-9][a-zA-Z0-9\.\-]*[a-zA-Z0-9]$', domain):
+            # Allow single-char domains like "a" for testing
+            if not re.match(r'^[a-zA-Z0-9]$', domain):
+                return False
+
+        # Domain must contain at least one dot (TLD required) unless testing
+        # Allow localhost and single-label names for internal testing
+
+        return True
+
     def validate_extra_options(self, options):
         """
         Security: Validate extra options to prevent command injection.
@@ -7018,17 +7107,23 @@ Configure in the Settings tab:
     def print_banner(self):
         banner = """
 ╔═══════════════════════════════════════════════════════════════════════╗
-║                    THE RECON SUPERPOWER v1.2                         ║
+║                    THE RECON SUPERPOWER v3.0                         ║
 ║           Professional Security Reconnaissance Suite                  ║
 ╚═══════════════════════════════════════════════════════════════════════╝
 
 [!] For Authorized Security Testing Only
 [!] Ensure you have permission to scan the target
 
-4 TOOLS: Nmap | Gobuster | Nikto | Metasploit (Auxiliary/Scanner)
+12 RECONNAISSANCE TOOLS:
+  🔍 Nmap          📁 Gobuster       🔐 Nikto         💉 SQLmap
+  💥 Metasploit    🌐 Shodan         📡 DNSrecon      🖥️  enum4linux
+  🔎 GitHarvester  🦀 feroxbuster    ☁️  AWS S3        📦 TCPDump
 
-Select a tool from the tabs on the left and configure your scan.
-Press 'RUN SCAN' when ready.
+UTILITY FEATURES:
+  🐚 Shellz (Reverse Shells)    🔐 Encoders/Decoders    📚 LOLOL (GTFOBins/LOLBAS/LOLAD)
+  🔄 20 Automated Workflows     ⚙️  Configurable Settings
+
+Select a tool from the sidebar and configure your scan. Press 'RUN SCAN' when ready.
 
 KEYBOARD SHORTCUTS:
   Ctrl+R: Run Scan  |  Ctrl+S: Save  |  Ctrl+L: Clear  |  Ctrl+F: Search
@@ -8137,7 +8232,7 @@ KEYBOARD SHORTCUTS:
                     messagebox.showerror("Error",
                         f"Network interface '{interface}' not found.\nCheck 'ip link show' for available interfaces.")
                     return None
-            except:
+            except OSError:
                 pass  # If we can't check, proceed anyway
 
             cmd = ["sudo", "tcpdump", "-i", interface]
