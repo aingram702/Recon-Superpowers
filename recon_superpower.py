@@ -6446,10 +6446,10 @@ Configure in the Settings tab:
         )
         self.workflow_progress.pack(fill=tk.X, padx=10, pady=(0, 10))
 
-        # Cheat Sheet Button
+        # Cheat Sheet Button (inside controls frame to avoid grid conflict)
         cheat_btn = tk.Button(
-            frame,
-            text="📋 VIEW WORKFLOW GUIDE",
+            controls_frame,
+            text="📋 GUIDE",
             font=("Courier", 9, "bold"),
             bg=self.bg_tertiary,
             fg=self.accent_cyan,
@@ -6457,13 +6457,13 @@ Configure in the Settings tab:
             activeforeground=self.bg_primary,
             relief=tk.FLAT,
             padx=15,
-            pady=8,
+            pady=10,
             cursor="hand2",
             command=lambda: self.show_cheatsheet("workflows")
         )
-        cheat_btn.grid(row=7, column=0, columnspan=2, pady=10)
+        cheat_btn.pack(side=tk.LEFT, padx=5)
 
-        # Info label
+        # Info label (moved to row 9 to avoid conflict with progress_frame at row 8)
         info_label = tk.Label(
             frame,
             text="💡 Tips: Workflows automate multi-tool reconnaissance. Target format depends on workflow.",
@@ -6471,9 +6471,9 @@ Configure in the Settings tab:
             fg=self.accent_cyan,
             bg=self.bg_secondary,
             justify=tk.LEFT,
-            wraplength=320
+            wraplength=600
         )
-        info_label.grid(row=8, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
+        info_label.grid(row=9, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
 
         # Initialize with first workflow
         self.on_workflow_selected(None)
