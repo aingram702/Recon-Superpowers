@@ -159,7 +159,18 @@ sudo apt install python3-tk
 
 ## 🚀 Installation
 
-1. **Clone the repository**
+0. **Run Install Scripts for Dependencies**
+###### For Windows PCs
+```powershell
+.\install_windows.ps1
+```
+###### For Linux PCs
+```bash
+./install_linux.sh
+```
+
+
+2. **Clone the repository**
 ```bash
 git clone https://github.com/aingram702/Recon-Superpowers.git
 cd Recon-Superpowers
