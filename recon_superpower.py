@@ -57,6 +57,22 @@ import json
 import time  # FIX: Added for workflow timing
 from pathlib import Path
 from collections import deque
+import base64
+import io
+
+# Try to import PIL for image handling
+try:
+    from PIL import Image, ImageTk
+    HAS_PIL = True
+except ImportError:
+    HAS_PIL = False
+
+# Try to import cairosvg for SVG conversion
+try:
+    import cairosvg
+    HAS_CAIROSVG = True
+except ImportError:
+    HAS_CAIROSVG = False
 
 
 class ReconSuperpower:
@@ -3330,6 +3346,9 @@ Adjustable:  Yes (via Settings)
         self.load_config()
         self.load_history()
 
+        # Load application icon and logo
+        self.load_app_icon()
+
         self.setup_ui()
         self.setup_keyboard_shortcuts()
 
@@ -3409,6 +3428,189 @@ Adjustable:  Yes (via Settings)
             except (tk.TclError, ValueError, KeyError):
                 pass  # Use default if restoration fails
 
+    def load_app_icon(self):
+        """Load and set the application icon."""
+        self.app_icon = None
+        self.app_logo = None
+        self.app_logo_small = None
+
+        # Get the directory where the script is located
+        script_dir = Path(__file__).parent.resolve()
+        icon_path = script_dir / "icon.svg"
+        logo_path = script_dir / "logo.svg"
+
+        # Try to load SVG with cairosvg + PIL
+        if HAS_PIL and HAS_CAIROSVG and icon_path.exists():
+            try:
+                # Convert SVG to PNG in memory
+                png_data = cairosvg.svg2png(url=str(icon_path), output_width=64, output_height=64)
+                image = Image.open(io.BytesIO(png_data))
+                self.app_icon = ImageTk.PhotoImage(image)
+                self.root.iconphoto(True, self.app_icon)
+
+                # Load larger logo for display
+                if logo_path.exists():
+                    logo_png = cairosvg.svg2png(url=str(logo_path), output_width=80, output_height=80)
+                    logo_image = Image.open(io.BytesIO(logo_png))
+                    self.app_logo = ImageTk.PhotoImage(logo_image)
+
+                    # Smaller version for title bar
+                    logo_small_png = cairosvg.svg2png(url=str(logo_path), output_width=50, output_height=50)
+                    logo_small_image = Image.open(io.BytesIO(logo_small_png))
+                    self.app_logo_small = ImageTk.PhotoImage(logo_small_image)
+            except Exception:
+                pass  # Fall through to fallback
+
+        # Try loading PNG versions if they exist
+        if self.app_icon is None and HAS_PIL:
+            png_icon_path = script_dir / "icon.png"
+            if png_icon_path.exists():
+                try:
+                    image = Image.open(png_icon_path)
+                    image = image.resize((64, 64), Image.Resampling.LANCZOS)
+                    self.app_icon = ImageTk.PhotoImage(image)
+                    self.root.iconphoto(True, self.app_icon)
+                except Exception:
+                    pass
+
+        # Create a simple programmatic icon as fallback
+        if self.app_icon is None:
+            try:
+                # Create a simple 32x32 icon using PhotoImage
+                self.app_icon = tk.PhotoImage(width=32, height=32)
+                # Draw a simple multi-tool shape with Monokai colors
+                for y in range(32):
+                    for x in range(32):
+                        # Background
+                        color = "#272822"
+                        # Center pivot (green circle)
+                        dx, dy = x - 16, y - 16
+                        dist = (dx*dx + dy*dy) ** 0.5
+                        if dist < 5:
+                            color = "#A6E22E"
+                        # Tool blades extending from center
+                        elif 5 <= dist <= 14:
+                            angle = abs(dx) + abs(dy)
+                            if (x == 16 and y < 16) or (y == 16 and x > 16) or \
+                               (x == 16 and y > 16) or (y == 16 and x < 16):
+                                color = "#66D9EF"
+                            elif abs(x - y) < 2 or abs(x + y - 32) < 2:
+                                color = "#F92672"
+                        self.app_icon.put(color, (x, y))
+                self.root.iconphoto(True, self.app_icon)
+            except Exception:
+                pass  # Give up on icon if this fails too
+
+    def show_about_dialog(self):
+        """Show the About dialog with logo."""
+        about_window = tk.Toplevel(self.root)
+        about_window.title("About Recon Superpower")
+        about_window.geometry("450x550")
+        about_window.configure(bg=self.bg_primary)
+        about_window.resizable(False, False)
+        about_window.transient(self.root)
+        about_window.grab_set()
+
+        # Center the window
+        about_window.update_idletasks()
+        x = (about_window.winfo_screenwidth() - 450) // 2
+        y = (about_window.winfo_screenheight() - 550) // 2
+        about_window.geometry(f"+{x}+{y}")
+
+        # Logo display
+        if self.app_logo:
+            logo_label = tk.Label(about_window, image=self.app_logo, bg=self.bg_primary)
+            logo_label.pack(pady=(30, 10))
+        else:
+            # Text fallback
+            logo_text = tk.Label(
+                about_window,
+                text="🛠️",
+                font=("Courier", 48),
+                fg=self.accent_green,
+                bg=self.bg_primary
+            )
+            logo_text.pack(pady=(30, 10))
+
+        # Title
+        title = tk.Label(
+            about_window,
+            text="RECON SUPERPOWER",
+            font=("Courier", 20, "bold"),
+            fg=self.accent_green,
+            bg=self.bg_primary
+        )
+        title.pack(pady=(10, 5))
+
+        # Version
+        version = tk.Label(
+            about_window,
+            text="Version 3.1",
+            font=("Courier", 12),
+            fg=self.accent_cyan,
+            bg=self.bg_primary
+        )
+        version.pack()
+
+        # Description
+        desc = tk.Label(
+            about_window,
+            text="Professional Security Reconnaissance Toolkit",
+            font=("Courier", 10),
+            fg=self.text_color,
+            bg=self.bg_primary,
+            wraplength=380
+        )
+        desc.pack(pady=(20, 10))
+
+        # Features
+        features_frame = tk.Frame(about_window, bg=self.bg_secondary, padx=20, pady=15)
+        features_frame.pack(fill=tk.X, padx=30, pady=10)
+
+        features = [
+            "🔍 12 Integrated Security Tools",
+            "🔄 30 Automated Workflows",
+            "🐚 Shell Generator & Encoders",
+            "🎨 Monokai Terminal Theme",
+            "📊 Real-time Output Display"
+        ]
+
+        for feature in features:
+            f_label = tk.Label(
+                features_frame,
+                text=feature,
+                font=("Courier", 9),
+                fg=self.text_color,
+                bg=self.bg_secondary,
+                anchor=tk.W
+            )
+            f_label.pack(anchor=tk.W, pady=2)
+
+        # Disclaimer
+        disclaimer = tk.Label(
+            about_window,
+            text="⚠️ For Authorized Security Testing Only",
+            font=("Courier", 9, "bold"),
+            fg=self.accent_orange,
+            bg=self.bg_primary
+        )
+        disclaimer.pack(pady=(20, 10))
+
+        # Close button
+        close_btn = tk.Button(
+            about_window,
+            text="Close",
+            font=("Courier", 10, "bold"),
+            fg=self.bg_primary,
+            bg=self.accent_green,
+            activebackground=self.accent_cyan,
+            relief=tk.FLAT,
+            padx=30,
+            pady=5,
+            command=about_window.destroy
+        )
+        close_btn.pack(pady=20)
+
     def setup_keyboard_shortcuts(self):
         """Setup keyboard shortcuts for common operations."""
         self.root.bind('<Control-r>', lambda e: self.run_scan())
@@ -3427,28 +3629,83 @@ Adjustable:  Yes (via Settings)
         self.root.quit()
 
     def setup_ui(self):
-        # Title Bar
+        # Title Bar with Logo
         title_frame = tk.Frame(self.root, bg=self.bg_primary, height=80)
         title_frame.pack(fill=tk.X, padx=20, pady=(20, 10))
         title_frame.pack_propagate(False)
 
+        # Left side - Logo
+        logo_frame = tk.Frame(title_frame, bg=self.bg_primary)
+        logo_frame.pack(side=tk.LEFT, padx=(10, 20))
+
+        if self.app_logo_small:
+            logo_label = tk.Label(logo_frame, image=self.app_logo_small, bg=self.bg_primary)
+            logo_label.pack()
+            # Make logo clickable for About dialog
+            logo_label.bind('<Button-1>', lambda e: self.show_about_dialog())
+            logo_label.configure(cursor="hand2")
+        else:
+            # Fallback text logo
+            logo_text = tk.Label(
+                logo_frame,
+                text="🛠️",
+                font=("Courier", 32),
+                fg=self.accent_green,
+                bg=self.bg_primary,
+                cursor="hand2"
+            )
+            logo_text.pack()
+            logo_text.bind('<Button-1>', lambda e: self.show_about_dialog())
+
+        # Center - Title and subtitle
+        center_frame = tk.Frame(title_frame, bg=self.bg_primary)
+        center_frame.pack(side=tk.LEFT, expand=True)
+
         title_label = tk.Label(
-            title_frame,
+            center_frame,
             text="⚡ THE RECON SUPERPOWER ⚡",
             font=("Courier", 28, "bold"),
             fg=self.accent_green,
             bg=self.bg_primary
         )
-        title_label.pack(side=tk.TOP, pady=(10, 0))
+        title_label.pack(side=tk.TOP)
 
         subtitle_label = tk.Label(
-            title_frame,
+            center_frame,
             text="[ AUTHORIZED SECURITY TESTING ONLY ]",
             font=("Courier", 10),
             fg=self.accent_cyan,
             bg=self.bg_primary
         )
         subtitle_label.pack(side=tk.TOP)
+
+        # Right side - About button and version
+        right_frame = tk.Frame(title_frame, bg=self.bg_primary)
+        right_frame.pack(side=tk.RIGHT, padx=(20, 10))
+
+        version_label = tk.Label(
+            right_frame,
+            text="v3.1",
+            font=("Courier", 10, "bold"),
+            fg=self.accent_purple,
+            bg=self.bg_primary
+        )
+        version_label.pack(side=tk.TOP)
+
+        about_btn = tk.Button(
+            right_frame,
+            text="ℹ️ About",
+            font=("Courier", 9),
+            fg=self.text_color,
+            bg=self.bg_secondary,
+            activebackground=self.bg_tertiary,
+            activeforeground=self.accent_green,
+            relief=tk.FLAT,
+            padx=10,
+            pady=2,
+            command=self.show_about_dialog
+        )
+        about_btn.pack(side=tk.TOP, pady=(5, 0))
 
         # Main container
         main_container = tk.Frame(self.root, bg=self.bg_primary)
