@@ -65,15 +65,19 @@ class ReconSuperpower:
         self.root.title("The Recon Superpower")
         self.root.geometry("1400x900")
 
-        # Dark hacker theme colors
-        self.bg_primary = "#0a0e27"
-        self.bg_secondary = "#151b3d"
-        self.bg_tertiary = "#1e2749"
-        self.accent_green = "#00ff41"
-        self.accent_cyan = "#00d9ff"
-        self.accent_red = "#ff0055"
-        self.text_color = "#e0e0e0"
-        self.border_color = "#00ff41"
+        # Monokai terminal theme colors
+        self.bg_primary = "#272822"      # Main background (dark greenish-gray)
+        self.bg_secondary = "#3E3D32"    # Panel background (lighter)
+        self.bg_tertiary = "#49483E"     # Sidebar/accent background
+        self.accent_green = "#A6E22E"    # Monokai green (strings/success)
+        self.accent_cyan = "#66D9EF"     # Monokai cyan (functions/info)
+        self.accent_red = "#F92672"      # Monokai pink/red (keywords/errors)
+        self.accent_orange = "#FD971F"   # Monokai orange (numbers/warnings)
+        self.accent_yellow = "#E6DB74"   # Monokai yellow (classes/highlights)
+        self.accent_purple = "#AE81FF"   # Monokai purple (constants)
+        self.text_color = "#F8F8F2"      # Monokai foreground (off-white)
+        self.text_muted = "#75715E"      # Monokai comments (muted text)
+        self.border_color = "#A6E22E"    # Green border
 
         self.root.configure(bg=self.bg_primary)
 
@@ -2823,6 +2827,495 @@ Adjustable:  Yes (via Settings)
                         "condition": "http_detected"
                     }
                 ]
+            },
+            "network_mapper": {
+                "name": "Complete Network Mapper",
+                "description": "Full network topology mapping and service discovery",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "Host Discovery",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "1-1000",
+                            "timing": "T4",
+                            "scripts": "default"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "Full Port Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "1-65535",
+                            "timing": "T4"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "Service Fingerprinting",
+                        "config": {
+                            "scan_type": "Version",
+                            "ports": "1-10000",
+                            "timing": "T3",
+                            "scripts": "banner,version"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "External Intelligence",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    }
+                ]
+            },
+            "web_vuln_hunter": {
+                "name": "Web Vulnerability Hunter",
+                "description": "Comprehensive web vulnerability assessment",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "Web Service Detection",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "80,443,8080,8443,8000,8888,3000,5000,9000",
+                            "timing": "T4",
+                            "scripts": "http-headers,http-methods,http-title,http-enum"
+                        }
+                    },
+                    {
+                        "tool": "nikto",
+                        "name": "Vulnerability Scan",
+                        "config": {
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "x"
+                        }
+                    },
+                    {
+                        "tool": "gobuster",
+                        "name": "Directory Discovery",
+                        "config": {
+                            "mode": "dir",
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt",
+                            "extensions": "php,asp,aspx,jsp,html,js,txt,xml,json,bak,old,sql",
+                            "threads": "50"
+                        }
+                    },
+                    {
+                        "tool": "feroxbuster",
+                        "name": "Deep Recursive Scan",
+                        "config": {
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
+                            "extensions": "php,html,js,json",
+                            "threads": "50",
+                            "depth": "5"
+                        }
+                    },
+                    {
+                        "tool": "sqlmap",
+                        "name": "SQL Injection Testing",
+                        "config": {
+                            "level": "5",
+                            "risk": "3",
+                            "batch": True,
+                            "forms": True,
+                            "random_agent": True,
+                            "dbs": True
+                        }
+                    }
+                ]
+            },
+            "osint_gather": {
+                "name": "OSINT Intelligence Gathering",
+                "description": "Open source intelligence collection",
+                "steps": [
+                    {
+                        "tool": "dnsrecon",
+                        "name": "DNS Intelligence",
+                        "config": {
+                            "scan_type": "std"
+                        }
+                    },
+                    {
+                        "tool": "dnsrecon",
+                        "name": "Subdomain Discovery",
+                        "config": {
+                            "scan_type": "brt",
+                            "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "GitHub Intelligence",
+                        "config": {
+                            "query": "[TARGET_DOMAIN]",
+                            "sort": "best"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Infrastructure Intel",
+                        "config": {
+                            "search_type": "search",
+                            "query": "hostname:[TARGET_DOMAIN]"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Organization Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "org:[TARGET_ORG]"
+                        }
+                    }
+                ]
+            },
+            "password_hunt": {
+                "name": "Password & Secret Hunter",
+                "description": "Hunt for exposed passwords and secrets",
+                "steps": [
+                    {
+                        "tool": "githarvester",
+                        "name": "GitHub Password Search",
+                        "config": {
+                            "query": "[TARGET] password OR passwd OR secret OR api_key",
+                            "sort": "new"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "GitHub Key Search",
+                        "config": {
+                            "query": "[TARGET] AWS_ACCESS_KEY OR PRIVATE_KEY OR BEGIN RSA",
+                            "sort": "new"
+                        }
+                    },
+                    {
+                        "tool": "gobuster",
+                        "name": "Backup File Discovery",
+                        "config": {
+                            "mode": "dir",
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
+                            "extensions": "bak,old,backup,sql,tar,gz,zip,config,conf,cfg,env",
+                            "threads": "30"
+                        },
+                        "condition": "http_detected"
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "Anonymous FTP Check",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "21",
+                            "timing": "T4",
+                            "scripts": "ftp-anon,ftp-brute"
+                        }
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "FTP Anonymous Access",
+                        "config": {
+                            "module": "auxiliary/scanner/ftp/anonymous",
+                            "threads": "10"
+                        }
+                    }
+                ]
+            },
+            "infrastructure_map": {
+                "name": "Infrastructure Mapping",
+                "description": "Map complete IT infrastructure",
+                "steps": [
+                    {
+                        "tool": "dnsrecon",
+                        "name": "DNS Mapping",
+                        "config": {
+                            "scan_type": "std"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "Network Discovery",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "21,22,23,25,53,80,110,135,139,143,443,445,993,995,1433,3306,3389,5432,8080",
+                            "timing": "T4",
+                            "scripts": "default"
+                        }
+                    },
+                    {
+                        "tool": "enum4linux",
+                        "name": "Windows Infrastructure",
+                        "config": {
+                            "all_enum": True
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Internet Exposure",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "SSH Version Detection",
+                        "config": {
+                            "module": "auxiliary/scanner/ssh/ssh_version",
+                            "threads": "10"
+                        }
+                    }
+                ]
+            },
+            "api_pentest": {
+                "name": "API Penetration Testing",
+                "description": "Comprehensive API security testing",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "API Endpoint Discovery",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "80,443,8080,8443,3000,5000,8000,9000",
+                            "timing": "T4",
+                            "scripts": "http-methods"
+                        }
+                    },
+                    {
+                        "tool": "gobuster",
+                        "name": "API Path Discovery",
+                        "config": {
+                            "mode": "dir",
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt",
+                            "extensions": "json,xml",
+                            "threads": "30"
+                        }
+                    },
+                    {
+                        "tool": "feroxbuster",
+                        "name": "Deep API Enumeration",
+                        "config": {
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
+                            "extensions": "json,xml,yaml",
+                            "threads": "40",
+                            "depth": "4"
+                        }
+                    },
+                    {
+                        "tool": "nikto",
+                        "name": "API Vulnerability Check",
+                        "config": {
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "3"
+                        }
+                    },
+                    {
+                        "tool": "sqlmap",
+                        "name": "API SQLi Testing",
+                        "config": {
+                            "level": "3",
+                            "risk": "2",
+                            "batch": True,
+                            "random_agent": True
+                        }
+                    }
+                ]
+            },
+            "subdomain_hunter": {
+                "name": "Subdomain Hunter",
+                "description": "Aggressive subdomain enumeration",
+                "steps": [
+                    {
+                        "tool": "dnsrecon",
+                        "name": "Standard DNS Enum",
+                        "config": {
+                            "scan_type": "std"
+                        }
+                    },
+                    {
+                        "tool": "dnsrecon",
+                        "name": "Subdomain Brute Force",
+                        "config": {
+                            "scan_type": "brt",
+                            "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt"
+                        }
+                    },
+                    {
+                        "tool": "dnsrecon",
+                        "name": "Zone Transfer Attempt",
+                        "config": {
+                            "scan_type": "axfr"
+                        }
+                    },
+                    {
+                        "tool": "gobuster",
+                        "name": "DNS Brute Force",
+                        "config": {
+                            "mode": "dns",
+                            "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt",
+                            "threads": "30"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Subdomain Intelligence",
+                        "config": {
+                            "search_type": "search",
+                            "query": "hostname:[TARGET_DOMAIN]"
+                        }
+                    }
+                ]
+            },
+            "cloud_pentest": {
+                "name": "Cloud Security Audit",
+                "description": "Comprehensive cloud security assessment",
+                "steps": [
+                    {
+                        "tool": "awsbucket",
+                        "name": "S3 Bucket Enumeration",
+                        "config": {
+                            "bucket_list": "buckets.txt",
+                            "threads": "10"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "Cloud Credential Search",
+                        "config": {
+                            "query": "[TARGET] AWS_ACCESS OR AZURE_CLIENT OR GCP_PROJECT",
+                            "sort": "new"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Cloud Infrastructure",
+                        "config": {
+                            "search_type": "search",
+                            "query": "org:[TARGET_ORG] cloud"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "Cloud Service Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "22,80,443,3389,5985,5986,8080,8443",
+                            "timing": "T4",
+                            "scripts": "default"
+                        }
+                    }
+                ]
+            },
+            "red_team_initial": {
+                "name": "Red Team Initial Access",
+                "description": "Initial access reconnaissance for red team",
+                "steps": [
+                    {
+                        "tool": "dnsrecon",
+                        "name": "Passive DNS",
+                        "config": {
+                            "scan_type": "std"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "External Footprint",
+                        "config": {
+                            "search_type": "search",
+                            "query": "org:[TARGET_ORG]"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "Code Repository Intel",
+                        "config": {
+                            "query": "[TARGET_ORG]",
+                            "sort": "best"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "Perimeter Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "21,22,23,25,53,80,110,443,445,3389,8080",
+                            "timing": "T3",
+                            "scripts": "vuln"
+                        }
+                    },
+                    {
+                        "tool": "nikto",
+                        "name": "Web Vulnerability Check",
+                        "config": {
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "x"
+                        },
+                        "condition": "http_detected"
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "SMB Vulnerability Check",
+                        "config": {
+                            "module": "auxiliary/scanner/smb/smb_ms17_010",
+                            "threads": "5"
+                        }
+                    }
+                ]
+            },
+            "blue_team_audit": {
+                "name": "Blue Team Security Audit",
+                "description": "Defensive security assessment",
+                "steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "Port Audit",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "1-65535",
+                            "timing": "T4"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "Vulnerability Audit",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "1-10000",
+                            "timing": "T4",
+                            "scripts": "vuln"
+                        }
+                    },
+                    {
+                        "tool": "nikto",
+                        "name": "Web Security Audit",
+                        "config": {
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "x"
+                        },
+                        "condition": "http_detected"
+                    },
+                    {
+                        "tool": "enum4linux",
+                        "name": "SMB Security Audit",
+                        "config": {
+                            "all_enum": True
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "External Exposure Check",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    }
+                ]
             }
         }
 
@@ -3205,16 +3698,17 @@ Adjustable:  Yes (via Settings)
 
         self.output_text = scrolledtext.ScrolledText(
             output_frame,
-            font=("Courier", 10),
-            bg=self.bg_primary,
-            fg=self.accent_green,
+            font=("Consolas", 11),
+            bg="#1E1E1E",                    # Darker terminal background
+            fg=self.text_color,              # Monokai off-white text
             insertbackground=self.accent_green,
-            selectbackground=self.accent_cyan,
+            selectbackground=self.accent_yellow,
             selectforeground=self.bg_primary,
             wrap=tk.WORD,
             relief=tk.FLAT,
-            padx=10,
-            pady=10
+            padx=12,
+            pady=12,
+            borderwidth=0
         )
         self.output_text.pack(fill=tk.BOTH, expand=True)
 
@@ -3264,9 +3758,10 @@ Adjustable:  Yes (via Settings)
                         fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
         label.grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
 
-        entry = tk.Entry(parent, font=("Courier", 10), bg=self.bg_primary,
-                        fg=self.accent_cyan, insertbackground=self.accent_cyan,
-                        relief=tk.FLAT, width=width)
+        entry = tk.Entry(parent, font=("Consolas", 11), bg="#1E1E1E",
+                        fg=self.text_color, insertbackground=self.accent_green,
+                        relief=tk.FLAT, width=width, highlightthickness=1,
+                        highlightbackground=self.bg_tertiary, highlightcolor=self.accent_green)
         entry.grid(row=row, column=1, sticky=tk.EW, padx=10, pady=5)
         entry.insert(0, default_value)
 
@@ -4449,10 +4944,11 @@ Adjustable:  Yes (via Settings)
         output_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(10, 5))
 
         self.shellz_output = scrolledtext.ScrolledText(
-            frame, height=8, font=("Courier", 10),
-            bg=self.bg_primary, fg=self.accent_green,
+            frame, height=8, font=("Consolas", 11),
+            bg="#1E1E1E", fg=self.accent_green,
             insertbackground=self.accent_green,
-            wrap=tk.WORD
+            selectbackground=self.accent_yellow,
+            wrap=tk.WORD, relief=tk.FLAT
         )
         self.shellz_output.grid(row=6, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
 
@@ -4563,10 +5059,11 @@ Adjustable:  Yes (via Settings)
         input_label.grid(row=2, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(10, 5))
 
         self.encoder_input = scrolledtext.ScrolledText(
-            frame, height=5, font=("Courier", 10),
-            bg=self.bg_primary, fg=self.text_color,
-            insertbackground=self.accent_cyan,
-            wrap=tk.WORD
+            frame, height=5, font=("Consolas", 11),
+            bg="#1E1E1E", fg=self.text_color,
+            insertbackground=self.accent_green,
+            selectbackground=self.accent_yellow,
+            wrap=tk.WORD, relief=tk.FLAT
         )
         self.encoder_input.grid(row=3, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
 
@@ -4592,10 +5089,11 @@ Adjustable:  Yes (via Settings)
         output_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(10, 5))
 
         self.encoder_output = scrolledtext.ScrolledText(
-            frame, height=5, font=("Courier", 10),
-            bg=self.bg_primary, fg=self.accent_green,
+            frame, height=5, font=("Consolas", 11),
+            bg="#1E1E1E", fg=self.accent_green,
             insertbackground=self.accent_green,
-            wrap=tk.WORD
+            selectbackground=self.accent_yellow,
+            wrap=tk.WORD, relief=tk.FLAT
         )
         self.encoder_output.grid(row=6, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
 
@@ -4704,10 +5202,11 @@ Adjustable:  Yes (via Settings)
         input_label.grid(row=2, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(10, 5))
 
         self.decoder_input = scrolledtext.ScrolledText(
-            frame, height=5, font=("Courier", 10),
-            bg=self.bg_primary, fg=self.text_color,
-            insertbackground=self.accent_cyan,
-            wrap=tk.WORD
+            frame, height=5, font=("Consolas", 11),
+            bg="#1E1E1E", fg=self.text_color,
+            insertbackground=self.accent_green,
+            selectbackground=self.accent_yellow,
+            wrap=tk.WORD, relief=tk.FLAT
         )
         self.decoder_input.grid(row=3, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
 
@@ -4733,10 +5232,11 @@ Adjustable:  Yes (via Settings)
         output_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(10, 5))
 
         self.decoder_output = scrolledtext.ScrolledText(
-            frame, height=5, font=("Courier", 10),
-            bg=self.bg_primary, fg=self.accent_green,
+            frame, height=5, font=("Consolas", 11),
+            bg="#1E1E1E", fg=self.accent_green,
             insertbackground=self.accent_green,
-            wrap=tk.WORD
+            selectbackground=self.accent_yellow,
+            wrap=tk.WORD, relief=tk.FLAT
         )
         self.decoder_output.grid(row=6, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
 
@@ -4880,10 +5380,11 @@ Adjustable:  Yes (via Settings)
 
         # Info display
         self.lolol_output = scrolledtext.ScrolledText(
-            frame, height=12, font=("Courier", 10),
-            bg=self.bg_primary, fg=self.accent_green,
+            frame, height=12, font=("Consolas", 11),
+            bg="#1E1E1E", fg=self.accent_green,
             insertbackground=self.accent_green,
-            wrap=tk.WORD
+            selectbackground=self.accent_yellow,
+            wrap=tk.WORD, relief=tk.FLAT
         )
         self.lolol_output.grid(row=5, column=0, columnspan=2, sticky=tk.NSEW, padx=10, pady=10)
 
@@ -5437,10 +5938,11 @@ Adjustable:  Yes (via Settings)
 
         # Help content
         help_text = scrolledtext.ScrolledText(
-            frame, font=("Courier", 10),
-            bg=self.bg_primary, fg=self.text_color,
-            insertbackground=self.accent_cyan,
-            wrap=tk.WORD
+            frame, font=("Consolas", 11),
+            bg="#1E1E1E", fg=self.text_color,
+            insertbackground=self.accent_green,
+            selectbackground=self.accent_yellow,
+            wrap=tk.WORD, relief=tk.FLAT
         )
         help_text.grid(row=1, column=0, sticky=tk.NSEW, padx=10, pady=10)
 
@@ -7106,37 +7608,67 @@ Configure in the Settings tab:
 
     def print_banner(self):
         banner = """
-╔═══════════════════════════════════════════════════════════════════════╗
-║                    THE RECON SUPERPOWER v3.0                         ║
-║           Professional Security Reconnaissance Suite                  ║
-╚═══════════════════════════════════════════════════════════════════════╝
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                                                                               ║
+║   ████████╗██╗  ██╗███████╗    ██████╗ ███████╗ ██████╗ ██████╗ ███╗   ██╗   ║
+║   ╚══██╔══╝██║  ██║██╔════╝    ██╔══██╗██╔════╝██╔════╝██╔═══██╗████╗  ██║   ║
+║      ██║   ███████║█████╗      ██████╔╝█████╗  ██║     ██║   ██║██╔██╗ ██║   ║
+║      ██║   ██╔══██║██╔══╝      ██╔══██╗██╔══╝  ██║     ██║   ██║██║╚██╗██║   ║
+║      ██║   ██║  ██║███████╗    ██║  ██║███████╗╚██████╗╚██████╔╝██║ ╚████║   ║
+║      ╚═╝   ╚═╝  ╚═╝╚══════╝    ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝   ║
+║                                                                               ║
+║              ███████╗██╗   ██╗██████╗ ███████╗██████╗ ██████╗  ██████╗       ║
+║              ██╔════╝██║   ██║██╔══██╗██╔════╝██╔══██╗██╔══██╗██╔═══██╗      ║
+║              ███████╗██║   ██║██████╔╝█████╗  ██████╔╝██████╔╝██║   ██║      ║
+║              ╚════██║██║   ██║██╔═══╝ ██╔══╝  ██╔══██╗██╔═══╝ ██║   ██║      ║
+║              ███████║╚██████╔╝██║     ███████╗██║  ██║██║     ╚██████╔╝      ║
+║              ╚══════╝ ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝      ╚═════╝       ║
+║                                                                               ║
+║                        ═══ VERSION 3.1 ═══                                   ║
+║                  Professional Security Reconnaissance Suite                   ║
+║                                                                               ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
 
-[!] For Authorized Security Testing Only
-[!] Ensure you have permission to scan the target
+  ⚠️  AUTHORIZED SECURITY TESTING ONLY - Ensure you have permission to scan
 
-12 RECONNAISSANCE TOOLS:
-  🔍 Nmap          📁 Gobuster       🔐 Nikto         💉 SQLmap
-  💥 Metasploit    🌐 Shodan         📡 DNSrecon      🖥️  enum4linux
-  🔎 GitHarvester  🦀 feroxbuster    ☁️  AWS S3        📦 TCPDump
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  🛠️  12 RECONNAISSANCE TOOLS                                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  🔍 Nmap          📁 Gobuster       🔐 Nikto         💉 SQLmap              │
+│  💥 Metasploit    🌐 Shodan         📡 DNSrecon      🖥️  enum4linux          │
+│  🔎 GitHarvester  🦀 feroxbuster    ☁️  AWS S3        📦 TCPDump              │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-UTILITY FEATURES:
-  🐚 Shellz (Reverse Shells)    🔐 Encoders/Decoders    📚 LOLOL (GTFOBins/LOLBAS/LOLAD)
-  🔄 20 Automated Workflows     ⚙️  Configurable Settings
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  ⚡ UTILITY FEATURES                                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  🐚 Shellz (16+ Reverse Shell Types)    🔐 Encoders/Decoders (10+ Types)   │
+│  📚 LOLOL (GTFOBins/LOLBAS/LOLAD)       🔄 30 Automated Workflows          │
+│  ⚙️  Configurable Settings               ❓ Comprehensive Help              │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-Select a tool from the sidebar and configure your scan. Press 'RUN SCAN' when ready.
+  📌 Select a tool from the sidebar → Configure your scan → Press 'RUN SCAN'
 
-KEYBOARD SHORTCUTS:
-  Ctrl+R: Run Scan  |  Ctrl+S: Save  |  Ctrl+L: Clear  |  Ctrl+F: Search
-  Ctrl+C: Copy      |  Ctrl+Q: Quit  |  ESC: Stop Scan
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  ⌨️  KEYBOARD SHORTCUTS                                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Ctrl+R: Run Scan  │  Ctrl+S: Save  │  Ctrl+L: Clear  │  Ctrl+F: Search    │
+│  Ctrl+C: Copy      │  Ctrl+Q: Quit  │  ESC: Stop Scan │                    │
+└─────────────────────────────────────────────────────────────────────────────┘
 
 """
         self.output_text.insert(tk.END, banner, 'info')
         self.output_text.tag_config('info', foreground=self.accent_cyan)
-        # Configure additional output tags for syntax highlighting
-        self.output_text.tag_config('success', foreground="#00ff41")
-        self.output_text.tag_config('error', foreground="#ff0055")
-        self.output_text.tag_config('warning', foreground="#ffa500")
-        self.output_text.tag_config('highlight', background="#1e2749", foreground="#00d9ff")
+        # Configure additional output tags for Monokai syntax highlighting
+        self.output_text.tag_config('success', foreground=self.accent_green)    # Monokai green
+        self.output_text.tag_config('error', foreground=self.accent_red)        # Monokai pink/red
+        self.output_text.tag_config('warning', foreground=self.accent_orange)   # Monokai orange
+        self.output_text.tag_config('highlight', background=self.bg_tertiary, foreground=self.accent_yellow)
+        self.output_text.tag_config('keyword', foreground=self.accent_red)      # Monokai keywords
+        self.output_text.tag_config('string', foreground=self.accent_yellow)    # Monokai strings
+        self.output_text.tag_config('number', foreground=self.accent_purple)    # Monokai numbers
+        self.output_text.tag_config('comment', foreground=self.text_muted)      # Monokai comments
+        self.output_text.tag_config('function', foreground=self.accent_green)   # Monokai functions
         # Initialize line count for banner
         self.output_line_count = banner.count('\n')
 

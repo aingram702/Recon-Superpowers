@@ -1,13 +1,14 @@
-# ⚡ The Recon Superpower v3.0
+# ⚡ The Recon Superpower v3.1
 
-A professional dark-themed GUI wrapper for **12 essential security reconnaissance tools** with **automated workflows**, advanced features, API integrations, and comprehensive security hardening.
+A professional **Monokai-themed** GUI wrapper for **12 essential security reconnaissance tools** with **30 automated workflows**, advanced features, API integrations, and comprehensive security hardening.
 
-![Version](https://img.shields.io/badge/version-3.0-brightgreen)
+![Version](https://img.shields.io/badge/version-3.1-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.6%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-orange)
 ![Security](https://img.shields.io/badge/security-hardened-brightgreen)
 ![Tools](https://img.shields.io/badge/tools-12-blue)
-![Workflows](https://img.shields.io/badge/workflows-20-purple)
+![Workflows](https://img.shields.io/badge/workflows-30-purple)
+![Theme](https://img.shields.io/badge/theme-Monokai-yellow)
 
 ## ⚠️ Legal Disclaimer
 
@@ -25,7 +26,7 @@ By using this tool, you agree to use it responsibly and legally.
 ## 🚀 What's New in v3.0
 
 ### 🔄 Automated Workflows ⭐
-- ✅ **20 Pre-defined Workflows** - Basic and advanced attack patterns automated
+- ✅ **30 Pre-defined Workflows** - Basic, advanced, and specialized attack patterns automated
 - ✅ **Sequential Execution** - Multi-tool chains with progress tracking
 - ✅ **Smart Conditions** - Steps execute based on previous results
 - ✅ **Target Validation** - Workflow-specific format checking
@@ -742,7 +743,7 @@ self.accent_red = "#ff0055"      # Alert/stop color
 - **Integrated Tools**: 12 reconnaissance tools
 - **Feature Tabs**: 6 (Shellz, Encoders, Decoders, LOLOL, Help, Workflows)
 - **File Size**: ~300KB
-- **Workflows**: 20 automated reconnaissance patterns
+- **Workflows**: 30 automated reconnaissance patterns
 
 ---
 
@@ -791,6 +792,13 @@ Use this tool responsibly and legally.
 
 ## 📝 Changelog
 
+### v3.1 (2025-12-08)
+- **Monokai Theme** - Complete UI overhaul with Monokai terminal color scheme
+- **30 Workflows** - Added 10 new specialized workflows (network mapper, web vuln hunter, OSINT gather, password hunt, infrastructure map, API pentest, subdomain hunter, cloud pentest, red team initial, blue team audit)
+- **Enhanced ASCII Banner** - New stylized banner with box-drawing characters
+- **Improved Text Boxes** - All input/output areas use Consolas font with Monokai colors
+- **Better Contrast** - Improved readability with proper syntax highlighting
+
 ### v3.0 (2025-12-07)
 - Added 20 automated workflows (6 basic + 14 advanced attack patterns)
 - New feature tabs: SQLmap, Shellz, Encoders, Decoders, LOLOL, Help
@@ -833,7 +841,7 @@ Use this tool responsibly and legally.
 ---
 
 **Project**: Recon-Superpowers
-**Version**: 3.0
+**Version**: 3.1
 **Author**: aingram702
 **Repository**: https://github.com/aingram702/Recon-Superpowers
 **License**: MIT
