@@ -1937,11 +1937,47 @@ Adjustable:  Yes (via Settings)
         }
 
         # Pre-defined Workflows for automation
+        # Workflow modes explanation:
+        # - passive_steps: No direct interaction with target (uses third-party data sources)
+        # - active_steps: Direct interaction with target (sends packets/requests to target)
         self.predefined_workflows = {
             "full_recon": {
                 "name": "Full Network Reconnaissance",
                 "description": "Comprehensive scan: ports → services → web → DNS → SQLi",
-                "steps": [
+                "passive_steps": [
+                    {
+                        "tool": "shodan",
+                        "name": "Shodan Host Intelligence",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Shodan Org Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "hostname:[TARGET_DOMAIN]"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "GitHub OSINT",
+                        "config": {
+                            "query": "[TARGET_DOMAIN]",
+                            "sort": "best"
+                        }
+                    },
+                    {
+                        "tool": "dnsrecon",
+                        "name": "DNS Record Lookup",
+                        "config": {
+                            "scan_type": "std"
+                        }
+                    }
+                ],
+                "active_steps": [
                     {
                         "tool": "nmap",
                         "name": "Comprehensive Port Scan",
@@ -1954,9 +1990,9 @@ Adjustable:  Yes (via Settings)
                     },
                     {
                         "tool": "dnsrecon",
-                        "name": "DNS Enumeration",
+                        "name": "DNS Zone Transfer",
                         "config": {
-                            "scan_type": "std"
+                            "scan_type": "axfr"
                         }
                     },
                     {
@@ -1991,21 +2027,39 @@ Adjustable:  Yes (via Settings)
                             "dbs": True
                         },
                         "condition": "http_detected"
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "Shodan Intelligence",
-                        "config": {
-                            "search_type": "host",
-                            "query": "[TARGET_IP]"
-                        }
                     }
                 ]
             },
             "web_deep_scan": {
                 "name": "Web Application Deep Scan",
-                "description": "Nmap → Nikto → Gobuster → feroxbuster → SQLmap → Shodan",
-                "steps": [
+                "description": "Comprehensive web application security assessment",
+                "passive_steps": [
+                    {
+                        "tool": "shodan",
+                        "name": "Shodan Web Service Intel",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "HTTP/HTTPS Service Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "hostname:[TARGET_DOMAIN] port:80,443,8080"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "Source Code Leak Search",
+                        "config": {
+                            "query": "[TARGET_DOMAIN] config OR password OR api",
+                            "sort": "new"
+                        }
+                    }
+                ],
+                "active_steps": [
                     {
                         "tool": "nmap",
                         "name": "Web Service Fingerprinting",
@@ -2055,34 +2109,18 @@ Adjustable:  Yes (via Settings)
                             "forms": True,
                             "random_agent": True
                         }
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "Shodan Intelligence",
-                        "config": {
-                            "search_type": "host",
-                            "query": "[TARGET_IP]"
-                        }
                     }
                 ]
             },
             "domain_intel": {
                 "name": "Domain Intelligence Gathering",
-                "description": "DNSrecon → Shodan → GitHub OSINT",
-                "steps": [
+                "description": "Comprehensive domain reconnaissance",
+                "passive_steps": [
                     {
                         "tool": "dnsrecon",
-                        "name": "DNS Standard Enumeration",
+                        "name": "DNS Record Lookup",
                         "config": {
                             "scan_type": "std"
-                        }
-                    },
-                    {
-                        "tool": "dnsrecon",
-                        "name": "Subdomain Brute Force",
-                        "config": {
-                            "scan_type": "brt",
-                            "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt"
                         }
                     },
                     {
@@ -2094,11 +2132,62 @@ Adjustable:  Yes (via Settings)
                         }
                     },
                     {
+                        "tool": "shodan",
+                        "name": "SSL Certificate Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "ssl.cert.subject.cn:[TARGET_DOMAIN]"
+                        }
+                    },
+                    {
                         "tool": "githarvester",
                         "name": "GitHub Reference Search",
                         "config": {
                             "query": "[TARGET_DOMAIN]",
                             "sort": "best"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "GitHub Credential Search",
+                        "config": {
+                            "query": "[TARGET_DOMAIN] password OR api_key OR secret",
+                            "sort": "new"
+                        }
+                    }
+                ],
+                "active_steps": [
+                    {
+                        "tool": "dnsrecon",
+                        "name": "Subdomain Brute Force",
+                        "config": {
+                            "scan_type": "brt",
+                            "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt"
+                        }
+                    },
+                    {
+                        "tool": "dnsrecon",
+                        "name": "Zone Transfer Attempt",
+                        "config": {
+                            "scan_type": "axfr"
+                        }
+                    },
+                    {
+                        "tool": "gobuster",
+                        "name": "DNS Subdomain Brute",
+                        "config": {
+                            "mode": "dns",
+                            "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt",
+                            "threads": "30"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "Domain Host Discovery",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "80,443,21,22,25,53",
+                            "timing": "T4"
                         }
                     }
                 ]
@@ -2106,7 +2195,33 @@ Adjustable:  Yes (via Settings)
             "smb_enum": {
                 "name": "Windows/SMB Enumeration",
                 "description": "Comprehensive SMB/Windows enumeration with vuln checks",
-                "steps": [
+                "passive_steps": [
+                    {
+                        "tool": "shodan",
+                        "name": "Shodan SMB Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "port:445 ip:[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Windows Service Intel",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "AD/SMB Credential Search",
+                        "config": {
+                            "query": "[TARGET_DOMAIN] NTLM OR domain\\\\user OR administrator",
+                            "sort": "new"
+                        }
+                    }
+                ],
+                "active_steps": [
                     {
                         "tool": "nmap",
                         "name": "SMB/Windows Service Scan",
@@ -2153,7 +2268,49 @@ Adjustable:  Yes (via Settings)
             "cloud_discovery": {
                 "name": "Cloud Asset Discovery",
                 "description": "S3 buckets → GitHub credentials → Infrastructure",
-                "steps": [
+                "passive_steps": [
+                    {
+                        "tool": "shodan",
+                        "name": "Cloud Organization Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "org:[TARGET_ORG]"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "AWS Infrastructure Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "org:Amazon [TARGET_ORG]"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "AWS Credential Search",
+                        "config": {
+                            "query": "[TARGET_ORG] AWS_ACCESS_KEY OR AKIA",
+                            "sort": "new"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "Azure Credential Search",
+                        "config": {
+                            "query": "[TARGET_ORG] AZURE_CLIENT_SECRET OR azure",
+                            "sort": "new"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "GCP Credential Search",
+                        "config": {
+                            "query": "[TARGET_ORG] GCP_PROJECT OR google_credentials",
+                            "sort": "new"
+                        }
+                    }
+                ],
+                "active_steps": [
                     {
                         "tool": "awsbucket",
                         "name": "S3 Bucket Enumeration",
@@ -2163,28 +2320,47 @@ Adjustable:  Yes (via Settings)
                         }
                     },
                     {
-                        "tool": "githarvester",
-                        "name": "Cloud Credential Search",
+                        "tool": "nmap",
+                        "name": "Cloud Service Ports",
                         "config": {
-                            "query": "AWS_ACCESS_KEY OR AZURE_CLIENT_SECRET",
-                            "account": "[TARGET_ORG]",
-                            "sort": "new"
+                            "scan_type": "SYN",
+                            "ports": "22,80,443,3389,5985,5986,8080,8443",
+                            "timing": "T4"
                         }
                     },
                     {
-                        "tool": "shodan",
-                        "name": "Organization Infrastructure",
+                        "tool": "gobuster",
+                        "name": "Cloud Admin Panels",
                         "config": {
-                            "search_type": "search",
-                            "query": "org:[TARGET_ORG]"
+                            "mode": "dir",
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
+                            "extensions": "html,php,json",
+                            "threads": "30"
                         }
                     }
                 ]
             },
             "quick_host": {
                 "name": "Quick Host Discovery",
-                "description": "Fast port scan → quick web scan",
-                "steps": [
+                "description": "Fast host reconnaissance",
+                "passive_steps": [
+                    {
+                        "tool": "shodan",
+                        "name": "Shodan Quick Lookup",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "dnsrecon",
+                        "name": "Quick DNS Lookup",
+                        "config": {
+                            "scan_type": "std"
+                        }
+                    }
+                ],
+                "active_steps": [
                     {
                         "tool": "nmap",
                         "name": "Fast Port Scan",
@@ -2209,7 +2385,40 @@ Adjustable:  Yes (via Settings)
             "ad_recon": {
                 "name": "Active Directory Reconnaissance",
                 "description": "Full AD enumeration: LDAP → Kerberos → SMB → Users",
-                "steps": [
+                "passive_steps": [
+                    {
+                        "tool": "shodan",
+                        "name": "AD Services Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "port:389,636,88 ip:[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Domain Controller Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "hostname:[TARGET_DOMAIN] port:88"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "AD Credential Search",
+                        "config": {
+                            "query": "[TARGET_DOMAIN] domain\\\\admin OR ldap OR kerberos",
+                            "sort": "new"
+                        }
+                    },
+                    {
+                        "tool": "dnsrecon",
+                        "name": "AD DNS Records",
+                        "config": {
+                            "scan_type": "std"
+                        }
+                    }
+                ],
+                "active_steps": [
                     {
                         "tool": "nmap",
                         "name": "AD Services Scan",
@@ -2248,7 +2457,33 @@ Adjustable:  Yes (via Settings)
             "web_pentest": {
                 "name": "Web Application Pentesting",
                 "description": "Complete web app assessment with vuln scanning",
-                "steps": [
+                "passive_steps": [
+                    {
+                        "tool": "shodan",
+                        "name": "Web Technology Intel",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "HTTP Fingerprint Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "hostname:[TARGET_DOMAIN] http"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "Web App Source Search",
+                        "config": {
+                            "query": "[TARGET_DOMAIN] config OR database OR password",
+                            "sort": "new"
+                        }
+                    }
+                ],
+                "active_steps": [
                     {
                         "tool": "nmap",
                         "name": "Web Service Detection",
@@ -2313,20 +2548,12 @@ Adjustable:  Yes (via Settings)
             "external_perimeter": {
                 "name": "External Perimeter Assessment",
                 "description": "External recon for red team operations",
-                "steps": [
+                "passive_steps": [
                     {
                         "tool": "dnsrecon",
-                        "name": "DNS Reconnaissance",
+                        "name": "DNS Record Lookup",
                         "config": {
                             "scan_type": "std"
-                        }
-                    },
-                    {
-                        "tool": "dnsrecon",
-                        "name": "Subdomain Enumeration",
-                        "config": {
-                            "scan_type": "brt",
-                            "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt"
                         }
                     },
                     {
@@ -2335,6 +2562,32 @@ Adjustable:  Yes (via Settings)
                         "config": {
                             "search_type": "search",
                             "query": "hostname:[TARGET_DOMAIN]"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Organization Footprint",
+                        "config": {
+                            "search_type": "search",
+                            "query": "org:[TARGET_ORG]"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "Code Leak Search",
+                        "config": {
+                            "query": "[TARGET_DOMAIN] password OR secret OR api_key",
+                            "sort": "new"
+                        }
+                    }
+                ],
+                "active_steps": [
+                    {
+                        "tool": "dnsrecon",
+                        "name": "Subdomain Brute Force",
+                        "config": {
+                            "scan_type": "brt",
+                            "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt"
                         }
                     },
                     {
@@ -2347,19 +2600,39 @@ Adjustable:  Yes (via Settings)
                         }
                     },
                     {
-                        "tool": "githarvester",
-                        "name": "Code Leak Search",
+                        "tool": "nikto",
+                        "name": "Web Vulnerability Scan",
                         "config": {
-                            "query": "[TARGET_DOMAIN] password OR secret OR api_key",
-                            "sort": "new"
-                        }
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "x"
+                        },
+                        "condition": "http_detected"
                     }
                 ]
             },
             "internal_sweep": {
                 "name": "Internal Network Sweep",
                 "description": "Internal network discovery and enumeration",
-                "steps": [
+                "passive_steps": [
+                    {
+                        "tool": "shodan",
+                        "name": "Internal Range Intel",
+                        "config": {
+                            "search_type": "search",
+                            "query": "net:[TARGET_RANGE]"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "Internal Network Docs",
+                        "config": {
+                            "query": "[TARGET_ORG] internal OR intranet OR 192.168 OR 10.0",
+                            "sort": "new"
+                        }
+                    }
+                ],
+                "active_steps": [
                     {
                         "tool": "nmap",
                         "name": "Host Discovery",
@@ -2400,7 +2673,33 @@ Adjustable:  Yes (via Settings)
             "api_security": {
                 "name": "API Security Assessment",
                 "description": "REST API security testing workflow",
-                "steps": [
+                "passive_steps": [
+                    {
+                        "tool": "shodan",
+                        "name": "API Service Intel",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "API Documentation Search",
+                        "config": {
+                            "query": "[TARGET_DOMAIN] swagger OR openapi OR api-docs",
+                            "sort": "best"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "API Key Search",
+                        "config": {
+                            "query": "[TARGET_DOMAIN] api_key OR bearer OR authorization",
+                            "sort": "new"
+                        }
+                    }
+                ],
+                "active_steps": [
                     {
                         "tool": "nmap",
                         "name": "API Endpoint Discovery",
@@ -2445,12 +2744,20 @@ Adjustable:  Yes (via Settings)
             "credential_hunt": {
                 "name": "Credential Hunting",
                 "description": "Search for exposed credentials across services",
-                "steps": [
+                "passive_steps": [
                     {
                         "tool": "githarvester",
                         "name": "GitHub Credential Search",
                         "config": {
-                            "query": "[TARGET] password OR secret OR token OR api_key OR apikey",
+                            "query": "[TARGET] password OR secret OR token OR api_key",
+                            "sort": "new"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "Private Key Search",
+                        "config": {
+                            "query": "[TARGET] BEGIN RSA OR BEGIN PRIVATE OR id_rsa",
                             "sort": "new"
                         }
                     },
@@ -2461,7 +2768,9 @@ Adjustable:  Yes (via Settings)
                             "search_type": "search",
                             "query": "org:[TARGET_ORG] port:21,22,23,3306,5432,27017"
                         }
-                    },
+                    }
+                ],
+                "active_steps": [
                     {
                         "tool": "nmap",
                         "name": "Authentication Service Scan",
@@ -2474,10 +2783,20 @@ Adjustable:  Yes (via Settings)
                     },
                     {
                         "tool": "metasploit",
-                        "name": "Anonymous Access Check",
+                        "name": "Anonymous FTP Check",
                         "config": {
                             "module": "auxiliary/scanner/ftp/anonymous",
                             "threads": "10"
+                        }
+                    },
+                    {
+                        "tool": "gobuster",
+                        "name": "Backup File Hunt",
+                        "config": {
+                            "mode": "dir",
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
+                            "extensions": "bak,old,sql,zip,tar,gz,config,env",
+                            "threads": "30"
                         }
                     }
                 ]
@@ -2485,7 +2804,33 @@ Adjustable:  Yes (via Settings)
             "ssl_assessment": {
                 "name": "SSL/TLS Assessment",
                 "description": "Certificate and encryption testing",
-                "steps": [
+                "passive_steps": [
+                    {
+                        "tool": "shodan",
+                        "name": "SSL Certificate Analysis",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "SSL Certificate Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "ssl.cert.subject.cn:[TARGET_DOMAIN]"
+                        }
+                    },
+                    {
+                        "tool": "githarvester",
+                        "name": "Certificate Leak Search",
+                        "config": {
+                            "query": "[TARGET_DOMAIN] certificate OR ssl OR private key",
+                            "sort": "new"
+                        }
+                    }
+                ],
+                "active_steps": [
                     {
                         "tool": "nmap",
                         "name": "SSL Service Discovery",
@@ -2504,21 +2849,31 @@ Adjustable:  Yes (via Settings)
                             "ssl": True,
                             "tuning": "x"
                         }
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "SSL Certificate Analysis",
-                        "config": {
-                            "search_type": "host",
-                            "query": "[TARGET_IP]"
-                        }
                     }
                 ]
             },
             "service_audit": {
                 "name": "Network Services Audit",
                 "description": "Comprehensive service enumeration",
-                "steps": [
+                "passive_steps": [
+                    {
+                        "tool": "shodan",
+                        "name": "Service Intelligence",
+                        "config": {
+                            "search_type": "host",
+                            "query": "[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "shodan",
+                        "name": "Port History Search",
+                        "config": {
+                            "search_type": "search",
+                            "query": "ip:[TARGET_IP]"
+                        }
+                    }
+                ],
+                "active_steps": [
                     {
                         "tool": "nmap",
                         "name": "Full Port Scan",
@@ -2570,16 +2925,7 @@ Adjustable:  Yes (via Settings)
             "stealth_recon": {
                 "name": "Stealth Reconnaissance",
                 "description": "Low and slow recon for evading detection",
-                "steps": [
-                    {
-                        "tool": "nmap",
-                        "name": "Stealth Port Scan",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "21,22,23,25,53,80,110,139,143,443,445,3389",
-                            "timing": "T1"
-                        }
-                    },
+                "passive_steps": [
                     {
                         "tool": "dnsrecon",
                         "name": "Passive DNS Lookup",
@@ -2603,734 +2949,222 @@ Adjustable:  Yes (via Settings)
                             "sort": "best"
                         }
                     }
+                ],
+                "active_steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "Stealth Port Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "21,22,23,25,53,80,110,139,143,443,445,3389",
+                            "timing": "T1"
+                        }
+                    }
                 ]
             },
             "full_stack": {
                 "name": "Full Stack Assessment",
                 "description": "Complete infrastructure assessment",
-                "steps": [
-                    {
-                        "tool": "dnsrecon",
-                        "name": "DNS Intelligence",
-                        "config": {
-                            "scan_type": "std"
-                        }
-                    },
-                    {
-                        "tool": "nmap",
-                        "name": "Comprehensive Port Scan",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "1-10000",
-                            "timing": "T4",
-                            "scripts": "default"
-                        }
-                    },
-                    {
-                        "tool": "nikto",
-                        "name": "Web Application Scan",
-                        "config": {
-                            "port": "80",
-                            "ssl": False,
-                            "tuning": "x"
-                        },
-                        "condition": "http_detected"
-                    },
-                    {
-                        "tool": "gobuster",
-                        "name": "Content Discovery",
-                        "config": {
-                            "mode": "dir",
-                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/big.txt",
-                            "extensions": "php,html,asp,aspx,jsp,txt,bak",
-                            "threads": "40"
-                        },
-                        "condition": "http_detected"
-                    },
-                    {
-                        "tool": "enum4linux",
-                        "name": "Windows Enumeration",
-                        "config": {
-                            "all_enum": True
-                        },
-                        "condition": "smb_detected"
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "Threat Intelligence",
-                        "config": {
-                            "search_type": "host",
-                            "query": "[TARGET_IP]"
-                        }
-                    },
-                    {
-                        "tool": "githarvester",
-                        "name": "Code Repository Search",
-                        "config": {
-                            "query": "[TARGET_DOMAIN]",
-                            "sort": "new"
-                        }
-                    }
+                "passive_steps": [
+                    {"tool": "dnsrecon", "name": "DNS Intelligence", "config": {"scan_type": "std"}},
+                    {"tool": "shodan", "name": "Threat Intelligence", "config": {"search_type": "host", "query": "[TARGET_IP]"}},
+                    {"tool": "githarvester", "name": "Code Repository Search", "config": {"query": "[TARGET_DOMAIN]", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Comprehensive Port Scan", "config": {"scan_type": "SYN", "ports": "1-10000", "timing": "T4", "scripts": "default"}},
+                    {"tool": "nikto", "name": "Web Application Scan", "config": {"port": "80", "ssl": False, "tuning": "x"}, "condition": "http_detected"},
+                    {"tool": "gobuster", "name": "Content Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/big.txt", "extensions": "php,html,asp,aspx,jsp,txt,bak", "threads": "40"}, "condition": "http_detected"},
+                    {"tool": "enum4linux", "name": "Windows Enumeration", "config": {"all_enum": True}, "condition": "smb_detected"}
                 ]
             },
             "vuln_assessment": {
                 "name": "Vulnerability Assessment",
                 "description": "Comprehensive vulnerability scanning",
-                "steps": [
-                    {
-                        "tool": "nmap",
-                        "name": "Vulnerability Scan",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "1-1000",
-                            "timing": "T4",
-                            "scripts": "vuln"
-                        }
-                    },
-                    {
-                        "tool": "nikto",
-                        "name": "Web Vulnerability Scan",
-                        "config": {
-                            "port": "80",
-                            "ssl": False,
-                            "tuning": "x"
-                        },
-                        "condition": "http_detected"
-                    },
-                    {
-                        "tool": "metasploit",
-                        "name": "SMB Vulnerability Check",
-                        "config": {
-                            "module": "auxiliary/scanner/smb/smb_ms17_010",
-                            "threads": "10"
-                        },
-                        "condition": "smb_detected"
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "Known Vulnerability Search",
-                        "config": {
-                            "search_type": "host",
-                            "query": "[TARGET_IP]"
-                        }
-                    }
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Known Vulnerability Search", "config": {"search_type": "host", "query": "[TARGET_IP]"}},
+                    {"tool": "shodan", "name": "CVE Search", "config": {"search_type": "search", "query": "vuln:CVE ip:[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Vulnerability Scan", "config": {"scan_type": "SYN", "ports": "1-1000", "timing": "T4", "scripts": "vuln"}},
+                    {"tool": "nikto", "name": "Web Vulnerability Scan", "config": {"port": "80", "ssl": False, "tuning": "x"}, "condition": "http_detected"},
+                    {"tool": "metasploit", "name": "SMB Vulnerability Check", "config": {"module": "auxiliary/scanner/smb/smb_ms17_010", "threads": "10"}, "condition": "smb_detected"}
                 ]
             },
             "database_hunt": {
                 "name": "Database Discovery",
                 "description": "Find and enumerate database services",
-                "steps": [
-                    {
-                        "tool": "nmap",
-                        "name": "Database Port Scan",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "1433,1521,3306,5432,5984,6379,9042,27017,28017",
-                            "timing": "T4",
-                            "scripts": "mysql-info,ms-sql-info,oracle-tns-version"
-                        }
-                    },
-                    {
-                        "tool": "metasploit",
-                        "name": "MySQL Enumeration",
-                        "config": {
-                            "module": "auxiliary/scanner/mysql/mysql_version",
-                            "threads": "10"
-                        }
-                    },
-                    {
-                        "tool": "metasploit",
-                        "name": "MSSQL Enumeration",
-                        "config": {
-                            "module": "auxiliary/scanner/mssql/mssql_ping",
-                            "threads": "10"
-                        }
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "Exposed Database Search",
-                        "config": {
-                            "search_type": "search",
-                            "query": "org:[TARGET_ORG] port:3306,5432,27017"
-                        }
-                    }
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Exposed Database Search", "config": {"search_type": "search", "query": "org:[TARGET_ORG] port:3306,5432,27017"}},
+                    {"tool": "githarvester", "name": "Database Credential Search", "config": {"query": "[TARGET] mysql OR postgres OR mongodb password", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Database Port Scan", "config": {"scan_type": "SYN", "ports": "1433,1521,3306,5432,5984,6379,9042,27017,28017", "timing": "T4", "scripts": "mysql-info,ms-sql-info,oracle-tns-version"}},
+                    {"tool": "metasploit", "name": "MySQL Enumeration", "config": {"module": "auxiliary/scanner/mysql/mysql_version", "threads": "10"}},
+                    {"tool": "metasploit", "name": "MSSQL Enumeration", "config": {"module": "auxiliary/scanner/mssql/mssql_ping", "threads": "10"}}
                 ]
             },
             "mail_server_recon": {
                 "name": "Mail Server Reconnaissance",
                 "description": "Email infrastructure enumeration",
-                "steps": [
-                    {
-                        "tool": "dnsrecon",
-                        "name": "MX Record Lookup",
-                        "config": {
-                            "scan_type": "std"
-                        }
-                    },
-                    {
-                        "tool": "nmap",
-                        "name": "Mail Service Scan",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "25,110,143,465,587,993,995",
-                            "timing": "T4",
-                            "scripts": "smtp-commands,smtp-enum-users,pop3-capabilities,imap-capabilities"
-                        }
-                    },
-                    {
-                        "tool": "metasploit",
-                        "name": "SMTP User Enumeration",
-                        "config": {
-                            "module": "auxiliary/scanner/smtp/smtp_enum",
-                            "threads": "5"
-                        }
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "Mail Server Intelligence",
-                        "config": {
-                            "search_type": "search",
-                            "query": "hostname:[TARGET_DOMAIN] port:25,587"
-                        }
-                    }
+                "passive_steps": [
+                    {"tool": "dnsrecon", "name": "MX Record Lookup", "config": {"scan_type": "std"}},
+                    {"tool": "shodan", "name": "Mail Server Intelligence", "config": {"search_type": "search", "query": "hostname:[TARGET_DOMAIN] port:25,587"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Mail Service Scan", "config": {"scan_type": "SYN", "ports": "25,110,143,465,587,993,995", "timing": "T4", "scripts": "smtp-commands,smtp-enum-users,pop3-capabilities,imap-capabilities"}},
+                    {"tool": "metasploit", "name": "SMTP User Enumeration", "config": {"module": "auxiliary/scanner/smtp/smtp_enum", "threads": "5"}}
                 ]
             },
             "sqli_assessment": {
                 "name": "SQL Injection Assessment",
-                "description": "Complete SQLi testing: discovery → enumeration → exploitation",
-                "steps": [
-                    {
-                        "tool": "nmap",
-                        "name": "Web Service Discovery",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "80,443,8080,8443,3306,5432,1433,1521",
-                            "timing": "T4",
-                            "scripts": "http-sql-injection"
-                        }
-                    },
-                    {
-                        "tool": "nikto",
-                        "name": "Web Application Scan",
-                        "config": {
-                            "port": "80",
-                            "ssl": False,
-                            "tuning": "9"
-                        },
-                        "condition": "http_detected"
-                    },
-                    {
-                        "tool": "gobuster",
-                        "name": "Find Dynamic Pages",
-                        "config": {
-                            "mode": "dir",
-                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
-                            "extensions": "php,asp,aspx,jsp,cgi",
-                            "threads": "20"
-                        },
-                        "condition": "http_detected"
-                    },
-                    {
-                        "tool": "sqlmap",
-                        "name": "SQL Injection Test",
-                        "config": {
-                            "level": "3",
-                            "risk": "2",
-                            "batch": True,
-                            "forms": True,
-                            "dbs": True
-                        },
-                        "condition": "http_detected"
-                    }
+                "description": "Complete SQLi testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Web Service Intel", "config": {"search_type": "host", "query": "[TARGET_IP]"}},
+                    {"tool": "githarvester", "name": "SQLi Vector Search", "config": {"query": "[TARGET_DOMAIN] sql injection OR sqli", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Web Service Discovery", "config": {"scan_type": "SYN", "ports": "80,443,8080,8443,3306,5432,1433,1521", "timing": "T4", "scripts": "http-sql-injection"}},
+                    {"tool": "nikto", "name": "Web Application Scan", "config": {"port": "80", "ssl": False, "tuning": "9"}, "condition": "http_detected"},
+                    {"tool": "gobuster", "name": "Find Dynamic Pages", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "php,asp,aspx,jsp,cgi", "threads": "20"}, "condition": "http_detected"},
+                    {"tool": "sqlmap", "name": "SQL Injection Test", "config": {"level": "3", "risk": "2", "batch": True, "forms": True, "dbs": True}, "condition": "http_detected"}
                 ]
             },
             "network_mapper": {
                 "name": "Complete Network Mapper",
-                "description": "Full network topology mapping and service discovery",
-                "steps": [
-                    {
-                        "tool": "nmap",
-                        "name": "Host Discovery",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "1-1000",
-                            "timing": "T4",
-                            "scripts": "default"
-                        }
-                    },
-                    {
-                        "tool": "nmap",
-                        "name": "Full Port Scan",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "1-65535",
-                            "timing": "T4"
-                        }
-                    },
-                    {
-                        "tool": "nmap",
-                        "name": "Service Fingerprinting",
-                        "config": {
-                            "scan_type": "Version",
-                            "ports": "1-10000",
-                            "timing": "T3",
-                            "scripts": "banner,version"
-                        }
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "External Intelligence",
-                        "config": {
-                            "search_type": "host",
-                            "query": "[TARGET_IP]"
-                        }
-                    }
+                "description": "Full network topology mapping",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "External Intelligence", "config": {"search_type": "host", "query": "[TARGET_IP]"}},
+                    {"tool": "shodan", "name": "Network Range Intel", "config": {"search_type": "search", "query": "net:[TARGET_RANGE]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Host Discovery", "config": {"scan_type": "SYN", "ports": "1-1000", "timing": "T4", "scripts": "default"}},
+                    {"tool": "nmap", "name": "Full Port Scan", "config": {"scan_type": "SYN", "ports": "1-65535", "timing": "T4"}},
+                    {"tool": "nmap", "name": "Service Fingerprinting", "config": {"scan_type": "Version", "ports": "1-10000", "timing": "T3", "scripts": "banner,version"}}
                 ]
             },
             "web_vuln_hunter": {
                 "name": "Web Vulnerability Hunter",
                 "description": "Comprehensive web vulnerability assessment",
-                "steps": [
-                    {
-                        "tool": "nmap",
-                        "name": "Web Service Detection",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "80,443,8080,8443,8000,8888,3000,5000,9000",
-                            "timing": "T4",
-                            "scripts": "http-headers,http-methods,http-title,http-enum"
-                        }
-                    },
-                    {
-                        "tool": "nikto",
-                        "name": "Vulnerability Scan",
-                        "config": {
-                            "port": "80",
-                            "ssl": False,
-                            "tuning": "x"
-                        }
-                    },
-                    {
-                        "tool": "gobuster",
-                        "name": "Directory Discovery",
-                        "config": {
-                            "mode": "dir",
-                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt",
-                            "extensions": "php,asp,aspx,jsp,html,js,txt,xml,json,bak,old,sql",
-                            "threads": "50"
-                        }
-                    },
-                    {
-                        "tool": "feroxbuster",
-                        "name": "Deep Recursive Scan",
-                        "config": {
-                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
-                            "extensions": "php,html,js,json",
-                            "threads": "50",
-                            "depth": "5"
-                        }
-                    },
-                    {
-                        "tool": "sqlmap",
-                        "name": "SQL Injection Testing",
-                        "config": {
-                            "level": "5",
-                            "risk": "3",
-                            "batch": True,
-                            "forms": True,
-                            "random_agent": True,
-                            "dbs": True
-                        }
-                    }
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Web Tech Intel", "config": {"search_type": "host", "query": "[TARGET_IP]"}},
+                    {"tool": "githarvester", "name": "Web Vuln Search", "config": {"query": "[TARGET_DOMAIN] vulnerability OR exploit", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Web Service Detection", "config": {"scan_type": "SYN", "ports": "80,443,8080,8443,8000,8888,3000,5000,9000", "timing": "T4", "scripts": "http-headers,http-methods,http-title,http-enum"}},
+                    {"tool": "nikto", "name": "Vulnerability Scan", "config": {"port": "80", "ssl": False, "tuning": "x"}},
+                    {"tool": "gobuster", "name": "Directory Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt", "extensions": "php,asp,aspx,jsp,html,js,txt,xml,json,bak,old,sql", "threads": "50"}},
+                    {"tool": "feroxbuster", "name": "Deep Recursive Scan", "config": {"wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "php,html,js,json", "threads": "50", "depth": "5"}},
+                    {"tool": "sqlmap", "name": "SQL Injection Testing", "config": {"level": "5", "risk": "3", "batch": True, "forms": True, "random_agent": True, "dbs": True}}
                 ]
             },
             "osint_gather": {
                 "name": "OSINT Intelligence Gathering",
                 "description": "Open source intelligence collection",
-                "steps": [
-                    {
-                        "tool": "dnsrecon",
-                        "name": "DNS Intelligence",
-                        "config": {
-                            "scan_type": "std"
-                        }
-                    },
-                    {
-                        "tool": "dnsrecon",
-                        "name": "Subdomain Discovery",
-                        "config": {
-                            "scan_type": "brt",
-                            "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt"
-                        }
-                    },
-                    {
-                        "tool": "githarvester",
-                        "name": "GitHub Intelligence",
-                        "config": {
-                            "query": "[TARGET_DOMAIN]",
-                            "sort": "best"
-                        }
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "Infrastructure Intel",
-                        "config": {
-                            "search_type": "search",
-                            "query": "hostname:[TARGET_DOMAIN]"
-                        }
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "Organization Search",
-                        "config": {
-                            "search_type": "search",
-                            "query": "org:[TARGET_ORG]"
-                        }
-                    }
+                "passive_steps": [
+                    {"tool": "dnsrecon", "name": "DNS Intelligence", "config": {"scan_type": "std"}},
+                    {"tool": "githarvester", "name": "GitHub Intelligence", "config": {"query": "[TARGET_DOMAIN]", "sort": "best"}},
+                    {"tool": "shodan", "name": "Infrastructure Intel", "config": {"search_type": "search", "query": "hostname:[TARGET_DOMAIN]"}},
+                    {"tool": "shodan", "name": "Organization Search", "config": {"search_type": "search", "query": "org:[TARGET_ORG]"}}
+                ],
+                "active_steps": [
+                    {"tool": "dnsrecon", "name": "Subdomain Discovery", "config": {"scan_type": "brt", "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt"}},
+                    {"tool": "gobuster", "name": "DNS Brute Force", "config": {"mode": "dns", "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt", "threads": "30"}}
                 ]
             },
             "password_hunt": {
                 "name": "Password & Secret Hunter",
                 "description": "Hunt for exposed passwords and secrets",
-                "steps": [
-                    {
-                        "tool": "githarvester",
-                        "name": "GitHub Password Search",
-                        "config": {
-                            "query": "[TARGET] password OR passwd OR secret OR api_key",
-                            "sort": "new"
-                        }
-                    },
-                    {
-                        "tool": "githarvester",
-                        "name": "GitHub Key Search",
-                        "config": {
-                            "query": "[TARGET] AWS_ACCESS_KEY OR PRIVATE_KEY OR BEGIN RSA",
-                            "sort": "new"
-                        }
-                    },
-                    {
-                        "tool": "gobuster",
-                        "name": "Backup File Discovery",
-                        "config": {
-                            "mode": "dir",
-                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
-                            "extensions": "bak,old,backup,sql,tar,gz,zip,config,conf,cfg,env",
-                            "threads": "30"
-                        },
-                        "condition": "http_detected"
-                    },
-                    {
-                        "tool": "nmap",
-                        "name": "Anonymous FTP Check",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "21",
-                            "timing": "T4",
-                            "scripts": "ftp-anon,ftp-brute"
-                        }
-                    },
-                    {
-                        "tool": "metasploit",
-                        "name": "FTP Anonymous Access",
-                        "config": {
-                            "module": "auxiliary/scanner/ftp/anonymous",
-                            "threads": "10"
-                        }
-                    }
+                "passive_steps": [
+                    {"tool": "githarvester", "name": "GitHub Password Search", "config": {"query": "[TARGET] password OR passwd OR secret OR api_key", "sort": "new"}},
+                    {"tool": "githarvester", "name": "GitHub Key Search", "config": {"query": "[TARGET] AWS_ACCESS_KEY OR PRIVATE_KEY OR BEGIN RSA", "sort": "new"}},
+                    {"tool": "shodan", "name": "Exposed Services", "config": {"search_type": "search", "query": "org:[TARGET_ORG] ftp OR telnet"}}
+                ],
+                "active_steps": [
+                    {"tool": "gobuster", "name": "Backup File Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "bak,old,backup,sql,tar,gz,zip,config,conf,cfg,env", "threads": "30"}, "condition": "http_detected"},
+                    {"tool": "nmap", "name": "Anonymous FTP Check", "config": {"scan_type": "SYN", "ports": "21", "timing": "T4", "scripts": "ftp-anon,ftp-brute"}},
+                    {"tool": "metasploit", "name": "FTP Anonymous Access", "config": {"module": "auxiliary/scanner/ftp/anonymous", "threads": "10"}}
                 ]
             },
             "infrastructure_map": {
                 "name": "Infrastructure Mapping",
                 "description": "Map complete IT infrastructure",
-                "steps": [
-                    {
-                        "tool": "dnsrecon",
-                        "name": "DNS Mapping",
-                        "config": {
-                            "scan_type": "std"
-                        }
-                    },
-                    {
-                        "tool": "nmap",
-                        "name": "Network Discovery",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "21,22,23,25,53,80,110,135,139,143,443,445,993,995,1433,3306,3389,5432,8080",
-                            "timing": "T4",
-                            "scripts": "default"
-                        }
-                    },
-                    {
-                        "tool": "enum4linux",
-                        "name": "Windows Infrastructure",
-                        "config": {
-                            "all_enum": True
-                        }
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "Internet Exposure",
-                        "config": {
-                            "search_type": "host",
-                            "query": "[TARGET_IP]"
-                        }
-                    },
-                    {
-                        "tool": "metasploit",
-                        "name": "SSH Version Detection",
-                        "config": {
-                            "module": "auxiliary/scanner/ssh/ssh_version",
-                            "threads": "10"
-                        }
-                    }
+                "passive_steps": [
+                    {"tool": "dnsrecon", "name": "DNS Mapping", "config": {"scan_type": "std"}},
+                    {"tool": "shodan", "name": "Internet Exposure", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Network Discovery", "config": {"scan_type": "SYN", "ports": "21,22,23,25,53,80,110,135,139,143,443,445,993,995,1433,3306,3389,5432,8080", "timing": "T4", "scripts": "default"}},
+                    {"tool": "enum4linux", "name": "Windows Infrastructure", "config": {"all_enum": True}},
+                    {"tool": "metasploit", "name": "SSH Version Detection", "config": {"module": "auxiliary/scanner/ssh/ssh_version", "threads": "10"}}
                 ]
             },
             "api_pentest": {
                 "name": "API Penetration Testing",
                 "description": "Comprehensive API security testing",
-                "steps": [
-                    {
-                        "tool": "nmap",
-                        "name": "API Endpoint Discovery",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "80,443,8080,8443,3000,5000,8000,9000",
-                            "timing": "T4",
-                            "scripts": "http-methods"
-                        }
-                    },
-                    {
-                        "tool": "gobuster",
-                        "name": "API Path Discovery",
-                        "config": {
-                            "mode": "dir",
-                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt",
-                            "extensions": "json,xml",
-                            "threads": "30"
-                        }
-                    },
-                    {
-                        "tool": "feroxbuster",
-                        "name": "Deep API Enumeration",
-                        "config": {
-                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
-                            "extensions": "json,xml,yaml",
-                            "threads": "40",
-                            "depth": "4"
-                        }
-                    },
-                    {
-                        "tool": "nikto",
-                        "name": "API Vulnerability Check",
-                        "config": {
-                            "port": "80",
-                            "ssl": False,
-                            "tuning": "3"
-                        }
-                    },
-                    {
-                        "tool": "sqlmap",
-                        "name": "API SQLi Testing",
-                        "config": {
-                            "level": "3",
-                            "risk": "2",
-                            "batch": True,
-                            "random_agent": True
-                        }
-                    }
+                "passive_steps": [
+                    {"tool": "shodan", "name": "API Intel", "config": {"search_type": "host", "query": "[TARGET_IP]"}},
+                    {"tool": "githarvester", "name": "API Docs Search", "config": {"query": "[TARGET_DOMAIN] swagger OR openapi OR api", "sort": "best"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "API Endpoint Discovery", "config": {"scan_type": "SYN", "ports": "80,443,8080,8443,3000,5000,8000,9000", "timing": "T4", "scripts": "http-methods"}},
+                    {"tool": "gobuster", "name": "API Path Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt", "extensions": "json,xml", "threads": "30"}},
+                    {"tool": "feroxbuster", "name": "Deep API Enumeration", "config": {"wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "json,xml,yaml", "threads": "40", "depth": "4"}},
+                    {"tool": "nikto", "name": "API Vulnerability Check", "config": {"port": "80", "ssl": False, "tuning": "3"}},
+                    {"tool": "sqlmap", "name": "API SQLi Testing", "config": {"level": "3", "risk": "2", "batch": True, "random_agent": True}}
                 ]
             },
             "subdomain_hunter": {
                 "name": "Subdomain Hunter",
                 "description": "Aggressive subdomain enumeration",
-                "steps": [
-                    {
-                        "tool": "dnsrecon",
-                        "name": "Standard DNS Enum",
-                        "config": {
-                            "scan_type": "std"
-                        }
-                    },
-                    {
-                        "tool": "dnsrecon",
-                        "name": "Subdomain Brute Force",
-                        "config": {
-                            "scan_type": "brt",
-                            "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt"
-                        }
-                    },
-                    {
-                        "tool": "dnsrecon",
-                        "name": "Zone Transfer Attempt",
-                        "config": {
-                            "scan_type": "axfr"
-                        }
-                    },
-                    {
-                        "tool": "gobuster",
-                        "name": "DNS Brute Force",
-                        "config": {
-                            "mode": "dns",
-                            "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt",
-                            "threads": "30"
-                        }
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "Subdomain Intelligence",
-                        "config": {
-                            "search_type": "search",
-                            "query": "hostname:[TARGET_DOMAIN]"
-                        }
-                    }
+                "passive_steps": [
+                    {"tool": "dnsrecon", "name": "Standard DNS Enum", "config": {"scan_type": "std"}},
+                    {"tool": "shodan", "name": "Subdomain Intelligence", "config": {"search_type": "search", "query": "hostname:[TARGET_DOMAIN]"}},
+                    {"tool": "shodan", "name": "SSL Cert Subdomains", "config": {"search_type": "search", "query": "ssl.cert.subject.cn:[TARGET_DOMAIN]"}}
+                ],
+                "active_steps": [
+                    {"tool": "dnsrecon", "name": "Subdomain Brute Force", "config": {"scan_type": "brt", "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt"}},
+                    {"tool": "dnsrecon", "name": "Zone Transfer Attempt", "config": {"scan_type": "axfr"}},
+                    {"tool": "gobuster", "name": "DNS Brute Force", "config": {"mode": "dns", "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt", "threads": "30"}}
                 ]
             },
             "cloud_pentest": {
                 "name": "Cloud Security Audit",
                 "description": "Comprehensive cloud security assessment",
-                "steps": [
-                    {
-                        "tool": "awsbucket",
-                        "name": "S3 Bucket Enumeration",
-                        "config": {
-                            "bucket_list": "buckets.txt",
-                            "threads": "10"
-                        }
-                    },
-                    {
-                        "tool": "githarvester",
-                        "name": "Cloud Credential Search",
-                        "config": {
-                            "query": "[TARGET] AWS_ACCESS OR AZURE_CLIENT OR GCP_PROJECT",
-                            "sort": "new"
-                        }
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "Cloud Infrastructure",
-                        "config": {
-                            "search_type": "search",
-                            "query": "org:[TARGET_ORG] cloud"
-                        }
-                    },
-                    {
-                        "tool": "nmap",
-                        "name": "Cloud Service Scan",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "22,80,443,3389,5985,5986,8080,8443",
-                            "timing": "T4",
-                            "scripts": "default"
-                        }
-                    }
+                "passive_steps": [
+                    {"tool": "githarvester", "name": "Cloud Credential Search", "config": {"query": "[TARGET] AWS_ACCESS OR AZURE_CLIENT OR GCP_PROJECT", "sort": "new"}},
+                    {"tool": "shodan", "name": "Cloud Infrastructure", "config": {"search_type": "search", "query": "org:[TARGET_ORG] cloud"}}
+                ],
+                "active_steps": [
+                    {"tool": "awsbucket", "name": "S3 Bucket Enumeration", "config": {"bucket_list": "buckets.txt", "threads": "10"}},
+                    {"tool": "nmap", "name": "Cloud Service Scan", "config": {"scan_type": "SYN", "ports": "22,80,443,3389,5985,5986,8080,8443", "timing": "T4", "scripts": "default"}}
                 ]
             },
             "red_team_initial": {
                 "name": "Red Team Initial Access",
                 "description": "Initial access reconnaissance for red team",
-                "steps": [
-                    {
-                        "tool": "dnsrecon",
-                        "name": "Passive DNS",
-                        "config": {
-                            "scan_type": "std"
-                        }
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "External Footprint",
-                        "config": {
-                            "search_type": "search",
-                            "query": "org:[TARGET_ORG]"
-                        }
-                    },
-                    {
-                        "tool": "githarvester",
-                        "name": "Code Repository Intel",
-                        "config": {
-                            "query": "[TARGET_ORG]",
-                            "sort": "best"
-                        }
-                    },
-                    {
-                        "tool": "nmap",
-                        "name": "Perimeter Scan",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "21,22,23,25,53,80,110,443,445,3389,8080",
-                            "timing": "T3",
-                            "scripts": "vuln"
-                        }
-                    },
-                    {
-                        "tool": "nikto",
-                        "name": "Web Vulnerability Check",
-                        "config": {
-                            "port": "80",
-                            "ssl": False,
-                            "tuning": "x"
-                        },
-                        "condition": "http_detected"
-                    },
-                    {
-                        "tool": "metasploit",
-                        "name": "SMB Vulnerability Check",
-                        "config": {
-                            "module": "auxiliary/scanner/smb/smb_ms17_010",
-                            "threads": "5"
-                        }
-                    }
+                "passive_steps": [
+                    {"tool": "dnsrecon", "name": "Passive DNS", "config": {"scan_type": "std"}},
+                    {"tool": "shodan", "name": "External Footprint", "config": {"search_type": "search", "query": "org:[TARGET_ORG]"}},
+                    {"tool": "githarvester", "name": "Code Repository Intel", "config": {"query": "[TARGET_ORG]", "sort": "best"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Perimeter Scan", "config": {"scan_type": "SYN", "ports": "21,22,23,25,53,80,110,443,445,3389,8080", "timing": "T3", "scripts": "vuln"}},
+                    {"tool": "nikto", "name": "Web Vulnerability Check", "config": {"port": "80", "ssl": False, "tuning": "x"}, "condition": "http_detected"},
+                    {"tool": "metasploit", "name": "SMB Vulnerability Check", "config": {"module": "auxiliary/scanner/smb/smb_ms17_010", "threads": "5"}}
                 ]
             },
             "blue_team_audit": {
                 "name": "Blue Team Security Audit",
                 "description": "Defensive security assessment",
-                "steps": [
-                    {
-                        "tool": "nmap",
-                        "name": "Port Audit",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "1-65535",
-                            "timing": "T4"
-                        }
-                    },
-                    {
-                        "tool": "nmap",
-                        "name": "Vulnerability Audit",
-                        "config": {
-                            "scan_type": "SYN",
-                            "ports": "1-10000",
-                            "timing": "T4",
-                            "scripts": "vuln"
-                        }
-                    },
-                    {
-                        "tool": "nikto",
-                        "name": "Web Security Audit",
-                        "config": {
-                            "port": "80",
-                            "ssl": False,
-                            "tuning": "x"
-                        },
-                        "condition": "http_detected"
-                    },
-                    {
-                        "tool": "enum4linux",
-                        "name": "SMB Security Audit",
-                        "config": {
-                            "all_enum": True
-                        }
-                    },
-                    {
-                        "tool": "shodan",
-                        "name": "External Exposure Check",
-                        "config": {
-                            "search_type": "host",
-                            "query": "[TARGET_IP]"
-                        }
-                    }
+                "passive_steps": [
+                    {"tool": "shodan", "name": "External Exposure Check", "config": {"search_type": "host", "query": "[TARGET_IP]"}},
+                    {"tool": "shodan", "name": "Vulnerability Intel", "config": {"search_type": "search", "query": "vuln:CVE ip:[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Port Audit", "config": {"scan_type": "SYN", "ports": "1-65535", "timing": "T4"}},
+                    {"tool": "nmap", "name": "Vulnerability Audit", "config": {"scan_type": "SYN", "ports": "1-10000", "timing": "T4", "scripts": "vuln"}},
+                    {"tool": "nikto", "name": "Web Security Audit", "config": {"port": "80", "ssl": False, "tuning": "x"}, "condition": "http_detected"},
+                    {"tool": "enum4linux", "name": "SMB Security Audit", "config": {"all_enum": True}}
                 ]
             }
         }
@@ -6375,8 +6209,9 @@ Configure in the Settings tab:
         
         # Configure grid weights for proper expansion
         frame.columnconfigure(1, weight=1)
-        frame.rowconfigure(3, weight=1)  # Preview frame should expand
-        frame.rowconfigure(5, weight=0)  # Progress section
+        frame.rowconfigure(5, weight=1)  # Preview frame should expand
+        frame.rowconfigure(7, weight=0)  # Controls section
+        frame.rowconfigure(8, weight=0)  # Progress section
 
         # Header
         header = tk.Label(
@@ -6425,6 +6260,76 @@ Configure in the Settings tab:
         self.workflow_selector.current(0)
         self.workflow_selector.bind("<<ComboboxSelected>>", self.on_workflow_selected)
 
+        # Scan Mode selector (Passive vs Active)
+        mode_frame = tk.Frame(frame, bg=self.bg_secondary)
+        mode_frame.grid(row=3, column=0, columnspan=2, sticky=tk.W, padx=10, pady=10)
+
+        mode_label = tk.Label(
+            mode_frame,
+            text="Scan Mode:",
+            font=("Courier", 10, "bold"),
+            fg=self.accent_green,
+            bg=self.bg_secondary
+        )
+        mode_label.pack(side=tk.LEFT, padx=(0, 10))
+
+        self.workflow_mode = tk.StringVar(value="both")
+
+        passive_rb = tk.Radiobutton(
+            mode_frame,
+            text="🔍 Passive Only (No target interaction)",
+            font=("Courier", 9),
+            variable=self.workflow_mode,
+            value="passive",
+            fg=self.accent_cyan,
+            bg=self.bg_secondary,
+            selectcolor=self.bg_primary,
+            activebackground=self.bg_secondary,
+            activeforeground=self.accent_cyan,
+            command=self.on_workflow_selected
+        )
+        passive_rb.pack(side=tk.LEFT, padx=5)
+
+        active_rb = tk.Radiobutton(
+            mode_frame,
+            text="⚡ Active Only (Direct target probing)",
+            font=("Courier", 9),
+            variable=self.workflow_mode,
+            value="active",
+            fg=self.accent_orange,
+            bg=self.bg_secondary,
+            selectcolor=self.bg_primary,
+            activebackground=self.bg_secondary,
+            activeforeground=self.accent_orange,
+            command=self.on_workflow_selected
+        )
+        active_rb.pack(side=tk.LEFT, padx=5)
+
+        both_rb = tk.Radiobutton(
+            mode_frame,
+            text="🔄 Both (Full reconnaissance)",
+            font=("Courier", 9),
+            variable=self.workflow_mode,
+            value="both",
+            fg=self.accent_green,
+            bg=self.bg_secondary,
+            selectcolor=self.bg_primary,
+            activebackground=self.bg_secondary,
+            activeforeground=self.accent_green,
+            command=self.on_workflow_selected
+        )
+        both_rb.pack(side=tk.LEFT, padx=5)
+
+        # Mode explanation
+        mode_info = tk.Label(
+            frame,
+            text="💡 Passive: Uses third-party data (Shodan, GitHub) | Active: Sends packets to target",
+            font=("Courier", 8),
+            fg=self.text_muted,
+            bg=self.bg_secondary
+        )
+        mode_info.grid(row=4, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(0, 10))
+
         # Preview frame
         preview_frame = tk.LabelFrame(
             frame,
@@ -6434,7 +6339,7 @@ Configure in the Settings tab:
             bg=self.bg_secondary,
             relief=tk.FLAT
         )
-        preview_frame.grid(row=3, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+        preview_frame.grid(row=5, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
 
         # Steps text widget
         self.workflow_steps_text = tk.Text(
@@ -6458,7 +6363,7 @@ Configure in the Settings tab:
             fg=self.accent_green,
             bg=self.bg_secondary
         )
-        target_label.grid(row=4, column=0, sticky=tk.W, padx=10, pady=5)
+        target_label.grid(row=6, column=0, sticky=tk.W, padx=10, pady=5)
 
         self.workflow_target = tk.Entry(
             frame,
@@ -6470,11 +6375,11 @@ Configure in the Settings tab:
             selectforeground=self.bg_primary,
             relief=tk.FLAT
         )
-        self.workflow_target.grid(row=4, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.workflow_target.grid(row=6, column=1, sticky=tk.EW, padx=10, pady=5)
 
         # Control buttons frame
         controls_frame = tk.Frame(frame, bg=self.bg_secondary)
-        controls_frame.grid(row=5, column=0, columnspan=2, pady=15)
+        controls_frame.grid(row=7, column=0, columnspan=2, pady=15)
 
         # Run button
         self.workflow_run_btn = tk.Button(
@@ -6520,7 +6425,7 @@ Configure in the Settings tab:
             bg=self.bg_secondary,
             relief=tk.FLAT
         )
-        progress_frame.grid(row=6, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+        progress_frame.grid(row=8, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
 
         # Progress label
         self.workflow_progress_label = tk.Label(
@@ -6575,12 +6480,12 @@ Configure in the Settings tab:
 
         return frame
 
-    def on_workflow_selected(self, event):
+    def on_workflow_selected(self, event=None):
         """Update workflow steps preview when selection changes."""
         try:
             selected_idx = self.workflow_selector.current()
             workflow_ids = list(self.predefined_workflows.keys())
-            
+
             if selected_idx < 0 or selected_idx >= len(workflow_ids):
                 # Default to first workflow if invalid selection
                 selected_idx = 0
@@ -6588,39 +6493,62 @@ Configure in the Settings tab:
                     self.workflow_selector.current(0)
                 except (tk.TclError, ValueError):
                     pass
-            
+
             workflow_id = workflow_ids[selected_idx]
             workflow = self.predefined_workflows[workflow_id]
-            
+
+            # Get selected mode
+            mode = self.workflow_mode.get()
+
+            # Build steps list based on mode
+            steps = []
+            if mode in ("passive", "both"):
+                passive_steps = workflow.get('passive_steps', [])
+                for step in passive_steps:
+                    steps.append(('🔍 PASSIVE', step))
+            if mode in ("active", "both"):
+                active_steps = workflow.get('active_steps', [])
+                for step in active_steps:
+                    steps.append(('⚡ ACTIVE', step))
+
+            # Fallback to old 'steps' format if present
+            if not steps and 'steps' in workflow:
+                for step in workflow['steps']:
+                    steps.append(('📌', step))
+
             # Update steps preview
             self.workflow_steps_text.config(state=tk.NORMAL)
             self.workflow_steps_text.delete('1.0', tk.END)
-            
+
             steps_text = f"Workflow: {workflow['name']}\n"
-            steps_text += f"{workflow['description']}\n\n"
+            steps_text += f"{workflow['description']}\n"
+            steps_text += f"Mode: {mode.upper()}\n\n"
             steps_text += "=" * 60 + "\n\n"
-            
-            for i, step in enumerate(workflow['steps'], 1):
-                condition = step.get('condition', '')
-                condition_text = f" (if {condition})" if condition else ""
-                
-                steps_text += f"Step {i}: {step['name']}{condition_text}\n"
-                steps_text += f"  Tool: {step['tool'].upper()}\n"
-                
-                # Show key config parameters
-                config = step['config']
-                for key, value in config.items():
-                    if isinstance(value, bool):
-                        value_str = "Yes" if value else "No"
-                    else:
-                        value_str = str(value)
-                    steps_text += f"  • {key}: {value_str}\n"
-                
-                steps_text += "\n"
-            
+
+            if not steps:
+                steps_text += "No steps available for selected mode.\n"
+            else:
+                for i, (step_type, step) in enumerate(steps, 1):
+                    condition = step.get('condition', '')
+                    condition_text = f" (if {condition})" if condition else ""
+
+                    steps_text += f"{step_type} Step {i}: {step['name']}{condition_text}\n"
+                    steps_text += f"  Tool: {step['tool'].upper()}\n"
+
+                    # Show key config parameters
+                    config = step['config']
+                    for key, value in config.items():
+                        if isinstance(value, bool):
+                            value_str = "Yes" if value else "No"
+                        else:
+                            value_str = str(value)
+                        steps_text += f"  • {key}: {value_str}\n"
+
+                    steps_text += "\n"
+
             self.workflow_steps_text.insert('1.0', steps_text)
             self.workflow_steps_text.config(state=tk.DISABLED)
-            
+
         except Exception as e:
             # Log error but don't crash
             print(f"Error in on_workflow_selected: {e}")
@@ -6854,7 +6782,7 @@ Configure in the Settings tab:
                 messagebox.showwarning("Workflow Running", "A workflow is already running. Please stop it first.")
                 return
             self.workflow_running = True
-        
+
         try:
             # Get target
             target = self.workflow_target.get().strip()
@@ -6862,50 +6790,74 @@ Configure in the Settings tab:
                 messagebox.showerror("Error", "Please enter a target (IP, domain, or URL)")
                 self.workflow_running = False
                 return
-            
+
             # Get selected workflow
             selected_idx = self.workflow_selector.current()
             workflow_ids = list(self.predefined_workflows.keys())
-            
+
             if selected_idx < 0:
                 messagebox.showerror("Error", "Please select a workflow")
                 self.workflow_running = False
                 return
-            
+
             workflow_id = workflow_ids[selected_idx]
             workflow = self.predefined_workflows[workflow_id]
-            
+
+            # Get selected mode (passive, active, or both)
+            mode = self.workflow_mode.get()
+
+            # Build steps list based on mode
+            workflow_steps = []
+            if mode in ("passive", "both"):
+                passive_steps = workflow.get('passive_steps', [])
+                workflow_steps.extend(passive_steps)
+            if mode in ("active", "both"):
+                active_steps = workflow.get('active_steps', [])
+                workflow_steps.extend(active_steps)
+
+            # Fallback to old 'steps' format if present
+            if not workflow_steps and 'steps' in workflow:
+                workflow_steps = workflow['steps']
+
+            if not workflow_steps:
+                messagebox.showwarning("No Steps", f"No steps available for mode: {mode.upper()}")
+                self.workflow_running = False
+                return
+
             # FIX CRIT-1: Validate target based on workflow requirements
             validation_error = self.validate_workflow_target(target, workflow_id)
             if validation_error:
                 messagebox.showerror("Invalid Target", validation_error)
                 self.workflow_running = False
                 return
-            
+
             # Initialize workflow execution
             self.current_workflow = workflow
+            self.current_workflow_steps = workflow_steps  # Store the mode-specific steps
+            self.current_workflow_mode = mode
             self.workflow_target_value = target  # Store validated target
             self.workflow_step_index = 0
             self.workflow_results = {}
             self.workflow_start_time = time.time()
-        
+
             # Update UI
             self.workflow_run_btn.config(state=tk.DISABLED)
             self.workflow_stop_btn.config(state=tk.NORMAL)
             self.workflow_selector.config(state=tk.DISABLED)
-            
+
             # Clear output
             self.output_text.delete('1.0', tk.END)
             self.append_output(f"{'=' * 60}\n")
             self.append_output(f"STARTING WORKFLOW: {workflow['name']}\n")
             self.append_output(f"Target: {target}\n")
-            self.append_output(f"Total Steps: {len(workflow['steps'])}\n")
+            self.append_output(f"Mode: {mode.upper()}\n")
+            self.append_output(f"Total Steps: {len(workflow_steps)}\n")
             self.append_output(f"{'=' * 60}\n\n")
-            
+
             # Start workflow execution in separate thread
             workflow_thread = threading.Thread(target=self.execute_workflow_steps, daemon=True)
             workflow_thread.start()
-            
+
         except Exception as e:
             # Reset workflow state on error
             self.workflow_running = False
@@ -6915,17 +6867,19 @@ Configure in the Settings tab:
     def execute_workflow_steps(self):
         """Execute workflow steps sequentially."""
         import time
-        
+
         workflow = self.current_workflow
         target = self.workflow_target_value
-        total_steps = len(workflow['steps'])
+        # Use mode-specific steps stored during run_workflow
+        workflow_steps = getattr(self, 'current_workflow_steps', workflow.get('steps', []))
+        total_steps = len(workflow_steps)
         start_time = time.time()
-        
+
         # FIX CRIT-2: Total workflow timeout (2 hours max)
         MAX_WORKFLOW_TIMEOUT = 7200  # 2 hours
         MAX_STEP_TIMEOUT = 1800  # 30 minutes per step
-        
-        for i, step in enumerate(workflow['steps']):
+
+        for i, step in enumerate(workflow_steps):
             # Check if workflow stopped by user
             if not self.workflow_running:
                 self.append_output("\n⚠️  Workflow stopped by user\n")
