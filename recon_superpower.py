@@ -3166,6 +3166,469 @@ Adjustable:  Yes (via Settings)
                     {"tool": "nikto", "name": "Web Security Audit", "config": {"port": "80", "ssl": False, "tuning": "x"}, "condition": "http_detected"},
                     {"tool": "enum4linux", "name": "SMB Security Audit", "config": {"all_enum": True}}
                 ]
+            },
+            # ============================================
+            # NEW POWERFUL PENTESTING WORKFLOWS
+            # ============================================
+            "bug_bounty_recon": {
+                "name": "Bug Bounty Recon",
+                "description": "Comprehensive bug bounty reconnaissance workflow",
+                "passive_steps": [
+                    {"tool": "dnsrecon", "name": "DNS Enumeration", "config": {"scan_type": "std"}},
+                    {"tool": "shodan", "name": "Infrastructure Recon", "config": {"search_type": "search", "query": "hostname:[TARGET_DOMAIN]"}},
+                    {"tool": "shodan", "name": "SSL Certificate Search", "config": {"search_type": "search", "query": "ssl.cert.subject.cn:[TARGET_DOMAIN]"}},
+                    {"tool": "shodan", "name": "Historical Data Search", "config": {"search_type": "search", "query": "ssl:[TARGET_DOMAIN]"}},
+                    {"tool": "githarvester", "name": "GitHub Code Leaks", "config": {"query": "[TARGET_DOMAIN] api_key OR password OR secret OR token", "sort": "new"}},
+                    {"tool": "githarvester", "name": "Config File Search", "config": {"query": "[TARGET_DOMAIN] .env OR config OR credentials", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "dnsrecon", "name": "Subdomain Brute Force", "config": {"scan_type": "brt", "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-110000.txt"}},
+                    {"tool": "gobuster", "name": "VHost Discovery", "config": {"mode": "vhost", "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-5000.txt", "threads": "40"}},
+                    {"tool": "nmap", "name": "Port Discovery", "config": {"scan_type": "SYN", "ports": "80,443,8080,8443,8000,3000,5000,9000,9443,4443", "timing": "T4", "scripts": "http-title,http-headers"}},
+                    {"tool": "gobuster", "name": "Directory Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt", "extensions": "php,asp,aspx,jsp,html,js,json,xml,txt,bak,old,zip", "threads": "50"}},
+                    {"tool": "feroxbuster", "name": "Recursive Content Discovery", "config": {"wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "php,html,js,json,xml,txt,bak,old,inc,zip,tar,gz", "threads": "50", "depth": "5"}},
+                    {"tool": "nikto", "name": "Vulnerability Scan", "config": {"port": "80", "ssl": False, "tuning": "x"}},
+                    {"tool": "sqlmap", "name": "SQL Injection Test", "config": {"level": "3", "risk": "2", "batch": True, "forms": True, "random_agent": True}}
+                ]
+            },
+            "easm_scan": {
+                "name": "External Attack Surface Mapping",
+                "description": "Map complete external attack surface for an organization",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Organization Infrastructure", "config": {"search_type": "search", "query": "org:[TARGET_ORG]"}},
+                    {"tool": "shodan", "name": "ASN Discovery", "config": {"search_type": "search", "query": "asn:[TARGET_ORG]"}},
+                    {"tool": "shodan", "name": "SSL Certificate Mapping", "config": {"search_type": "search", "query": "ssl.cert.subject.o:[TARGET_ORG]"}},
+                    {"tool": "shodan", "name": "Cloud Assets", "config": {"search_type": "search", "query": "[TARGET_ORG] cloud.provider:aws OR cloud.provider:azure OR cloud.provider:gcp"}},
+                    {"tool": "githarvester", "name": "Public Repositories", "config": {"query": "[TARGET_ORG]", "sort": "best"}},
+                    {"tool": "githarvester", "name": "Employee Code Leaks", "config": {"query": "[TARGET_ORG] password OR credentials OR internal", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "dnsrecon", "name": "DNS Intelligence", "config": {"scan_type": "std"}},
+                    {"tool": "dnsrecon", "name": "Subdomain Discovery", "config": {"scan_type": "brt", "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt"}},
+                    {"tool": "nmap", "name": "Service Discovery", "config": {"scan_type": "SYN", "ports": "21,22,23,25,53,80,110,143,443,445,993,995,1433,3306,3389,5432,5900,8080,8443", "timing": "T4", "scripts": "default,version"}},
+                    {"tool": "gobuster", "name": "Web Content Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "php,asp,aspx,jsp,html", "threads": "30"}}
+                ]
+            },
+            "iot_assessment": {
+                "name": "IoT/OT Security Assessment",
+                "description": "Security assessment for IoT and OT devices",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "IoT Device Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:502,102,47808,20000,44818"}},
+                    {"tool": "shodan", "name": "SCADA Systems", "config": {"search_type": "search", "query": "ip:[TARGET_IP] product:scada OR product:plc OR product:hmi"}},
+                    {"tool": "shodan", "name": "Industrial Protocols", "config": {"search_type": "host", "query": "[TARGET_IP]"}},
+                    {"tool": "githarvester", "name": "Firmware/Config Leaks", "config": {"query": "[TARGET_DOMAIN] firmware OR iot OR embedded", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "IoT Port Scan", "config": {"scan_type": "SYN", "ports": "21,22,23,80,102,443,502,1883,1911,4840,5683,8080,8883,20000,44818,47808", "timing": "T3", "scripts": "default,version"}},
+                    {"tool": "nmap", "name": "Modbus Enumeration", "config": {"scan_type": "SYN", "ports": "502", "timing": "T3", "scripts": "modbus-discover"}},
+                    {"tool": "nmap", "name": "MQTT Discovery", "config": {"scan_type": "SYN", "ports": "1883,8883", "timing": "T3", "scripts": "mqtt-subscribe"}},
+                    {"tool": "nmap", "name": "UPnP Discovery", "config": {"scan_type": "SYN", "ports": "1900,5000", "timing": "T3", "scripts": "upnp-info"}},
+                    {"tool": "nikto", "name": "Web Interface Scan", "config": {"port": "80", "ssl": False, "tuning": "x"}, "condition": "http_detected"}
+                ]
+            },
+            "ransomware_exposure": {
+                "name": "Ransomware Exposure Assessment",
+                "description": "Check for common ransomware attack vectors",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "RDP Exposure Check", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:3389"}},
+                    {"tool": "shodan", "name": "SMB Exposure Check", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:445"}},
+                    {"tool": "shodan", "name": "VPN Gateway Check", "config": {"search_type": "search", "query": "ip:[TARGET_IP] product:vpn OR product:fortinet OR product:paloalto OR product:cisco"}},
+                    {"tool": "shodan", "name": "Known Vulnerabilities", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Ransomware Vector Scan", "config": {"scan_type": "SYN", "ports": "21,22,23,135,139,445,1433,3306,3389,5900,5985,5986", "timing": "T4", "scripts": "smb-vuln-ms17-010,smb-vuln-ms08-067,rdp-vuln-ms12-020"}},
+                    {"tool": "enum4linux", "name": "SMB Enumeration", "config": {"all_enum": True}},
+                    {"tool": "metasploit", "name": "EternalBlue Check", "config": {"module": "auxiliary/scanner/smb/smb_ms17_010", "threads": "5"}},
+                    {"tool": "metasploit", "name": "BlueKeep Check", "config": {"module": "auxiliary/scanner/rdp/cve_2019_0708_bluekeep", "threads": "5"}},
+                    {"tool": "nmap", "name": "Default Credentials Check", "config": {"scan_type": "SYN", "ports": "21,22,23,3389", "timing": "T3", "scripts": "ftp-anon,ssh-auth-methods"}}
+                ]
+            },
+            "zero_trust_audit": {
+                "name": "Zero Trust Architecture Audit",
+                "description": "Audit network segmentation and zero trust controls",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "External Footprint", "config": {"search_type": "host", "query": "[TARGET_IP]"}},
+                    {"tool": "shodan", "name": "Service Exposure", "config": {"search_type": "search", "query": "ip:[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Full Port Audit", "config": {"scan_type": "SYN", "ports": "1-65535", "timing": "T4"}},
+                    {"tool": "nmap", "name": "Service Version Detection", "config": {"scan_type": "SYN", "ports": "1-10000", "timing": "T4", "scripts": "version,default"}},
+                    {"tool": "nmap", "name": "Network Segmentation Test", "config": {"scan_type": "SYN", "ports": "22,23,80,135,139,443,445,1433,3306,3389,5432,5900,8080", "timing": "T4"}},
+                    {"tool": "enum4linux", "name": "SMB Access Audit", "config": {"all_enum": True}},
+                    {"tool": "metasploit", "name": "Anonymous Access Check", "config": {"module": "auxiliary/scanner/smb/smb_enumshares", "threads": "10"}}
+                ]
+            },
+            "lateral_movement_paths": {
+                "name": "Lateral Movement Path Analysis",
+                "description": "Identify potential lateral movement paths in network",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Internal Service Intel", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Admin Service Discovery", "config": {"scan_type": "SYN", "ports": "22,23,135,139,445,3389,5985,5986", "timing": "T4", "scripts": "default,version"}},
+                    {"tool": "nmap", "name": "WMI/WinRM Detection", "config": {"scan_type": "SYN", "ports": "135,5985,5986", "timing": "T4", "scripts": "wmi-brute,winrm-brute"}},
+                    {"tool": "enum4linux", "name": "Domain Enumeration", "config": {"all_enum": True}},
+                    {"tool": "metasploit", "name": "SMB Session Enum", "config": {"module": "auxiliary/scanner/smb/smb_enumusers_domain", "threads": "10"}},
+                    {"tool": "metasploit", "name": "Pass-the-Hash Check", "config": {"module": "auxiliary/scanner/smb/smb_login", "threads": "5"}},
+                    {"tool": "nmap", "name": "SSH Key Auth Check", "config": {"scan_type": "SYN", "ports": "22", "timing": "T4", "scripts": "ssh-hostkey,ssh-auth-methods"}}
+                ]
+            },
+            "ci_cd_security": {
+                "name": "CI/CD Pipeline Security",
+                "description": "Assess CI/CD pipeline security posture",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Jenkins Detection", "config": {"search_type": "search", "query": "ip:[TARGET_IP] product:jenkins OR http.title:Jenkins"}},
+                    {"tool": "shodan", "name": "GitLab Detection", "config": {"search_type": "search", "query": "ip:[TARGET_IP] product:gitlab OR http.title:GitLab"}},
+                    {"tool": "githarvester", "name": "CI/CD Config Leaks", "config": {"query": "[TARGET_DOMAIN] .gitlab-ci OR Jenkinsfile OR .github/workflows", "sort": "new"}},
+                    {"tool": "githarvester", "name": "Secret Exposure", "config": {"query": "[TARGET_DOMAIN] DOCKER_PASSWORD OR NPM_TOKEN OR PYPI_TOKEN", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "CI/CD Service Scan", "config": {"scan_type": "SYN", "ports": "22,80,443,2375,2376,5000,8080,8443,9000,50000", "timing": "T4", "scripts": "http-title,http-headers"}},
+                    {"tool": "gobuster", "name": "CI/CD Endpoint Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "json,xml,yaml", "threads": "30"}},
+                    {"tool": "nikto", "name": "CI/CD Web Interface Scan", "config": {"port": "8080", "ssl": False, "tuning": "x"}}
+                ]
+            },
+            "kubernetes_recon": {
+                "name": "Kubernetes Cluster Recon",
+                "description": "Kubernetes cluster security reconnaissance",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "K8s API Server Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] kubernetes OR port:6443 OR port:10250"}},
+                    {"tool": "shodan", "name": "etcd Exposure", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:2379"}},
+                    {"tool": "githarvester", "name": "K8s Config Leaks", "config": {"query": "[TARGET_DOMAIN] kubeconfig OR kubernetes secret OR kubectl", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "K8s Service Discovery", "config": {"scan_type": "SYN", "ports": "443,2379,2380,6443,8001,8080,10250,10251,10252,10255,30000-32767", "timing": "T4", "scripts": "http-title,ssl-cert"}},
+                    {"tool": "gobuster", "name": "K8s API Endpoints", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt", "threads": "30"}},
+                    {"tool": "nikto", "name": "Dashboard Security Check", "config": {"port": "443", "ssl": True, "tuning": "x"}}
+                ]
+            },
+            "docker_security": {
+                "name": "Docker/Container Security",
+                "description": "Docker and container security assessment",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Docker API Exposure", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:2375,2376 product:docker"}},
+                    {"tool": "shodan", "name": "Container Registry", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:5000 http.title:registry"}},
+                    {"tool": "githarvester", "name": "Dockerfile Leaks", "config": {"query": "[TARGET_DOMAIN] Dockerfile OR docker-compose OR DOCKER_", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Docker Port Scan", "config": {"scan_type": "SYN", "ports": "2375,2376,2377,4243,5000,5001,9323", "timing": "T4", "scripts": "docker-version"}},
+                    {"tool": "gobuster", "name": "Registry Enumeration", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "json", "threads": "30"}},
+                    {"tool": "nikto", "name": "Registry Web Scan", "config": {"port": "5000", "ssl": False, "tuning": "x"}}
+                ]
+            },
+            "graphql_assessment": {
+                "name": "GraphQL API Assessment",
+                "description": "GraphQL endpoint security testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "GraphQL Endpoint Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] graphql OR /graphql"}},
+                    {"tool": "githarvester", "name": "GraphQL Schema Leaks", "config": {"query": "[TARGET_DOMAIN] graphql schema OR query OR mutation", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "API Service Detection", "config": {"scan_type": "SYN", "ports": "80,443,3000,4000,5000,8080,8443", "timing": "T4", "scripts": "http-title,http-methods"}},
+                    {"tool": "gobuster", "name": "GraphQL Path Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "graphql", "threads": "30"}},
+                    {"tool": "feroxbuster", "name": "Deep Endpoint Discovery", "config": {"wordlist": "/usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt", "threads": "40", "depth": "3"}},
+                    {"tool": "nikto", "name": "API Security Check", "config": {"port": "80", "ssl": False, "tuning": "x"}}
+                ]
+            },
+            "oauth_oidc_assessment": {
+                "name": "OAuth/OIDC Security Assessment",
+                "description": "OAuth and OpenID Connect security testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "OAuth Provider Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] oauth OR oidc OR openid"}},
+                    {"tool": "githarvester", "name": "OAuth Config Leaks", "config": {"query": "[TARGET_DOMAIN] client_secret OR oauth OR OIDC", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "OAuth Service Scan", "config": {"scan_type": "SYN", "ports": "80,443,8080,8443", "timing": "T4", "scripts": "http-headers,http-methods"}},
+                    {"tool": "gobuster", "name": "OAuth Endpoint Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "json", "threads": "30"}},
+                    {"tool": "feroxbuster", "name": "Auth Path Discovery", "config": {"wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "threads": "40", "depth": "3"}},
+                    {"tool": "nikto", "name": "Auth Security Check", "config": {"port": "443", "ssl": True, "tuning": "x"}}
+                ]
+            },
+            "wireless_assessment": {
+                "name": "Wireless Infrastructure Assessment",
+                "description": "Wireless network and controller security assessment",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Wireless Controller Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] wireless OR wlan OR wifi OR aruba OR cisco"}},
+                    {"tool": "shodan", "name": "Network Infrastructure", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Wireless Controller Scan", "config": {"scan_type": "SYN", "ports": "22,23,80,443,4343,8080,8443", "timing": "T4", "scripts": "http-title,ssl-cert"}},
+                    {"tool": "nmap", "name": "SNMP Discovery", "config": {"scan_type": "SYN", "ports": "161,162", "timing": "T3", "scripts": "snmp-info,snmp-brute"}},
+                    {"tool": "nikto", "name": "Management Interface Scan", "config": {"port": "443", "ssl": True, "tuning": "x"}}
+                ]
+            },
+            "voip_assessment": {
+                "name": "VoIP Security Assessment",
+                "description": "Voice over IP infrastructure security testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "VoIP Service Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] voip OR sip OR asterisk OR cisco unified"}},
+                    {"tool": "shodan", "name": "PBX Systems", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:5060,5061"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "VoIP Port Scan", "config": {"scan_type": "SYN", "ports": "69,161,162,1719,1720,2000,2427,2727,4569,5060,5061,5070,10000-20000", "timing": "T4", "scripts": "sip-methods,sip-enum-users"}},
+                    {"tool": "metasploit", "name": "SIP User Enumeration", "config": {"module": "auxiliary/scanner/sip/enumerator", "threads": "10"}},
+                    {"tool": "nikto", "name": "VoIP Web Interface", "config": {"port": "80", "ssl": False, "tuning": "x"}}
+                ]
+            },
+            "medical_device_assessment": {
+                "name": "Medical Device/HIPAA Assessment",
+                "description": "Healthcare and medical device security assessment",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Medical Device Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] hl7 OR dicom OR medical"}},
+                    {"tool": "shodan", "name": "DICOM Systems", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:104,11112"}},
+                    {"tool": "shodan", "name": "Healthcare Systems", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Healthcare Port Scan", "config": {"scan_type": "SYN", "ports": "80,104,443,2575,2761,2762,8080,11112", "timing": "T3", "scripts": "dicom-ping,hl7-info"}},
+                    {"tool": "nmap", "name": "Service Enumeration", "config": {"scan_type": "SYN", "ports": "1-10000", "timing": "T3", "scripts": "version"}},
+                    {"tool": "nikto", "name": "Web Portal Scan", "config": {"port": "443", "ssl": True, "tuning": "x"}}
+                ]
+            },
+            "pos_retail_assessment": {
+                "name": "POS/Retail System Assessment",
+                "description": "Point of Sale and retail system security testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "POS System Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] pos OR point of sale OR retail"}},
+                    {"tool": "shodan", "name": "Payment Systems", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "POS Port Scan", "config": {"scan_type": "SYN", "ports": "22,80,443,1433,3306,5900,8080,9100", "timing": "T3", "scripts": "default,version"}},
+                    {"tool": "nmap", "name": "Database Detection", "config": {"scan_type": "SYN", "ports": "1433,1521,3306,5432", "timing": "T3", "scripts": "mysql-info,ms-sql-info"}},
+                    {"tool": "nikto", "name": "POS Web Interface", "config": {"port": "80", "ssl": False, "tuning": "x"}},
+                    {"tool": "enum4linux", "name": "Windows POS Enum", "config": {"all_enum": True}}
+                ]
+            },
+            "scada_ics_assessment": {
+                "name": "SCADA/ICS Security Assessment",
+                "description": "Industrial Control System security testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "SCADA Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] scada OR plc OR hmi OR ics"}},
+                    {"tool": "shodan", "name": "Industrial Protocols", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:102,502,20000,44818,47808"}},
+                    {"tool": "shodan", "name": "Modbus Devices", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:502"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "ICS Protocol Scan", "config": {"scan_type": "SYN", "ports": "21,22,23,80,102,443,502,1089,1090,1091,1911,2222,2404,4840,9600,20000,34962,34963,34964,44818,47808,55000,55001,55002,55003", "timing": "T2", "scripts": "modbus-discover,s7-info,bacnet-info"}},
+                    {"tool": "nmap", "name": "BACnet Discovery", "config": {"scan_type": "SYN", "ports": "47808", "timing": "T2", "scripts": "bacnet-info"}},
+                    {"tool": "nmap", "name": "S7 Communication", "config": {"scan_type": "SYN", "ports": "102", "timing": "T2", "scripts": "s7-info"}},
+                    {"tool": "nikto", "name": "HMI Web Scan", "config": {"port": "80", "ssl": False, "tuning": "x"}}
+                ]
+            },
+            "financial_pci_assessment": {
+                "name": "Financial/PCI-DSS Assessment",
+                "description": "PCI-DSS compliance and financial system security",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Financial Service Intel", "config": {"search_type": "host", "query": "[TARGET_IP]"}},
+                    {"tool": "shodan", "name": "SSL/TLS Analysis", "config": {"search_type": "search", "query": "ip:[TARGET_IP] ssl.version:tlsv1.2 OR ssl.version:tlsv1.3"}},
+                    {"tool": "githarvester", "name": "Credential Leaks", "config": {"query": "[TARGET_DOMAIN] card OR payment OR api_key", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "PCI Port Audit", "config": {"scan_type": "SYN", "ports": "21,22,23,25,80,110,143,443,465,587,993,995,1433,3306,3389,5432,8080,8443", "timing": "T4", "scripts": "ssl-enum-ciphers,ssl-cert,ssh-brute"}},
+                    {"tool": "nmap", "name": "SSL/TLS Assessment", "config": {"scan_type": "SYN", "ports": "443,8443,9443", "timing": "T4", "scripts": "ssl-enum-ciphers,ssl-cert,ssl-heartbleed,ssl-poodle,ssl-dh-params"}},
+                    {"tool": "nikto", "name": "Web Security Scan", "config": {"port": "443", "ssl": True, "tuning": "x"}},
+                    {"tool": "sqlmap", "name": "SQL Injection Test", "config": {"level": "3", "risk": "3", "batch": True, "forms": True}}
+                ]
+            },
+            "email_security_assessment": {
+                "name": "Email Security Assessment",
+                "description": "Comprehensive email infrastructure security testing",
+                "passive_steps": [
+                    {"tool": "dnsrecon", "name": "MX Record Lookup", "config": {"scan_type": "std"}},
+                    {"tool": "shodan", "name": "Mail Server Search", "config": {"search_type": "search", "query": "hostname:[TARGET_DOMAIN] port:25,465,587,993,995"}},
+                    {"tool": "shodan", "name": "Exchange Detection", "config": {"search_type": "search", "query": "hostname:[TARGET_DOMAIN] product:exchange"}},
+                    {"tool": "githarvester", "name": "Email Credential Leaks", "config": {"query": "[TARGET_DOMAIN] smtp OR email OR mail password", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Mail Server Scan", "config": {"scan_type": "SYN", "ports": "25,110,143,465,587,993,995,2525", "timing": "T4", "scripts": "smtp-commands,smtp-enum-users,smtp-open-relay,imap-capabilities,pop3-capabilities"}},
+                    {"tool": "nmap", "name": "SMTP Relay Test", "config": {"scan_type": "SYN", "ports": "25,587", "timing": "T4", "scripts": "smtp-open-relay"}},
+                    {"tool": "metasploit", "name": "SMTP User Enumeration", "config": {"module": "auxiliary/scanner/smtp/smtp_enum", "threads": "10"}},
+                    {"tool": "nikto", "name": "Webmail Interface", "config": {"port": "443", "ssl": True, "tuning": "x"}}
+                ]
+            },
+            "vpn_gateway_assessment": {
+                "name": "VPN Gateway Assessment",
+                "description": "VPN and remote access gateway security testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "VPN Gateway Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] vpn OR product:fortinet OR product:paloalto OR product:cisco asa OR product:juniper"}},
+                    {"tool": "shodan", "name": "SSL VPN Detection", "config": {"search_type": "search", "query": "ip:[TARGET_IP] ssl.cert:vpn OR http.title:vpn"}},
+                    {"tool": "shodan", "name": "Known Vulnerabilities", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "VPN Port Scan", "config": {"scan_type": "SYN", "ports": "22,443,500,1194,1701,1723,4500,8443,10443", "timing": "T4", "scripts": "ssl-enum-ciphers,ssl-cert,ike-version"}},
+                    {"tool": "nmap", "name": "IPSec Detection", "config": {"scan_type": "SYN", "ports": "500,4500", "timing": "T4", "scripts": "ike-version"}},
+                    {"tool": "nikto", "name": "SSL VPN Web Portal", "config": {"port": "443", "ssl": True, "tuning": "x"}},
+                    {"tool": "gobuster", "name": "VPN Portal Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "threads": "30"}}
+                ]
+            },
+            "ldap_ad_assessment": {
+                "name": "LDAP/Active Directory Assessment",
+                "description": "LDAP and Active Directory security testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "LDAP Service Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:389,636"}},
+                    {"tool": "shodan", "name": "Domain Controller Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:88,389,445"}},
+                    {"tool": "githarvester", "name": "AD Credential Leaks", "config": {"query": "[TARGET_DOMAIN] domain\\\\user OR LDAP OR ntlm", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "AD Service Scan", "config": {"scan_type": "SYN", "ports": "53,88,135,139,389,445,464,593,636,3268,3269,5985,5986,9389", "timing": "T4", "scripts": "ldap-rootdse,ldap-search,smb-os-discovery"}},
+                    {"tool": "enum4linux", "name": "AD Enumeration", "config": {"all_enum": True}},
+                    {"tool": "metasploit", "name": "Kerberos Enumeration", "config": {"module": "auxiliary/gather/kerberos_enumusers", "threads": "10"}},
+                    {"tool": "nmap", "name": "LDAP Anonymous Bind", "config": {"scan_type": "SYN", "ports": "389,636", "timing": "T4", "scripts": "ldap-brute"}}
+                ]
+            },
+            "web_cache_poisoning": {
+                "name": "Web Cache Poisoning Assessment",
+                "description": "Test for web cache poisoning vulnerabilities",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "CDN Detection", "config": {"search_type": "search", "query": "hostname:[TARGET_DOMAIN] http.headers.x-cache OR http.headers.cf-cache-status"}},
+                    {"tool": "shodan", "name": "Proxy Detection", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Web Service Scan", "config": {"scan_type": "SYN", "ports": "80,443,8080,8443", "timing": "T4", "scripts": "http-headers,http-methods"}},
+                    {"tool": "gobuster", "name": "Cacheable Endpoint Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "js,css,png,jpg,gif,woff,woff2", "threads": "30"}},
+                    {"tool": "nikto", "name": "Web Security Scan", "config": {"port": "80", "ssl": False, "tuning": "x"}},
+                    {"tool": "feroxbuster", "name": "Deep Path Discovery", "config": {"wordlist": "/usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt", "threads": "40", "depth": "3"}}
+                ]
+            },
+            "ssrf_detection": {
+                "name": "SSRF Vulnerability Assessment",
+                "description": "Server-Side Request Forgery detection and testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Web Service Intel", "config": {"search_type": "host", "query": "[TARGET_IP]"}},
+                    {"tool": "githarvester", "name": "URL Parameter Leaks", "config": {"query": "[TARGET_DOMAIN] url= OR path= OR fetch= OR request=", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Web Service Fingerprint", "config": {"scan_type": "SYN", "ports": "80,443,8080,8443,3000,5000,9000", "timing": "T4", "scripts": "http-enum,http-methods"}},
+                    {"tool": "gobuster", "name": "Parameter Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/burp-parameter-names.txt", "threads": "30"}},
+                    {"tool": "feroxbuster", "name": "API Endpoint Discovery", "config": {"wordlist": "/usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt", "extensions": "json,xml", "threads": "40", "depth": "3"}},
+                    {"tool": "nikto", "name": "Web Vulnerability Scan", "config": {"port": "80", "ssl": False, "tuning": "x"}}
+                ]
+            },
+            "xxe_injection_assessment": {
+                "name": "XXE Injection Assessment",
+                "description": "XML External Entity injection testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "XML Service Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] xml OR soap OR wsdl"}},
+                    {"tool": "githarvester", "name": "XML Config Leaks", "config": {"query": "[TARGET_DOMAIN] xml OR soap OR wsdl", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "XML Service Scan", "config": {"scan_type": "SYN", "ports": "80,443,8080,8443", "timing": "T4", "scripts": "http-methods,http-headers"}},
+                    {"tool": "gobuster", "name": "XML Endpoint Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "xml,wsdl,xsd,dtd", "threads": "30"}},
+                    {"tool": "nikto", "name": "Web Security Scan", "config": {"port": "80", "ssl": False, "tuning": "x"}}
+                ]
+            },
+            "insecure_deserialization": {
+                "name": "Insecure Deserialization Assessment",
+                "description": "Test for insecure deserialization vulnerabilities",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Java Service Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] java OR tomcat OR jboss OR weblogic"}},
+                    {"tool": "shodan", "name": ".NET Service Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] asp.net OR iis"}},
+                    {"tool": "githarvester", "name": "Serialization Code Leaks", "config": {"query": "[TARGET_DOMAIN] serialize OR pickle OR ObjectInputStream", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Application Server Scan", "config": {"scan_type": "SYN", "ports": "80,443,1099,1100,4443,4444,7001,7002,8000,8009,8080,8443,8880,9000,9001,9043,9060,9080,9090,9443,11099,47001,47002", "timing": "T4", "scripts": "rmi-dumpregistry,rmi-vuln-classloader"}},
+                    {"tool": "nmap", "name": "Java RMI Detection", "config": {"scan_type": "SYN", "ports": "1099,1100,11099", "timing": "T4", "scripts": "rmi-dumpregistry"}},
+                    {"tool": "nikto", "name": "Web Vulnerability Scan", "config": {"port": "8080", "ssl": False, "tuning": "x"}},
+                    {"tool": "gobuster", "name": "Admin Panel Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "action,do,jspa,jspx", "threads": "30"}}
+                ]
+            },
+            "jwt_security_assessment": {
+                "name": "JWT Security Assessment",
+                "description": "JSON Web Token security testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "API Service Intel", "config": {"search_type": "host", "query": "[TARGET_IP]"}},
+                    {"tool": "githarvester", "name": "JWT Secret Leaks", "config": {"query": "[TARGET_DOMAIN] jwt OR JWT_SECRET OR token secret", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "API Service Scan", "config": {"scan_type": "SYN", "ports": "80,443,3000,5000,8080,8443", "timing": "T4", "scripts": "http-headers,http-methods"}},
+                    {"tool": "gobuster", "name": "Auth Endpoint Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "json", "threads": "30"}},
+                    {"tool": "feroxbuster", "name": "API Path Discovery", "config": {"wordlist": "/usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt", "threads": "40", "depth": "3"}},
+                    {"tool": "nikto", "name": "API Security Scan", "config": {"port": "443", "ssl": True, "tuning": "x"}}
+                ]
+            },
+            "ssti_assessment": {
+                "name": "SSTI Assessment",
+                "description": "Server-Side Template Injection testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Web Framework Detection", "config": {"search_type": "search", "query": "ip:[TARGET_IP] jinja OR django OR flask OR twig OR freemarker"}},
+                    {"tool": "githarvester", "name": "Template Code Leaks", "config": {"query": "[TARGET_DOMAIN] template OR render OR jinja OR twig", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Web Service Scan", "config": {"scan_type": "SYN", "ports": "80,443,5000,8000,8080,8443", "timing": "T4", "scripts": "http-headers,http-title"}},
+                    {"tool": "gobuster", "name": "Template Endpoint Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "html,tpl,tmpl", "threads": "30"}},
+                    {"tool": "nikto", "name": "Web Security Scan", "config": {"port": "80", "ssl": False, "tuning": "x"}},
+                    {"tool": "feroxbuster", "name": "Deep Path Discovery", "config": {"wordlist": "/usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt", "threads": "40", "depth": "4"}}
+                ]
+            },
+            "nosql_injection": {
+                "name": "NoSQL Injection Assessment",
+                "description": "NoSQL database injection testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "NoSQL Database Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] mongodb OR couchdb OR redis OR elasticsearch"}},
+                    {"tool": "shodan", "name": "Database Port Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:27017,5984,6379,9200"}},
+                    {"tool": "githarvester", "name": "NoSQL Connection Leaks", "config": {"query": "[TARGET_DOMAIN] mongodb OR mongoose OR redis connection", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "NoSQL Port Scan", "config": {"scan_type": "SYN", "ports": "5984,6379,7474,7687,8086,8091,9042,9200,9300,27017,27018,27019,28017,29015", "timing": "T4", "scripts": "mongodb-info,redis-info,couchdb-stats"}},
+                    {"tool": "nmap", "name": "MongoDB Enumeration", "config": {"scan_type": "SYN", "ports": "27017", "timing": "T4", "scripts": "mongodb-info,mongodb-databases"}},
+                    {"tool": "nmap", "name": "Redis Enumeration", "config": {"scan_type": "SYN", "ports": "6379", "timing": "T4", "scripts": "redis-info,redis-brute"}},
+                    {"tool": "nmap", "name": "Elasticsearch Enumeration", "config": {"scan_type": "SYN", "ports": "9200,9300", "timing": "T4", "scripts": "http-headers"}}
+                ]
+            },
+            "privilege_escalation_audit": {
+                "name": "Privilege Escalation Audit",
+                "description": "Identify privilege escalation vectors",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Service Intelligence", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Service Enumeration", "config": {"scan_type": "SYN", "ports": "21,22,23,25,53,80,110,135,139,143,443,445,993,995,1433,3306,3389,5432,5900,8080", "timing": "T4", "scripts": "default,version,vuln"}},
+                    {"tool": "enum4linux", "name": "Windows Privilege Audit", "config": {"all_enum": True}},
+                    {"tool": "metasploit", "name": "SMB Session Enum", "config": {"module": "auxiliary/scanner/smb/smb_enumusers", "threads": "10"}},
+                    {"tool": "nmap", "name": "Sudo Exploitation Check", "config": {"scan_type": "SYN", "ports": "22", "timing": "T4", "scripts": "ssh-brute"}}
+                ]
+            },
+            "supply_chain_assessment": {
+                "name": "Supply Chain Security Assessment",
+                "description": "Third-party and supply chain security audit",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Third-Party Services", "config": {"search_type": "search", "query": "hostname:[TARGET_DOMAIN]"}},
+                    {"tool": "githarvester", "name": "Dependency Leaks", "config": {"query": "[TARGET_DOMAIN] package.json OR requirements.txt OR Gemfile", "sort": "new"}},
+                    {"tool": "githarvester", "name": "CI/CD Pipeline Leaks", "config": {"query": "[TARGET_DOMAIN] .github/workflows OR gitlab-ci OR jenkins", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "External Service Scan", "config": {"scan_type": "SYN", "ports": "80,443,8080,8443", "timing": "T4", "scripts": "http-headers,ssl-cert"}},
+                    {"tool": "gobuster", "name": "Third-Party Endpoint Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "threads": "30"}},
+                    {"tool": "nikto", "name": "Web Security Scan", "config": {"port": "443", "ssl": True, "tuning": "x"}}
+                ]
+            },
+            "compliance_baseline": {
+                "name": "Security Compliance Baseline",
+                "description": "General security compliance baseline check",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "External Exposure Analysis", "config": {"search_type": "host", "query": "[TARGET_IP]"}},
+                    {"tool": "shodan", "name": "Vulnerability Intelligence", "config": {"search_type": "search", "query": "ip:[TARGET_IP] vuln:CVE"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Full Port Scan", "config": {"scan_type": "SYN", "ports": "1-65535", "timing": "T4"}},
+                    {"tool": "nmap", "name": "Vulnerability Scan", "config": {"scan_type": "SYN", "ports": "1-10000", "timing": "T4", "scripts": "vuln"}},
+                    {"tool": "nmap", "name": "SSL/TLS Compliance", "config": {"scan_type": "SYN", "ports": "443,8443", "timing": "T4", "scripts": "ssl-enum-ciphers,ssl-cert"}},
+                    {"tool": "nikto", "name": "Web Security Baseline", "config": {"port": "443", "ssl": True, "tuning": "x"}},
+                    {"tool": "enum4linux", "name": "Windows Security Baseline", "config": {"all_enum": True}}
+                ]
+            },
+            "shadow_it_discovery": {
+                "name": "Shadow IT Discovery",
+                "description": "Discover unauthorized IT assets and services",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Organization Asset Search", "config": {"search_type": "search", "query": "org:[TARGET_ORG]"}},
+                    {"tool": "shodan", "name": "SSL Certificate Discovery", "config": {"search_type": "search", "query": "ssl.cert.subject.o:[TARGET_ORG]"}},
+                    {"tool": "shodan", "name": "Cloud Asset Discovery", "config": {"search_type": "search", "query": "[TARGET_ORG] cloud:aws OR cloud:azure OR cloud:gcp"}},
+                    {"tool": "githarvester", "name": "Unauthorized Repo Search", "config": {"query": "[TARGET_ORG]", "sort": "new"}}
+                ],
+                "active_steps": [
+                    {"tool": "dnsrecon", "name": "DNS Enumeration", "config": {"scan_type": "std"}},
+                    {"tool": "dnsrecon", "name": "Subdomain Discovery", "config": {"scan_type": "brt", "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt"}},
+                    {"tool": "nmap", "name": "Service Discovery", "config": {"scan_type": "SYN", "ports": "21,22,80,443,3389,8080,8443", "timing": "T4"}}
+                ]
             }
         }
 
@@ -6384,15 +6847,15 @@ Configure in the Settings tab:
         # Run button
         self.workflow_run_btn = tk.Button(
             controls_frame,
-            text="▶ RUN WORKFLOW",
-            font=("Courier", 11, "bold"),
+            text="▶ RUN",
+            font=("Courier", 10, "bold"),
             bg=self.accent_green,
             fg=self.bg_primary,
             activebackground=self.accent_cyan,
             activeforeground=self.bg_primary,
             relief=tk.FLAT,
-            padx=20,
-            pady=10,
+            padx=15,
+            pady=8,
             cursor="hand2",
             command=self.run_workflow
         )
@@ -6402,19 +6865,36 @@ Configure in the Settings tab:
         self.workflow_stop_btn = tk.Button(
             controls_frame,
             text="⬛ STOP",
-            font=("Courier", 11, "bold"),
+            font=("Courier", 10, "bold"),
             bg=self.accent_red,
             fg="white",
             activebackground="#cc0044",
             activeforeground="white",
             relief=tk.FLAT,
-            padx=20,
-            pady=10,
+            padx=15,
+            pady=8,
             cursor="hand2",
             state=tk.DISABLED,
             command=self.stop_workflow
         )
         self.workflow_stop_btn.pack(side=tk.LEFT, padx=5)
+
+        # Workflow Guide button (in same row as controls)
+        cheat_btn = tk.Button(
+            controls_frame,
+            text="📋 GUIDE",
+            font=("Courier", 10, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.accent_cyan,
+            activebackground=self.accent_cyan,
+            activeforeground=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=8,
+            cursor="hand2",
+            command=lambda: self.show_cheatsheet("workflows")
+        )
+        cheat_btn.pack(side=tk.LEFT, padx=5)
 
         # Progress frame
         progress_frame = tk.LabelFrame(
@@ -6446,23 +6926,6 @@ Configure in the Settings tab:
         )
         self.workflow_progress.pack(fill=tk.X, padx=10, pady=(0, 10))
 
-        # Cheat Sheet Button
-        cheat_btn = tk.Button(
-            frame,
-            text="📋 VIEW WORKFLOW GUIDE",
-            font=("Courier", 9, "bold"),
-            bg=self.bg_tertiary,
-            fg=self.accent_cyan,
-            activebackground=self.accent_cyan,
-            activeforeground=self.bg_primary,
-            relief=tk.FLAT,
-            padx=15,
-            pady=8,
-            cursor="hand2",
-            command=lambda: self.show_cheatsheet("workflows")
-        )
-        cheat_btn.grid(row=7, column=0, columnspan=2, pady=10)
-
         # Info label
         info_label = tk.Label(
             frame,
@@ -6471,9 +6934,9 @@ Configure in the Settings tab:
             fg=self.accent_cyan,
             bg=self.bg_secondary,
             justify=tk.LEFT,
-            wraplength=320
+            wraplength=500
         )
-        info_label.grid(row=8, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
+        info_label.grid(row=9, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
 
         # Initialize with first workflow
         self.on_workflow_selected(None)

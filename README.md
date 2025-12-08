@@ -1,13 +1,13 @@
-# ⚡ The Recon Superpower v3.1
+# ⚡ The Recon Superpower v3.2
 
-A professional **Monokai-themed** GUI wrapper for **12 essential security reconnaissance tools** with **30 automated workflows**, advanced features, API integrations, and comprehensive security hardening.
+A professional **Monokai-themed** GUI wrapper for **12 essential security reconnaissance tools** with **60+ automated workflows**, advanced features, API integrations, and comprehensive security hardening.
 
-![Version](https://img.shields.io/badge/version-3.1-brightgreen)
+![Version](https://img.shields.io/badge/version-3.2-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.6%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-orange)
 ![Security](https://img.shields.io/badge/security-hardened-brightgreen)
 ![Tools](https://img.shields.io/badge/tools-12-blue)
-![Workflows](https://img.shields.io/badge/workflows-30-purple)
+![Workflows](https://img.shields.io/badge/workflows-60+-purple)
 ![Theme](https://img.shields.io/badge/theme-Monokai-yellow)
 
 ## ⚠️ Legal Disclaimer
