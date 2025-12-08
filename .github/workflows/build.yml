@@ -1,0 +1,36 @@
+name: Build Executables
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pyinstaller
+      - run: pyinstaller --onefile --name "ReconSuperpower-Linux" recon_superpower.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: dist/ReconSuperpower-Linux
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install pyinstaller
+      - run: pyinstaller --onefile --windowed --name "ReconSuperpower" recon_superpower.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: dist/ReconSuperpower.exe
