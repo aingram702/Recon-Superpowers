@@ -7659,26 +7659,10 @@ Configure in the Settings tab:
         
         return None  # Valid
 
-    def validate_extra_options(self, options):
-        """
-        Enhanced validation for extra options across all tools.
-        Prevents command injection via extra options.
-        """
-        if not options:
-            return True
-        
-        # Security: Reject shell metacharacters
-        dangerous_chars = [';', '|', '&', '$', '`', '\n', '\r', '$(', '${', '&&', '||']
-        for char in dangerous_chars:
-            if char in options:
-                return False
-        
-        # Max length check
-        if len(options) > 500:
-            return False
-        
-        return True
-    
+    # NOTE: validate_extra_options is defined later in this file (around line 8817)
+    # with more comprehensive security checks including shlex parsing and regex patterns.
+    # The duplicate simpler version has been removed to avoid confusion.
+
     def validate_metasploit_options(self, options):
         """
         FIX CRIT-3: Validate Metasploit KEY=VALUE options.
