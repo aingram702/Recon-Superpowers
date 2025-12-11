@@ -4862,75 +4862,488 @@ Adjustable:  Yes (via Settings)
                 self.gobuster_wordlist.insert(0, filename)
 
     def create_shodan_tab(self):
+        """Create enhanced Shodan tab with query builder and presets."""
         frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
         frame.columnconfigure(1, weight=1)
 
-        # API Key status
-        api_status = tk.Label(
-            frame,
-            text="⚠️  Configure API key in Settings  ⚠️",
-            font=("Courier", 9, "bold"),
-            fg=self.accent_red if not self.config.get("shodan_api_key") else self.accent_green,
-            bg=self.bg_secondary,
-            justify=tk.CENTER
+        # Create scrollable frame for all the content
+        canvas = tk.Canvas(frame, bg=self.bg_secondary, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=self.bg_secondary)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
         )
-        api_status.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+
+        scrollable_frame.columnconfigure(1, weight=1)
+        row = 0
+
+        # ═══════════════════════════════════════════════════════════
+        # API KEY STATUS SECTION
+        # ═══════════════════════════════════════════════════════════
+        api_frame = tk.Frame(scrollable_frame, bg=self.bg_tertiary, padx=10, pady=8)
+        api_frame.grid(row=row, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+
+        has_api_key = bool(self.config.get("shodan_api_key"))
+        api_icon = "✅" if has_api_key else "⚠️"
+        api_text = "API Key Configured" if has_api_key else "Configure API key in Settings"
+        api_color = self.accent_green if has_api_key else self.accent_orange
+
+        api_status = tk.Label(api_frame, text=f"{api_icon}  {api_text}",
+                             font=("Courier", 10, "bold"), fg=api_color, bg=self.bg_tertiary)
+        api_status.pack(side=tk.LEFT)
         self.shodan_api_status = api_status
 
-        # Search query
-        self.shodan_query = self.create_labeled_entry(frame, "Search Query:", 1, "apache port:443")
+        validate_btn = tk.Button(api_frame, text="🔑 Validate", font=("Courier", 8),
+                                bg=self.bg_primary, fg=self.accent_cyan, relief=tk.FLAT,
+                                cursor="hand2", command=self.validate_shodan_api_key)
+        validate_btn.pack(side=tk.RIGHT, padx=5)
+        row += 1
 
-        # Search type
-        label = tk.Label(frame, text="Search Type:", font=("Courier", 10),
-                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
-        label.grid(row=2, column=0, sticky=tk.W, padx=10, pady=5)
+        # ═══════════════════════════════════════════════════════════
+        # SEARCH TYPE SECTION
+        # ═══════════════════════════════════════════════════════════
+        tk.Label(scrollable_frame, text="━━━ SEARCH TYPE ━━━", font=("Courier", 10, "bold"),
+                fg=self.accent_cyan, bg=self.bg_secondary).grid(row=row, column=0, columnspan=2,
+                sticky=tk.W, padx=10, pady=(15, 5))
+        row += 1
 
-        self.shodan_type = ttk.Combobox(frame, values=[
-            "search (Query search)",
-            "host (Host lookup)"
-        ], font=("Courier", 9), state="readonly", width=28)
-        self.shodan_type.grid(row=2, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.shodan_type = ttk.Combobox(scrollable_frame, values=[
+            "search - General query search",
+            "host - IP/hostname lookup",
+            "domain - Domain information",
+            "dns resolve - DNS resolution",
+            "dns reverse - Reverse DNS",
+            "exploits - Search exploits DB",
+            "count - Count results only",
+            "info - API info & credits"
+        ], font=("Courier", 9), state="readonly", width=35)
+        self.shodan_type.grid(row=row, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
         self.shodan_type.current(0)
+        self.shodan_type.bind("<<ComboboxSelected>>", self.on_shodan_type_change)
+        row += 1
 
-        # Facets
-        self.shodan_facets = self.create_labeled_entry(frame, "Facets:", 3, "country,org")
+        # ═══════════════════════════════════════════════════════════
+        # QUICK PRESETS SECTION
+        # ═══════════════════════════════════════════════════════════
+        tk.Label(scrollable_frame, text="━━━ QUICK PRESETS ━━━", font=("Courier", 10, "bold"),
+                fg=self.accent_cyan, bg=self.bg_secondary).grid(row=row, column=0, columnspan=2,
+                sticky=tk.W, padx=10, pady=(15, 5))
+        row += 1
 
-        # Limit
-        self.shodan_limit = self.create_labeled_entry(frame, "Result Limit:", 4, "100")
+        self.shodan_presets = {
+            "🔓 Vulnerable": [
+                ("HeartBleed", "vuln:CVE-2014-0160"),
+                ("EternalBlue", "vuln:CVE-2017-0144"),
+                ("BlueKeep", "vuln:CVE-2019-0708"),
+                ("Log4Shell", "vuln:CVE-2021-44228"),
+                ("Default Passwords", '"default password"'),
+                ("Anonymous FTP", '"230 login successful" port:21'),
+            ],
+            "🗄️ Databases": [
+                ("MongoDB Open", 'product:"MongoDB" port:27017'),
+                ("Elasticsearch", "port:9200 elasticsearch"),
+                ("MySQL Exposed", 'product:"MySQL"'),
+                ("PostgreSQL", "port:5432 PostgreSQL"),
+                ("Redis No Auth", "port:6379 -authentication"),
+                ("CouchDB", "port:5984 CouchDB"),
+                ("Cassandra", "port:9042 cassandra"),
+            ],
+            "📹 IoT/Cameras": [
+                ("All Webcams", "has_screenshot:true webcam"),
+                ("Hikvision DVR", 'product:"Hikvision"'),
+                ("Dahua Camera", 'product:"Dahua"'),
+                ("RTSP Streams", "port:554 has_screenshot:true"),
+                ("IP Cameras", '"Network Camera"'),
+                ("Smart Home", "port:8123 home-assistant"),
+            ],
+            "🏭 ICS/SCADA": [
+                ("Modbus", "port:502"),
+                ("Siemens S7", "port:102 siemens"),
+                ("BACnet", "port:47808"),
+                ("DNP3", "port:20000"),
+                ("EtherNet/IP", "port:44818"),
+                ("Niagara Fox", "port:1911 niagara"),
+            ],
+            "🌐 Web Servers": [
+                ("Apache", 'product:"Apache httpd"'),
+                ("Nginx", 'product:"nginx"'),
+                ("IIS", 'product:"Microsoft IIS"'),
+                ("Login Pages", 'http.title:"login"'),
+                ("Admin Panels", 'http.title:"admin"'),
+                ("WordPress", 'http.component:"WordPress"'),
+                ("phpMyAdmin", 'http.title:"phpMyAdmin"'),
+            ],
+            "🔒 SSL Issues": [
+                ("Expired Certs", "ssl.cert.expired:true"),
+                ("Self-Signed", "ssl.cert.issuer.cn:ssl.cert.subject.cn"),
+                ("Heartbleed", "vuln:CVE-2014-0160"),
+            ],
+            "🖥️ Remote Access": [
+                ("RDP Open", "port:3389"),
+                ("VNC No Auth", 'port:5900 "authentication disabled"'),
+                ("SSH Servers", 'port:22 "SSH-2.0"'),
+                ("Telnet", "port:23 telnet"),
+            ],
+        }
 
-        # Additional options
-        self.shodan_options = self.create_labeled_entry(frame, "Extra Options:", 5, "")
+        preset_frame = tk.Frame(scrollable_frame, bg=self.bg_secondary)
+        preset_frame.grid(row=row, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
 
-        # Info label
-        info_label = tk.Label(
-            frame,
-            text="\n🌐 Shodan Search Engine\nAPI-based device discovery\n\nExample queries:\n• apache port:443\n• nginx country:US\n• port:22 'SSH-2.0'",
-            font=("Courier", 9),
-            fg=self.accent_cyan,
-            bg=self.bg_secondary,
-            justify=tk.LEFT,
-            wraplength=320
-        )
-        info_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=20)
+        tk.Label(preset_frame, text="Category:", font=("Courier", 9),
+                fg=self.text_color, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(0, 5))
 
-        # Cheat Sheet Button
-        cheat_btn = tk.Button(
-            frame,
-            text="📋 VIEW CHEAT SHEET",
-            font=("Courier", 9, "bold"),
-            bg=self.bg_tertiary,
-            fg=self.accent_cyan,
-            activebackground=self.accent_cyan,
-            activeforeground=self.bg_primary,
-            relief=tk.FLAT,
-            padx=15,
-            pady=8,
-            cursor="hand2",
-            command=lambda: self.show_cheatsheet("shodan")
-        )
-        cheat_btn.grid(row=7, column=0, columnspan=2, pady=10)
+        self.shodan_preset_category = ttk.Combobox(preset_frame, values=list(self.shodan_presets.keys()),
+                                                   font=("Courier", 9), state="readonly", width=15)
+        self.shodan_preset_category.pack(side=tk.LEFT, padx=5)
+        self.shodan_preset_category.current(0)
+        self.shodan_preset_category.bind("<<ComboboxSelected>>", self.update_shodan_preset_queries)
+
+        self.shodan_preset_query = ttk.Combobox(preset_frame, font=("Courier", 9),
+                                                state="readonly", width=18)
+        self.shodan_preset_query.pack(side=tk.LEFT, padx=5)
+        self.update_shodan_preset_queries()
+
+        apply_btn = tk.Button(preset_frame, text="Apply", font=("Courier", 8, "bold"),
+                             bg=self.accent_green, fg=self.bg_primary, relief=tk.FLAT,
+                             cursor="hand2", command=self.apply_shodan_preset)
+        apply_btn.pack(side=tk.LEFT, padx=5)
+        row += 1
+
+        # ═══════════════════════════════════════════════════════════
+        # QUERY BUILDER SECTION
+        # ═══════════════════════════════════════════════════════════
+        tk.Label(scrollable_frame, text="━━━ QUERY BUILDER ━━━", font=("Courier", 10, "bold"),
+                fg=self.accent_cyan, bg=self.bg_secondary).grid(row=row, column=0, columnspan=2,
+                sticky=tk.W, padx=10, pady=(15, 5))
+        row += 1
+
+        self.shodan_query = self.create_labeled_entry(scrollable_frame, "Search Query:", row, "")
+        row += 1
+
+        # Filter builder
+        filter_frame = tk.LabelFrame(scrollable_frame, text="Add Filters", font=("Courier", 9, "bold"),
+                                     fg=self.accent_yellow, bg=self.bg_secondary, relief=tk.GROOVE, bd=1)
+        filter_frame.grid(row=row, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+        row += 1
+
+        # Location filters
+        loc_frame = tk.Frame(filter_frame, bg=self.bg_secondary)
+        loc_frame.pack(fill=tk.X, padx=5, pady=3)
+
+        tk.Label(loc_frame, text="🌍 Country:", font=("Courier", 8),
+                fg=self.text_muted, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(0, 2))
+        self.shodan_country = ttk.Combobox(loc_frame, values=[
+            "", "US", "CN", "RU", "DE", "GB", "FR", "JP", "KR", "IN", "BR", "CA", "AU"
+        ], font=("Courier", 8), width=5)
+        self.shodan_country.pack(side=tk.LEFT, padx=2)
+
+        tk.Label(loc_frame, text="City:", font=("Courier", 8),
+                fg=self.text_muted, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(10, 2))
+        self.shodan_city = tk.Entry(loc_frame, font=("Courier", 8), width=12,
+                                   bg=self.bg_primary, fg=self.text_color,
+                                   insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.shodan_city.pack(side=tk.LEFT, padx=2)
+
+        tk.Label(loc_frame, text="Org:", font=("Courier", 8),
+                fg=self.text_muted, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(10, 2))
+        self.shodan_org = tk.Entry(loc_frame, font=("Courier", 8), width=15,
+                                  bg=self.bg_primary, fg=self.text_color,
+                                  insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.shodan_org.pack(side=tk.LEFT, padx=2)
+
+        # Network filters
+        net_frame = tk.Frame(filter_frame, bg=self.bg_secondary)
+        net_frame.pack(fill=tk.X, padx=5, pady=3)
+
+        tk.Label(net_frame, text="🔌 Port:", font=("Courier", 8),
+                fg=self.text_muted, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(0, 2))
+        self.shodan_port = tk.Entry(net_frame, font=("Courier", 8), width=10,
+                                   bg=self.bg_primary, fg=self.text_color,
+                                   insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.shodan_port.pack(side=tk.LEFT, padx=2)
+
+        tk.Label(net_frame, text="Net (CIDR):", font=("Courier", 8),
+                fg=self.text_muted, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(10, 2))
+        self.shodan_net = tk.Entry(net_frame, font=("Courier", 8), width=16,
+                                  bg=self.bg_primary, fg=self.text_color,
+                                  insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.shodan_net.pack(side=tk.LEFT, padx=2)
+
+        tk.Label(net_frame, text="ASN:", font=("Courier", 8),
+                fg=self.text_muted, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(10, 2))
+        self.shodan_asn = tk.Entry(net_frame, font=("Courier", 8), width=8,
+                                  bg=self.bg_primary, fg=self.text_color,
+                                  insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.shodan_asn.pack(side=tk.LEFT, padx=2)
+
+        # Product filters
+        prod_frame = tk.Frame(filter_frame, bg=self.bg_secondary)
+        prod_frame.pack(fill=tk.X, padx=5, pady=3)
+
+        tk.Label(prod_frame, text="⚙️ Product:", font=("Courier", 8),
+                fg=self.text_muted, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(0, 2))
+        self.shodan_product = ttk.Combobox(prod_frame, values=[
+            "", "Apache", "nginx", "IIS", "MySQL", "MongoDB", "Redis", "OpenSSH", "Tomcat"
+        ], font=("Courier", 8), width=10)
+        self.shodan_product.pack(side=tk.LEFT, padx=2)
+
+        tk.Label(prod_frame, text="OS:", font=("Courier", 8),
+                fg=self.text_muted, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(10, 2))
+        self.shodan_os = ttk.Combobox(prod_frame, values=[
+            "", "Linux", "Windows", "Ubuntu", "Debian", "CentOS", "FreeBSD"
+        ], font=("Courier", 8), width=10)
+        self.shodan_os.pack(side=tk.LEFT, padx=2)
+
+        tk.Label(prod_frame, text="Version:", font=("Courier", 8),
+                fg=self.text_muted, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(10, 2))
+        self.shodan_version = tk.Entry(prod_frame, font=("Courier", 8), width=8,
+                                       bg=self.bg_primary, fg=self.text_color,
+                                       insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.shodan_version.pack(side=tk.LEFT, padx=2)
+
+        # HTTP filters
+        http_frame = tk.Frame(filter_frame, bg=self.bg_secondary)
+        http_frame.pack(fill=tk.X, padx=5, pady=3)
+
+        tk.Label(http_frame, text="🌐 Title:", font=("Courier", 8),
+                fg=self.text_muted, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(0, 2))
+        self.shodan_title = tk.Entry(http_frame, font=("Courier", 8), width=15,
+                                    bg=self.bg_primary, fg=self.text_color,
+                                    insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.shodan_title.pack(side=tk.LEFT, padx=2)
+
+        tk.Label(http_frame, text="HTML:", font=("Courier", 8),
+                fg=self.text_muted, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(10, 2))
+        self.shodan_html = tk.Entry(http_frame, font=("Courier", 8), width=12,
+                                   bg=self.bg_primary, fg=self.text_color,
+                                   insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.shodan_html.pack(side=tk.LEFT, padx=2)
+
+        self.shodan_screenshot_var = tk.BooleanVar()
+        tk.Checkbutton(http_frame, text="Screenshot", variable=self.shodan_screenshot_var,
+                      font=("Courier", 8), fg=self.text_color, bg=self.bg_secondary,
+                      selectcolor=self.bg_primary, activebackground=self.bg_secondary).pack(side=tk.LEFT, padx=10)
+
+        # Vulnerability filters
+        vuln_frame = tk.Frame(filter_frame, bg=self.bg_secondary)
+        vuln_frame.pack(fill=tk.X, padx=5, pady=3)
+
+        tk.Label(vuln_frame, text="⚠️ CVE:", font=("Courier", 8),
+                fg=self.text_muted, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(0, 2))
+        self.shodan_cve = tk.Entry(vuln_frame, font=("Courier", 8), width=18,
+                                  bg=self.bg_primary, fg=self.text_color,
+                                  insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.shodan_cve.pack(side=tk.LEFT, padx=2)
+
+        # Build query button
+        btn_row = tk.Frame(filter_frame, bg=self.bg_secondary)
+        btn_row.pack(fill=tk.X, padx=5, pady=8)
+
+        tk.Button(btn_row, text="🔧 BUILD QUERY", font=("Courier", 9, "bold"),
+                 bg=self.accent_purple, fg=self.text_color, relief=tk.FLAT, cursor="hand2",
+                 padx=15, command=self.build_shodan_query).pack(side=tk.LEFT, padx=5)
+
+        tk.Button(btn_row, text="🗑️ Clear", font=("Courier", 8), bg=self.bg_tertiary,
+                 fg=self.text_color, relief=tk.FLAT, cursor="hand2",
+                 command=self.clear_shodan_filters).pack(side=tk.LEFT, padx=5)
+
+        # ═══════════════════════════════════════════════════════════
+        # OUTPUT OPTIONS SECTION
+        # ═══════════════════════════════════════════════════════════
+        tk.Label(scrollable_frame, text="━━━ OUTPUT OPTIONS ━━━", font=("Courier", 10, "bold"),
+                fg=self.accent_cyan, bg=self.bg_secondary).grid(row=row, column=0, columnspan=2,
+                sticky=tk.W, padx=10, pady=(15, 5))
+        row += 1
+
+        output_frame = tk.Frame(scrollable_frame, bg=self.bg_secondary)
+        output_frame.grid(row=row, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
+        row += 1
+
+        tk.Label(output_frame, text="Limit:", font=("Courier", 9),
+                fg=self.text_color, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(0, 5))
+        self.shodan_limit = ttk.Combobox(output_frame, values=["10", "25", "50", "100", "250", "500"],
+                                        font=("Courier", 9), width=6)
+        self.shodan_limit.pack(side=tk.LEFT, padx=5)
+        self.shodan_limit.set("100")
+
+        tk.Label(output_frame, text="Facets:", font=("Courier", 9),
+                fg=self.text_color, bg=self.bg_secondary).pack(side=tk.LEFT, padx=(15, 5))
+        self.shodan_facets = ttk.Combobox(output_frame, values=[
+            "country,org", "country,port", "org,port", "product,version", "os,port", "vuln", ""
+        ], font=("Courier", 9), width=15)
+        self.shodan_facets.pack(side=tk.LEFT, padx=5)
+        self.shodan_facets.set("country,org")
+
+        self.shodan_options = self.create_labeled_entry(scrollable_frame, "Extra Options:", row, "")
+        row += 1
+
+        # ═══════════════════════════════════════════════════════════
+        # QUICK SEARCHES SECTION
+        # ═══════════════════════════════════════════════════════════
+        tk.Label(scrollable_frame, text="━━━ ONE-CLICK SEARCHES ━━━", font=("Courier", 10, "bold"),
+                fg=self.accent_cyan, bg=self.bg_secondary).grid(row=row, column=0, columnspan=2,
+                sticky=tk.W, padx=10, pady=(15, 5))
+        row += 1
+
+        quick_frame = tk.Frame(scrollable_frame, bg=self.bg_secondary)
+        quick_frame.grid(row=row, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
+        row += 1
+
+        quick_searches = [
+            ("🔓 Open RDP", 'port:3389 "Remote Desktop"'),
+            ("🗄️ MongoDB", 'product:"MongoDB" port:27017'),
+            ("📹 Webcams", "has_screenshot:true"),
+            ("🔑 Defaults", '"default password"'),
+            ("🏭 SCADA", "port:502 modbus"),
+        ]
+
+        for name, query in quick_searches:
+            tk.Button(quick_frame, text=name, font=("Courier", 8), bg=self.bg_tertiary,
+                     fg=self.accent_cyan, relief=tk.FLAT, cursor="hand2", padx=6, pady=2,
+                     command=lambda q=query: self.set_shodan_query(q)).pack(side=tk.LEFT, padx=2)
+
+        # ═══════════════════════════════════════════════════════════
+        # BUTTONS SECTION
+        # ═══════════════════════════════════════════════════════════
+        btn_frame = tk.Frame(scrollable_frame, bg=self.bg_secondary)
+        btn_frame.grid(row=row, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=15)
+
+        tk.Button(btn_frame, text="📋 CHEAT SHEET", font=("Courier", 9, "bold"),
+                 bg=self.bg_tertiary, fg=self.accent_cyan, relief=tk.FLAT, padx=15, pady=8,
+                 cursor="hand2", command=lambda: self.show_cheatsheet("shodan")).pack(side=tk.LEFT, padx=5)
+
+        tk.Button(btn_frame, text="💳 CHECK CREDITS", font=("Courier", 9, "bold"),
+                 bg=self.bg_tertiary, fg=self.accent_orange, relief=tk.FLAT, padx=15, pady=8,
+                 cursor="hand2", command=self.check_shodan_credits).pack(side=tk.LEFT, padx=5)
 
         return frame
+
+    def update_shodan_preset_queries(self, event=None):
+        """Update preset query dropdown based on selected category."""
+        category = self.shodan_preset_category.get()
+        queries = self.shodan_presets.get(category, [])
+        self.shodan_preset_query['values'] = [name for name, _ in queries]
+        if queries:
+            self.shodan_preset_query.current(0)
+
+    def apply_shodan_preset(self):
+        """Apply selected preset query to the search field."""
+        category = self.shodan_preset_category.get()
+        query_name = self.shodan_preset_query.get()
+        for name, query in self.shodan_presets.get(category, []):
+            if name == query_name:
+                self.shodan_query.delete(0, tk.END)
+                self.shodan_query.insert(0, query)
+                self.update_status(f"Applied: {query_name}")
+                break
+
+    def set_shodan_query(self, query):
+        """Set the Shodan query field."""
+        self.shodan_query.delete(0, tk.END)
+        self.shodan_query.insert(0, query)
+
+    def build_shodan_query(self):
+        """Build a Shodan query from the filter fields."""
+        parts = []
+        base = self.shodan_query.get().strip()
+        if base:
+            parts.append(base)
+
+        if self.shodan_country.get():
+            parts.append(f"country:{self.shodan_country.get()}")
+        if self.shodan_city.get():
+            parts.append(f'city:"{self.shodan_city.get()}"')
+        if self.shodan_org.get():
+            parts.append(f'org:"{self.shodan_org.get()}"')
+        if self.shodan_port.get():
+            parts.append(f"port:{self.shodan_port.get()}")
+        if self.shodan_net.get():
+            parts.append(f"net:{self.shodan_net.get()}")
+        if self.shodan_asn.get():
+            parts.append(f"asn:{self.shodan_asn.get()}")
+        if self.shodan_product.get():
+            parts.append(f'product:"{self.shodan_product.get()}"')
+        if self.shodan_os.get():
+            parts.append(f'os:"{self.shodan_os.get()}"')
+        if self.shodan_version.get():
+            parts.append(f'version:"{self.shodan_version.get()}"')
+        if self.shodan_title.get():
+            parts.append(f'http.title:"{self.shodan_title.get()}"')
+        if self.shodan_html.get():
+            parts.append(f'http.html:"{self.shodan_html.get()}"')
+        if self.shodan_screenshot_var.get():
+            parts.append("has_screenshot:true")
+        if self.shodan_cve.get():
+            parts.append(f"vuln:{self.shodan_cve.get()}")
+
+        self.shodan_query.delete(0, tk.END)
+        self.shodan_query.insert(0, " ".join(parts))
+        self.update_status(f"Built query with {len(parts)} filters")
+
+    def clear_shodan_filters(self):
+        """Clear all Shodan filter fields."""
+        self.shodan_country.set("")
+        self.shodan_city.delete(0, tk.END)
+        self.shodan_org.delete(0, tk.END)
+        self.shodan_port.delete(0, tk.END)
+        self.shodan_net.delete(0, tk.END)
+        self.shodan_asn.delete(0, tk.END)
+        self.shodan_product.set("")
+        self.shodan_os.set("")
+        self.shodan_version.delete(0, tk.END)
+        self.shodan_title.delete(0, tk.END)
+        self.shodan_html.delete(0, tk.END)
+        self.shodan_screenshot_var.set(False)
+        self.shodan_cve.delete(0, tk.END)
+        self.update_status("Cleared all filters")
+
+    def on_shodan_type_change(self, event=None):
+        """Handle Shodan search type change."""
+        search_type = self.shodan_type.get().split(" - ")[0]
+        placeholders = {
+            "search": "apache port:443 country:US",
+            "host": "8.8.8.8",
+            "domain": "example.com",
+            "dns resolve": "google.com,facebook.com",
+            "dns reverse": "8.8.8.8,8.8.4.4",
+            "exploits": "apache cve",
+            "count": "port:22 country:US",
+            "info": ""
+        }
+        self.shodan_query.delete(0, tk.END)
+        if placeholders.get(search_type):
+            self.shodan_query.insert(0, placeholders[search_type])
+
+    def validate_shodan_api_key(self):
+        """Validate the configured Shodan API key."""
+        api_key = self.config.get("shodan_api_key", "")
+        if not api_key:
+            messagebox.showwarning("No API Key", "No Shodan API key configured.\nGo to Settings to add your API key.")
+            return
+        self.shodan_api_status.config(text="✅ API Key Configured", fg=self.accent_green)
+        self.update_status("API key configured. Run 'info' search to verify.")
+
+    def check_shodan_credits(self):
+        """Check remaining Shodan API credits."""
+        api_key = self.config.get("shodan_api_key", "")
+        if not api_key:
+            messagebox.showwarning("No API Key", "No Shodan API key configured.\nGo to Settings to add your API key.")
+            return
+        self.shodan_type.set("info - API info & credits")
+        self.shodan_query.delete(0, tk.END)
+        self.update_status("Run scan to check Shodan credits")
 
     def create_dnsrecon_tab(self):
         frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
