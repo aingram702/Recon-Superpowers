@@ -3,45 +3,6 @@
 The Recon Superpower
 A professional GUI wrapper for security reconnaissance tools
 For authorized penetration testing, CTF challenges, and security research only
-
-SECURITY MEASURES IMPLEMENTED:
-1. Command Injection Prevention:
-   - All user inputs validated with whitelist/regex patterns
-   - Extra options parsed with shlex.split() to prevent shell injection
-   - Shell metacharacters (;, &, |, $, `, etc.) blocked in all inputs
-   - NULL byte injection prevention (\x00 detection)
-   - subprocess.Popen called with shell=False to prevent shell injection
-
-2. Path Traversal Prevention:
-   - File paths normalized and validated before use
-   - Path traversal patterns (.., ~) blocked
-   - Symlink attacks mitigated with realpath checking
-   - File size limits enforced (100MB max for wordlists)
-   - Save operations restricted to user's home directory
-
-3. Resource Exhaustion Prevention:
-   - Process timeout (1 hour default) to prevent infinite runs
-   - Output line limit (10,000 lines) to prevent memory exhaustion
-   - Thread count validation (max 1000 for Gobuster)
-   - File size validation before loading
-
-4. Thread Safety:
-   - Threading locks for process state management
-   - Stop event for clean process termination
-   - Race condition prevention in scan start/stop operations
-
-5. Input Validation:
-   - Target/hostname: alphanumeric, dots, hyphens, slashes, colons only
-   - URLs: must be http/https with proper format validation
-   - Ports: validated as integers 1-65535
-   - Extensions: alphanumeric and commas only
-   - Thread counts: validated numeric ranges
-
-6. Process Management:
-   - Graceful termination with fallback to force kill
-   - Process groups for clean child process cleanup
-   - Proper error handling for all subprocess operations
-   - Permission error detection and user notification
 """
 
 import tkinter as tk
