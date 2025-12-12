@@ -4505,7 +4505,7 @@ Adjustable:  Yes (via Settings)
         frame.columnconfigure(1, weight=1)
 
         # Target
-        self.nikto_target = self.create_labeled_entry(frame, "Target:", 0, "http://")
+        self.nikto_target = self.create_labeled_entry(frame, "Target:", 0, "http://example.com")
 
         # Port
         self.nikto_port = self.create_labeled_entry(frame, "Port:", 1, "80")
@@ -8502,11 +8502,16 @@ Configure in the Settings tab:
                 if hasattr(self, 'nikto_port'):
                     self.nikto_port.delete(0, tk.END)
                     self.nikto_port.insert(0, config.get('port', '80'))
-                if hasattr(self, 'nikto_ssl'):
-                    self.nikto_ssl.set(config.get('ssl', False))
+                if hasattr(self, 'nikto_ssl_var'):
+                    self.nikto_ssl_var.set(config.get('ssl', False))
                 if hasattr(self, 'nikto_tuning'):
-                    self.nikto_tuning.delete(0, tk.END)
-                    self.nikto_tuning.insert(0, config.get('tuning', 'x'))
+                    # Find matching tuning value in combobox
+                    tuning_val = config.get('tuning', 'x')
+                    values = self.nikto_tuning['values']
+                    for i, val in enumerate(values):
+                        if val.startswith(tuning_val):
+                            self.nikto_tuning.current(i)
+                            break
                 return True
                 
             elif tool == 'dnsrecon':
@@ -9733,8 +9738,10 @@ Configure in the Settings tab:
                     "Invalid target format. Target contains dangerous characters or invalid format.")
                 return None
 
-            scan_type = self.nmap_scan_type.get().split()[0]
-            timing = self.nmap_timing.get().split()[0]
+            scan_type_raw = self.nmap_scan_type.get().strip()
+            scan_type = scan_type_raw.split()[0] if scan_type_raw else "-sT"
+            timing_raw = self.nmap_timing.get().strip()
+            timing = timing_raw.split()[0] if timing_raw else "T3"
             ports = self.nmap_ports.get().strip()
             extra = self.nmap_options.get().strip()
 
@@ -9803,7 +9810,8 @@ Configure in the Settings tab:
                     "Invalid wordlist path. Path contains suspicious patterns.")
                 return None
 
-            mode = self.gobuster_mode.get().split()[0]
+            mode_raw = self.gobuster_mode.get().strip()
+            mode = mode_raw.split()[0] if mode_raw else "dir"
             threads = self.gobuster_threads.get().strip()
             extensions = self.gobuster_extensions.get().strip()
             extra = self.gobuster_options.get().strip()
@@ -9856,7 +9864,8 @@ Configure in the Settings tab:
                     return None
 
             port = self.nikto_port.get().strip()
-            tuning = self.nikto_tuning.get().split()[0]
+            tuning_raw = self.nikto_tuning.get().strip()
+            tuning = tuning_raw.split()[0] if tuning_raw else "x"
             extra = self.nikto_options.get().strip()
 
             # Security: Validate port number
@@ -9903,9 +9912,12 @@ Configure in the Settings tab:
                 return None
 
             # Get options
-            level = self.sqlmap_level.get().split()[0]
-            risk = self.sqlmap_risk.get().split()[0]
-            technique = self.sqlmap_technique.get().split()[0]
+            level_raw = self.sqlmap_level.get().strip()
+            level = level_raw.split()[0] if level_raw else "1"
+            risk_raw = self.sqlmap_risk.get().strip()
+            risk = risk_raw.split()[0] if risk_raw else "1"
+            technique_raw = self.sqlmap_technique.get().strip()
+            technique = technique_raw.split()[0] if technique_raw else "BEUSTQ"
             threads = self.sqlmap_threads.get().strip()
             tamper = self.sqlmap_tamper.get()
             post_data = self.sqlmap_data.get().strip()
@@ -10109,9 +10121,11 @@ Configure in the Settings tab:
                 messagebox.showerror("Error", "Search query too long (max 500 characters)")
                 return None
 
-            search_type = self.shodan_type.get().split()[0]
-            facets = self.shodan_facets.get().strip()
-            limit = self.shodan_limit.get().strip()
+            search_type_raw = self.shodan_type.get().strip()
+            # Handle new format "search - General query search" or old "search (Query search)"
+            search_type = search_type_raw.split()[0] if search_type_raw else "search"
+            facets = self.shodan_facets.get().strip() if hasattr(self.shodan_facets, 'get') else ""
+            limit = self.shodan_limit.get().strip() if hasattr(self.shodan_limit, 'get') else "100"
 
             # SECURITY FIX (HIGH-3): Prevent SSRF - block private IPs for host lookups
             if search_type == "host":
@@ -10178,7 +10192,8 @@ Configure in the Settings tab:
                     messagebox.showerror("Error", "Invalid domain label length (each part must be 1-63 chars)")
                     return None
 
-            scan_type = self.dnsrecon_type.get().split()[0]
+            scan_type_raw = self.dnsrecon_type.get().strip()
+            scan_type = scan_type_raw.split()[0] if scan_type_raw else "std"
             wordlist = self.dnsrecon_wordlist.get().strip()
             nameserver = self.dnsrecon_ns.get().strip()
 
@@ -10502,7 +10517,11 @@ Configure in the Settings tab:
                 messagebox.showwarning("Warning", "A scan is already running")
                 return
 
-        cmd = self.build_command()
+        try:
+            cmd = self.build_command()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to build command: {str(e)}")
+            return
         if not cmd:
             return
 
