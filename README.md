@@ -67,21 +67,21 @@ By using this tool, you agree to use it responsibly and legally.
 5. ☁️ **Cloud Asset Discovery** - AWSBucketDump → GitHarvester → Shodan
 6. ⚡ **Quick Host Discovery** - Nmap (fast) → Nikto (quick)
 
-**Advanced Attack Workflows:**
-7. 🏢 **AD Reconnaissance** - Nmap (AD ports) → enum4linux → MSF LDAP → Kerberos
-8. 🌍 **Web Application Pentesting** - Nmap → Nikto → Gobuster → feroxbuster → Vhost → SQLmap
-9. 🔴 **External Perimeter Assessment** - DNS → Subdomain → Shodan → Nmap → GitHarvester
-10. 🔄 **Internal Network Sweep** - Host Discovery → Service Enum → Windows → MSF
-11. 🔌 **API Security Assessment** - Nmap → Gobuster (API) → feroxbuster → Nikto
-12. 🔑 **Credential Hunting** - GitHarvester → Shodan → Nmap → MSF FTP
-13. 🔒 **SSL/TLS Assessment** - Nmap (SSL scripts) → Nikto HTTPS → Shodan
-14. 📊 **Network Services Audit** - Full Port Scan → Version Detection → Nikto → SMB → SSH
-15. 🥷 **Stealth Reconnaissance** - Slow Nmap → DNS → Shodan → GitHub
-16. 📦 **Full Stack Assessment** - DNS → Nmap → Nikto → Gobuster → enum4linux → Shodan → Git
-17. 🔓 **Vulnerability Assessment** - Nmap (vuln) → Nikto → MSF SMB → Shodan
-18. 🗄️ **Database Discovery** - Nmap (DB ports) → MySQL → MSSQL → Shodan
-19. 📧 **Mail Server Reconnaissance** - DNS MX → Nmap (mail) → SMTP Enum → Shodan
-20. 💉 **SQL Injection Assessment** - Nmap → Nikto → Gobuster → SQLmap
+**Advanced Attack Workflows:** 
+7. 🏢 **AD Reconnaissance** - Nmap (AD ports) → enum4linux → MSF LDAP → Kerberos 
+8. 🌍 **Web Application Pentesting** - Nmap → Nikto → Gobuster → feroxbuster → Vhost → SQLmap 
+9. 🔴 **External Perimeter Assessment** - DNS → Subdomain → Shodan → Nmap → GitHarvester 
+10. 🔄 **Internal Network Sweep** - Host Discovery → Service Enum → Windows → MSF 
+11. 🔌 **API Security Assessment** - Nmap → Gobuster (API) → feroxbuster → Nikto 
+12. 🔑 **Credential Hunting** - GitHarvester → Shodan → Nmap → MSF FTP 
+13. 🔒 **SSL/TLS Assessment** - Nmap (SSL scripts) → Nikto HTTPS → Shodan 
+14. 📊 **Network Services Audit** - Full Port Scan → Version Detection → Nikto → SMB → SSH 
+15. 🥷 **Stealth Reconnaissance** - Slow Nmap → DNS → Shodan → GitHub 
+16. 📦 **Full Stack Assessment** - DNS → Nmap → Nikto → Gobuster → enum4linux → Shodan → Git 
+17. 🔓 **Vulnerability Assessment** - Nmap (vuln) → Nikto → MSF SMB → Shodan 
+18. 🗄️ **Database Discovery** - Nmap (DB ports) → MySQL → MSSQL → Shodan 
+19. 📧 **Mail Server Reconnaissance** - DNS MX → Nmap (mail) → SMTP Enum → Shodan 
+20. 💉 **SQL Injection Assessment** - Nmap → Nikto → Gobuster → SQLmap 
 
 ---
 
