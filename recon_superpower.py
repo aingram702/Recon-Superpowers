@@ -8783,13 +8783,27 @@ Configure in the Settings tab:
                 if hasattr(self, 'nikto_ssl_var'):
                     self.nikto_ssl_var.set(config.get('ssl', False))
                 if hasattr(self, 'nikto_tuning'):
-                    # Find matching tuning value in combobox
                     tuning_val = config.get('tuning', 'x')
                     values = self.nikto_tuning['values']
-                    for i, val in enumerate(values):
-                        if val.startswith(tuning_val):
-                            self.nikto_tuning.current(i)
-                            break
+                    matched = False
+                    # Try to match single-char tuning to combobox
+                    if len(tuning_val) == 1:
+                        for i, val in enumerate(values):
+                            if val.startswith(tuning_val):
+                                self.nikto_tuning.current(i)
+                                matched = True
+                                break
+                    # For multi-char tuning (e.g., "124"), set combobox to default and add to extra options
+                    if not matched and hasattr(self, 'nikto_options'):
+                        self.nikto_tuning.current(6)  # Default to "x (All Tests)"
+                        current_extra = self.nikto_options.get().strip()
+                        new_tuning = f"-Tuning {tuning_val}"
+                        if current_extra:
+                            self.nikto_options.delete(0, tk.END)
+                            self.nikto_options.insert(0, f"{current_extra} {new_tuning}")
+                        else:
+                            self.nikto_options.delete(0, tk.END)
+                            self.nikto_options.insert(0, new_tuning)
                 return True
                 
             elif tool == 'dnsrecon':
@@ -8814,10 +8828,12 @@ Configure in the Settings tab:
                     query = query.replace('[TARGET_IP]', target)
                     query = query.replace('[TARGET_DOMAIN]', target)
                     self.shodan_query.insert(0, query)
-                if hasattr(self, 'shodan_search_type'):
+                if hasattr(self, 'shodan_type'):
                     search_type = config.get('search_type', 'search')
-                    types = {'search': 0, 'host': 1, 'count': 2}
-                    self.shodan_search_type.current(types.get(search_type, 0))
+                    # Fixed: correct attribute name and mapping to match combobox indices
+                    types = {'search': 0, 'host': 1, 'domain': 2, 'dns resolve': 3,
+                             'dns reverse': 4, 'exploits': 5, 'count': 6, 'info': 7}
+                    self.shodan_type.current(types.get(search_type, 0))
                 return True
                 
             elif tool == 'feroxbuster':
@@ -10185,9 +10201,9 @@ Configure in the Settings tab:
                 messagebox.showerror("Error", "Invalid port number. Must be between 1 and 65535")
                 return None
 
-            # Security: Validate tuning parameter (must be single char or digit)
-            if tuning and not re.match(r'^[0-9x]$', tuning):
-                messagebox.showerror("Error", "Invalid tuning option")
+            # Security: Validate tuning parameter (digits 0-9 and/or x, can be combined like "124")
+            if tuning and not re.match(r'^[0-9x]+$', tuning):
+                messagebox.showerror("Error", "Invalid tuning option. Use digits 0-9 and/or x (e.g., '124', 'x', '9')")
                 return None
 
             cmd = ["nikto", "-h", target]
