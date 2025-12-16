@@ -82,39 +82,45 @@ class ReconSuperpower:
         self.recent_urls = deque(maxlen=20)
         self.command_history = deque(maxlen=50)
 
-        # Scan profiles
+        # Scan profiles - FIXED: Use tuples instead of sets for ordered values
+        # Each profile value is a tuple with tool-specific settings in order:
+        # nmap: (scan_type, timing, ports, extra_options)
+        # gobuster: (mode, threads, extensions, extra_options)
+        # nikto: (port, ssl, tuning, extra_options)
+        # sqlmap: (base_options, level_risk, threads)
+        # metasploit: (module, target_option, extra_options)
         self.scan_profiles = {
             "nmap": {
-                "Quick Scan": {"-sS", "T4", "1-1000", ""},
-                "Deep Scan": {"-sS -sV -sC", "T3", "1-65535", "-A"},
-                "Stealth Scan": {"-sS", "T1", "1-1000", "-f"},
-                "UDP Scan": {"-sU", "T3", "53,161,500", ""}
+                "Quick Scan": ("-sS", "T4", "1-1000", ""),
+                "Deep Scan": ("-sS -sV -sC", "T3", "1-65535", "-A"),
+                "Stealth Scan": ("-sS", "T1", "1-1000", "-f"),
+                "UDP Scan": ("-sU", "T3", "53,161,500", "")
             },
             "gobuster": {
-                "Quick Dir": {"dir", "10", "php,html,txt", "-k"},
-                "Deep Dir": {"dir", "50", "php,html,txt,asp,aspx,jsp,js,json,xml", "-k"},
-                "DNS Enum": {"dns", "20", "", ""},
-                "VHost Scan": {"vhost", "10", "", "-k"}
+                "Quick Dir": ("dir", "10", "php,html,txt", "-k"),
+                "Deep Dir": ("dir", "50", "php,html,txt,asp,aspx,jsp,js,json,xml", "-k"),
+                "DNS Enum": ("dns", "20", "", ""),
+                "VHost Scan": ("vhost", "10", "", "-k")
             },
             "nikto": {
-                "Quick": {"80", False, "x", ""},
-                "SSL Scan": {"443", True, "x", ""},
-                "Targeted": {"80", False, "4,6,9", ""}
+                "Quick": ("80", False, "x", ""),
+                "SSL Scan": ("443", True, "x", ""),
+                "Targeted": ("80", False, "4,6,9", "")
             },
             "sqlmap": {
-                "Basic": {"--batch", "--smart", "1"},
-                "Full Scan": {"--batch --forms --crawl=3", "--level=5 --risk=3", "5"},
-                "Quick Test": {"--batch", "--level=1 --risk=1", "1"},
-                "Database Enum": {"--batch --dbs", "--level=3 --risk=2", "3"},
-                "Table Dump": {"--batch --tables", "--level=3 --risk=2", "3"}
+                "Basic": ("--batch", "--smart", "1"),
+                "Full Scan": ("--batch --forms --crawl=3", "--level=5 --risk=3", "5"),
+                "Quick Test": ("--batch", "--level=1 --risk=1", "1"),
+                "Database Enum": ("--batch --dbs", "--level=3 --risk=2", "3"),
+                "Table Dump": ("--batch --tables", "--level=3 --risk=2", "3")
             },
             "metasploit": {
-                "Port Scanner": {"auxiliary/scanner/portscan/tcp", "RHOSTS", "PORTS=1-1000"},
-                "SMB Version": {"auxiliary/scanner/smb/smb_version", "RHOSTS", ""},
-                "SSH Version": {"auxiliary/scanner/ssh/ssh_version", "RHOSTS", ""},
-                "HTTP Version": {"auxiliary/scanner/http/http_version", "RHOSTS", ""},
-                "FTP Version": {"auxiliary/scanner/ftp/ftp_version", "RHOSTS", ""},
-                "SNMP Enum": {"auxiliary/scanner/snmp/snmp_enum", "RHOSTS", ""}
+                "Port Scanner": ("auxiliary/scanner/portscan/tcp", "RHOSTS", "PORTS=1-1000"),
+                "SMB Version": ("auxiliary/scanner/smb/smb_version", "RHOSTS", ""),
+                "SSH Version": ("auxiliary/scanner/ssh/ssh_version", "RHOSTS", ""),
+                "HTTP Version": ("auxiliary/scanner/http/http_version", "RHOSTS", ""),
+                "FTP Version": ("auxiliary/scanner/ftp/ftp_version", "RHOSTS", ""),
+                "SNMP Enum": ("auxiliary/scanner/snmp/snmp_enum", "RHOSTS", "")
             }
         }
 
@@ -4062,7 +4068,7 @@ Adjustable:  Yes (via Settings)
         # Version
         version = tk.Label(
             about_window,
-            text="Version 3.1",
+            text="Version 3.3",
             font=("Courier", 12),
             fg=self.accent_cyan,
             bg=self.bg_primary
@@ -4202,7 +4208,7 @@ Adjustable:  Yes (via Settings)
 
         version_label = tk.Label(
             right_frame,
-            text="v3.1",
+            text="v3.3",
             font=("Courier", 10, "bold"),
             fg=self.accent_purple,
             bg=self.bg_primary
@@ -4560,7 +4566,11 @@ Adjustable:  Yes (via Settings)
             "-sV (Version Detection)",
             "-O (OS Detection)",
             "-A (Aggressive Scan)",
-            "-sn (Ping Scan)"
+            "-sn (Ping Scan)",
+            "-sA (ACK Scan)",
+            "-sF (FIN Scan)",
+            "-sN (NULL Scan)",
+            "-sX (Xmas Scan)"
         ], font=("Courier", 9), state="readonly", width=28)
         self.nmap_scan_type.grid(row=1, column=1, sticky=tk.EW, padx=10, pady=5)
         self.nmap_scan_type.current(0)
@@ -8193,7 +8203,20 @@ Configure in the Settings tab:
             workflow_id = workflow_ids[selected_idx]
             workflow = self.predefined_workflows[workflow_id]
 
-            # Get selected mode
+            # Check what step types the workflow has
+            has_passive = bool(workflow.get('passive_steps', []))
+            has_active = bool(workflow.get('active_steps', []))
+
+            # Auto-set appropriate mode if workflow only has one type of steps
+            if has_active and not has_passive:
+                # Active-only workflow - set to active mode
+                self.workflow_mode.set("active")
+            elif has_passive and not has_active:
+                # Passive-only workflow - set to passive mode
+                self.workflow_mode.set("passive")
+            # If workflow has both, keep user's current selection (defaults to "both")
+
+            # Get selected mode (may have been auto-set above)
             mode = self.workflow_mode.get()
 
             # Build steps list based on mode
@@ -8486,18 +8509,27 @@ Configure in the Settings tab:
             # Get selected mode (passive, active, or both)
             mode = self.workflow_mode.get()
 
-            # Build steps list based on mode
+            # Build steps list based on mode - track step types for display
             workflow_steps = []
             if mode in ("passive", "both"):
                 passive_steps = workflow.get('passive_steps', [])
-                workflow_steps.extend(passive_steps)
+                for step in passive_steps:
+                    step_with_type = step.copy()
+                    step_with_type['_step_type'] = 'PASSIVE'
+                    workflow_steps.append(step_with_type)
             if mode in ("active", "both"):
                 active_steps = workflow.get('active_steps', [])
-                workflow_steps.extend(active_steps)
+                for step in active_steps:
+                    step_with_type = step.copy()
+                    step_with_type['_step_type'] = 'ACTIVE'
+                    workflow_steps.append(step_with_type)
 
             # Fallback to old 'steps' format if present
             if not workflow_steps and 'steps' in workflow:
-                workflow_steps = workflow['steps']
+                for step in workflow['steps']:
+                    step_with_type = step.copy()
+                    step_with_type['_step_type'] = 'LEGACY'
+                    workflow_steps.append(step_with_type)
 
             if not workflow_steps:
                 messagebox.showwarning("No Steps", f"No steps available for mode: {mode.upper()}")
@@ -8578,15 +8610,19 @@ Configure in the Settings tab:
             
             # FIX HIGH-3: Check condition with proper evaluation
             condition = step.get('condition')
+            step_type = step.get('_step_type', 'UNKNOWN')
             if condition:
                 condition_met = self.evaluate_workflow_condition(condition)
                 if not condition_met:
-                    self.append_output(f"\n⏭️  Step {i + 1} SKIPPED: {step['name']} (condition not met: {condition})\n")
+                    step_icon = '🔍' if step_type == 'PASSIVE' else '⚡' if step_type == 'ACTIVE' else '📌'
+                    self.append_output(f"\n⏭️  {step_icon} {step_type} Step {i + 1} SKIPPED: {step['name']} (condition not met: {condition})\n")
                     continue
             
-            # Execute step
+            # Execute step - display step type (PASSIVE/ACTIVE)
+            step_type = step.get('_step_type', 'UNKNOWN')
+            step_icon = '🔍' if step_type == 'PASSIVE' else '⚡' if step_type == 'ACTIVE' else '📌'
             self.append_output(f"\n{'*' * 60}\n")
-            self.append_output(f"▶ Step {i + 1}/{total_steps}: {step['name']}\n")
+            self.append_output(f"{step_icon} {step_type} Step {i + 1}/{total_steps}: {step['name']}\n")
             self.append_output(f"{'*' * 60}\n\n")
             
             # FIX CRIT-2: Execute with timeout
@@ -8679,7 +8715,12 @@ Configure in the Settings tab:
                     self.nmap_target.insert(0, target)
                 if hasattr(self, 'nmap_scan_type'):
                     scan_type = config.get('scan_type', 'SYN')
-                    types = {'SYN': 0, 'TCP': 1, 'UDP': 2, 'PING': 3, 'VERSION': 4}
+                    # Mapping: indices match combobox values
+                    types = {
+                        'SYN': 0, 'TCP': 1, 'UDP': 2, 'VERSION': 3,
+                        'OS': 4, 'AGGRESSIVE': 5, 'PING': 6,
+                        'ACK': 7, 'FIN': 8, 'NULL': 9, 'Xmas': 10
+                    }
                     self.nmap_scan_type.current(types.get(scan_type, 0))
                 if hasattr(self, 'nmap_ports'):
                     self.nmap_ports.delete(0, tk.END)
@@ -8692,6 +8733,19 @@ Configure in the Settings tab:
                         self.nmap_timing.current(idx)
                     except (ValueError, tk.TclError):
                         self.nmap_timing.current(3)
+                # Set NSE scripts if specified in config
+                scripts = config.get('scripts', '')
+                if scripts and hasattr(self, 'nmap_scripts') and hasattr(self, 'nmap_custom_script'):
+                    # Map simple script names to combobox indices
+                    script_map = {'default': 1, 'vuln': 2, 'discovery': 3, 'auth': 4,
+                                  'broadcast': 5, 'exploit': 6, 'safe': 7, 'version': 8}
+                    if scripts in script_map:
+                        self.nmap_scripts.current(script_map[scripts])
+                    else:
+                        # Use custom script field for complex/multiple scripts
+                        self.nmap_scripts.current(9)  # "Custom (enter below)"
+                        self.nmap_custom_script.delete(0, tk.END)
+                        self.nmap_custom_script.insert(0, scripts)
                 return True
                 
             elif tool == 'gobuster':
@@ -8701,6 +8755,10 @@ Configure in the Settings tab:
                     if not target.startswith('http'):
                         target = f"http://{target}"
                     self.gobuster_url.insert(0, target)
+                if hasattr(self, 'gobuster_mode'):
+                    mode = config.get('mode', 'dir')
+                    modes = {'dir': 0, 'dns': 1, 'vhost': 2}
+                    self.gobuster_mode.current(modes.get(mode, 0))
                 if hasattr(self, 'gobuster_wordlist'):
                     self.gobuster_wordlist.delete(0, tk.END)
                     self.gobuster_wordlist.insert(0, config.get('wordlist', '/usr/share/wordlists/dirb/common.txt'))
@@ -8740,7 +8798,8 @@ Configure in the Settings tab:
                     self.dnsrecon_domain.insert(0, target)
                 if hasattr(self, 'dnsrecon_type'):
                     scan_type = config.get('scan_type', 'std')
-                    types = {'std': 0, 'axfr': 1, 'brt': 2, 'srv': 3, 'rvl': 4, 'crt': 5, 'zonewalk': 6}
+                    # Fixed: indices match combobox order (std, axfr, brt, rvl, srv, crt, zonewalk)
+                    types = {'std': 0, 'axfr': 1, 'brt': 2, 'rvl': 3, 'srv': 4, 'crt': 5, 'zonewalk': 6}
                     self.dnsrecon_type.current(types.get(scan_type, 0))
                 if config.get('scan_type') == 'brt' and hasattr(self, 'dnsrecon_wordlist'):
                     self.dnsrecon_wordlist.delete(0, tk.END)
@@ -8885,13 +8944,46 @@ Configure in the Settings tab:
             for step_name, result in self.workflow_results.items():
                 if result and isinstance(result, str):
                     # Look for HTTP port indicators in results
-                    if any(port in result.lower() for port in ['port 80', 'port 443', 'port 8080', 'port 8443', 'http']):
+                    if any(port in result.lower() for port in ['port 80', 'port 8080', 'port 8000', 'port 3000', 'port 5000', '80/tcp', '8080/tcp', 'http']):
                         self.append_output(f"  ℹ️  Condition met: HTTP service detected in previous results\n")
                         return True
-            
+
             self.append_output(f"  ℹ️  Condition not met: No HTTP service detected\n")
             return False
-        
+
+        elif condition == "https_detected":
+            # Check if previous steps found HTTPS ports
+            for step_name, result in self.workflow_results.items():
+                if result and isinstance(result, str):
+                    if any(port in result.lower() for port in ['port 443', 'port 8443', 'port 9443', '443/tcp', '8443/tcp', 'https', 'ssl']):
+                        self.append_output(f"  ℹ️  Condition met: HTTPS service detected in previous results\n")
+                        return True
+
+            self.append_output(f"  ℹ️  Condition not met: No HTTPS service detected\n")
+            return False
+
+        elif condition == "smb_detected":
+            # Check if previous steps found SMB/Windows ports
+            for step_name, result in self.workflow_results.items():
+                if result and isinstance(result, str):
+                    if any(port in result.lower() for port in ['port 445', 'port 139', '445/tcp', '139/tcp', 'smb', 'microsoft-ds', 'netbios']):
+                        self.append_output(f"  ℹ️  Condition met: SMB service detected in previous results\n")
+                        return True
+
+            self.append_output(f"  ℹ️  Condition not met: No SMB service detected\n")
+            return False
+
+        elif condition == "ssh_detected":
+            # Check if previous steps found SSH ports
+            for step_name, result in self.workflow_results.items():
+                if result and isinstance(result, str):
+                    if any(port in result.lower() for port in ['port 22', '22/tcp', 'ssh', 'openssh']):
+                        self.append_output(f"  ℹ️  Condition met: SSH service detected in previous results\n")
+                        return True
+
+            self.append_output(f"  ℹ️  Condition not met: No SSH service detected\n")
+            return False
+
         # Default: condition not recognized, skip step for safety
         self.append_output(f"  ⚠️  Unknown condition '{condition}', skipping step for safety\n")
         return False
@@ -9520,7 +9612,7 @@ Configure in the Settings tab:
 ║  ███████║╚██████╔╝██║     ███████╗██║  ██║██║     ╚██████╔╝╚███╔███╔╝███████╗██║  ██║  ║
 ║  ╚══════╝ ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═╝╚═╝      ╚═════╝  ╚══╝╚══╝ ╚══════╝╚═╝  ╚═╝  ║
 ║                                                                                        ║
-║                            ═══ VERSION 3.1 ═══                                         ║
+║                            ═══ VERSION 3.3 ═══                                         ║
 ║                   Professional Security Reconnaissance Suite                           ║
 ║                                                                                        ║
 ╚════════════════════════════════════════════════════════════════════════════════════════╝
@@ -9539,7 +9631,7 @@ Configure in the Settings tab:
 │  ⚡ UTILITY FEATURES                                                                 │
 ├──────────────────────────────────────────────────────────────────────────────────────┤
 │  🐚 Shellz (16+ Reverse Shell Types)    🔐 Encoders/Decoders (10+ Types)            │
-│  📚 LOLOL (GTFOBins/LOLBAS/LOLAD)       🔄 30 Automated Workflows                   │
+│  📚 LOLOL (GTFOBins/LOLBAS/LOLAD)       🔄 60+ Automated Workflows                  │
 │  ⚙️  Configurable Settings               ❓ Comprehensive Help                       │
 └──────────────────────────────────────────────────────────────────────────────────────┘
 
