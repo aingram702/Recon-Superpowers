@@ -8203,7 +8203,20 @@ Configure in the Settings tab:
             workflow_id = workflow_ids[selected_idx]
             workflow = self.predefined_workflows[workflow_id]
 
-            # Get selected mode
+            # Check what step types the workflow has
+            has_passive = bool(workflow.get('passive_steps', []))
+            has_active = bool(workflow.get('active_steps', []))
+
+            # Auto-set appropriate mode if workflow only has one type of steps
+            if has_active and not has_passive:
+                # Active-only workflow - set to active mode
+                self.workflow_mode.set("active")
+            elif has_passive and not has_active:
+                # Passive-only workflow - set to passive mode
+                self.workflow_mode.set("passive")
+            # If workflow has both, keep user's current selection (defaults to "both")
+
+            # Get selected mode (may have been auto-set above)
             mode = self.workflow_mode.get()
 
             # Build steps list based on mode
