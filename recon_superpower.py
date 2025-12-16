@@ -4566,7 +4566,11 @@ Adjustable:  Yes (via Settings)
             "-sV (Version Detection)",
             "-O (OS Detection)",
             "-A (Aggressive Scan)",
-            "-sn (Ping Scan)"
+            "-sn (Ping Scan)",
+            "-sA (ACK Scan)",
+            "-sF (FIN Scan)",
+            "-sN (NULL Scan)",
+            "-sX (Xmas Scan)"
         ], font=("Courier", 9), state="readonly", width=28)
         self.nmap_scan_type.grid(row=1, column=1, sticky=tk.EW, padx=10, pady=5)
         self.nmap_scan_type.current(0)
@@ -8698,7 +8702,12 @@ Configure in the Settings tab:
                     self.nmap_target.insert(0, target)
                 if hasattr(self, 'nmap_scan_type'):
                     scan_type = config.get('scan_type', 'SYN')
-                    types = {'SYN': 0, 'TCP': 1, 'UDP': 2, 'PING': 3, 'VERSION': 4}
+                    # Mapping: indices match combobox values
+                    types = {
+                        'SYN': 0, 'TCP': 1, 'UDP': 2, 'VERSION': 3,
+                        'OS': 4, 'AGGRESSIVE': 5, 'PING': 6,
+                        'ACK': 7, 'FIN': 8, 'NULL': 9, 'Xmas': 10
+                    }
                     self.nmap_scan_type.current(types.get(scan_type, 0))
                 if hasattr(self, 'nmap_ports'):
                     self.nmap_ports.delete(0, tk.END)
@@ -8711,6 +8720,19 @@ Configure in the Settings tab:
                         self.nmap_timing.current(idx)
                     except (ValueError, tk.TclError):
                         self.nmap_timing.current(3)
+                # Set NSE scripts if specified in config
+                scripts = config.get('scripts', '')
+                if scripts and hasattr(self, 'nmap_scripts') and hasattr(self, 'nmap_custom_script'):
+                    # Map simple script names to combobox indices
+                    script_map = {'default': 1, 'vuln': 2, 'discovery': 3, 'auth': 4,
+                                  'broadcast': 5, 'exploit': 6, 'safe': 7, 'version': 8}
+                    if scripts in script_map:
+                        self.nmap_scripts.current(script_map[scripts])
+                    else:
+                        # Use custom script field for complex/multiple scripts
+                        self.nmap_scripts.current(9)  # "Custom (enter below)"
+                        self.nmap_custom_script.delete(0, tk.END)
+                        self.nmap_custom_script.insert(0, scripts)
                 return True
                 
             elif tool == 'gobuster':
@@ -8720,6 +8742,10 @@ Configure in the Settings tab:
                     if not target.startswith('http'):
                         target = f"http://{target}"
                     self.gobuster_url.insert(0, target)
+                if hasattr(self, 'gobuster_mode'):
+                    mode = config.get('mode', 'dir')
+                    modes = {'dir': 0, 'dns': 1, 'vhost': 2}
+                    self.gobuster_mode.current(modes.get(mode, 0))
                 if hasattr(self, 'gobuster_wordlist'):
                     self.gobuster_wordlist.delete(0, tk.END)
                     self.gobuster_wordlist.insert(0, config.get('wordlist', '/usr/share/wordlists/dirb/common.txt'))
@@ -8759,7 +8785,8 @@ Configure in the Settings tab:
                     self.dnsrecon_domain.insert(0, target)
                 if hasattr(self, 'dnsrecon_type'):
                     scan_type = config.get('scan_type', 'std')
-                    types = {'std': 0, 'axfr': 1, 'brt': 2, 'srv': 3, 'rvl': 4, 'crt': 5, 'zonewalk': 6}
+                    # Fixed: indices match combobox order (std, axfr, brt, rvl, srv, crt, zonewalk)
+                    types = {'std': 0, 'axfr': 1, 'brt': 2, 'rvl': 3, 'srv': 4, 'crt': 5, 'zonewalk': 6}
                     self.dnsrecon_type.current(types.get(scan_type, 0))
                 if config.get('scan_type') == 'brt' and hasattr(self, 'dnsrecon_wordlist'):
                     self.dnsrecon_wordlist.delete(0, tk.END)
@@ -8904,13 +8931,46 @@ Configure in the Settings tab:
             for step_name, result in self.workflow_results.items():
                 if result and isinstance(result, str):
                     # Look for HTTP port indicators in results
-                    if any(port in result.lower() for port in ['port 80', 'port 443', 'port 8080', 'port 8443', 'http']):
+                    if any(port in result.lower() for port in ['port 80', 'port 8080', 'port 8000', 'port 3000', 'port 5000', '80/tcp', '8080/tcp', 'http']):
                         self.append_output(f"  ℹ️  Condition met: HTTP service detected in previous results\n")
                         return True
-            
+
             self.append_output(f"  ℹ️  Condition not met: No HTTP service detected\n")
             return False
-        
+
+        elif condition == "https_detected":
+            # Check if previous steps found HTTPS ports
+            for step_name, result in self.workflow_results.items():
+                if result and isinstance(result, str):
+                    if any(port in result.lower() for port in ['port 443', 'port 8443', 'port 9443', '443/tcp', '8443/tcp', 'https', 'ssl']):
+                        self.append_output(f"  ℹ️  Condition met: HTTPS service detected in previous results\n")
+                        return True
+
+            self.append_output(f"  ℹ️  Condition not met: No HTTPS service detected\n")
+            return False
+
+        elif condition == "smb_detected":
+            # Check if previous steps found SMB/Windows ports
+            for step_name, result in self.workflow_results.items():
+                if result and isinstance(result, str):
+                    if any(port in result.lower() for port in ['port 445', 'port 139', '445/tcp', '139/tcp', 'smb', 'microsoft-ds', 'netbios']):
+                        self.append_output(f"  ℹ️  Condition met: SMB service detected in previous results\n")
+                        return True
+
+            self.append_output(f"  ℹ️  Condition not met: No SMB service detected\n")
+            return False
+
+        elif condition == "ssh_detected":
+            # Check if previous steps found SSH ports
+            for step_name, result in self.workflow_results.items():
+                if result and isinstance(result, str):
+                    if any(port in result.lower() for port in ['port 22', '22/tcp', 'ssh', 'openssh']):
+                        self.append_output(f"  ℹ️  Condition met: SSH service detected in previous results\n")
+                        return True
+
+            self.append_output(f"  ℹ️  Condition not met: No SSH service detected\n")
+            return False
+
         # Default: condition not recognized, skip step for safety
         self.append_output(f"  ⚠️  Unknown condition '{condition}', skipping step for safety\n")
         return False
