@@ -82,39 +82,45 @@ class ReconSuperpower:
         self.recent_urls = deque(maxlen=20)
         self.command_history = deque(maxlen=50)
 
-        # Scan profiles
+        # Scan profiles - FIXED: Use tuples instead of sets for ordered values
+        # Each profile value is a tuple with tool-specific settings in order:
+        # nmap: (scan_type, timing, ports, extra_options)
+        # gobuster: (mode, threads, extensions, extra_options)
+        # nikto: (port, ssl, tuning, extra_options)
+        # sqlmap: (base_options, level_risk, threads)
+        # metasploit: (module, target_option, extra_options)
         self.scan_profiles = {
             "nmap": {
-                "Quick Scan": {"-sS", "T4", "1-1000", ""},
-                "Deep Scan": {"-sS -sV -sC", "T3", "1-65535", "-A"},
-                "Stealth Scan": {"-sS", "T1", "1-1000", "-f"},
-                "UDP Scan": {"-sU", "T3", "53,161,500", ""}
+                "Quick Scan": ("-sS", "T4", "1-1000", ""),
+                "Deep Scan": ("-sS -sV -sC", "T3", "1-65535", "-A"),
+                "Stealth Scan": ("-sS", "T1", "1-1000", "-f"),
+                "UDP Scan": ("-sU", "T3", "53,161,500", "")
             },
             "gobuster": {
-                "Quick Dir": {"dir", "10", "php,html,txt", "-k"},
-                "Deep Dir": {"dir", "50", "php,html,txt,asp,aspx,jsp,js,json,xml", "-k"},
-                "DNS Enum": {"dns", "20", "", ""},
-                "VHost Scan": {"vhost", "10", "", "-k"}
+                "Quick Dir": ("dir", "10", "php,html,txt", "-k"),
+                "Deep Dir": ("dir", "50", "php,html,txt,asp,aspx,jsp,js,json,xml", "-k"),
+                "DNS Enum": ("dns", "20", "", ""),
+                "VHost Scan": ("vhost", "10", "", "-k")
             },
             "nikto": {
-                "Quick": {"80", False, "x", ""},
-                "SSL Scan": {"443", True, "x", ""},
-                "Targeted": {"80", False, "4,6,9", ""}
+                "Quick": ("80", False, "x", ""),
+                "SSL Scan": ("443", True, "x", ""),
+                "Targeted": ("80", False, "4,6,9", "")
             },
             "sqlmap": {
-                "Basic": {"--batch", "--smart", "1"},
-                "Full Scan": {"--batch --forms --crawl=3", "--level=5 --risk=3", "5"},
-                "Quick Test": {"--batch", "--level=1 --risk=1", "1"},
-                "Database Enum": {"--batch --dbs", "--level=3 --risk=2", "3"},
-                "Table Dump": {"--batch --tables", "--level=3 --risk=2", "3"}
+                "Basic": ("--batch", "--smart", "1"),
+                "Full Scan": ("--batch --forms --crawl=3", "--level=5 --risk=3", "5"),
+                "Quick Test": ("--batch", "--level=1 --risk=1", "1"),
+                "Database Enum": ("--batch --dbs", "--level=3 --risk=2", "3"),
+                "Table Dump": ("--batch --tables", "--level=3 --risk=2", "3")
             },
             "metasploit": {
-                "Port Scanner": {"auxiliary/scanner/portscan/tcp", "RHOSTS", "PORTS=1-1000"},
-                "SMB Version": {"auxiliary/scanner/smb/smb_version", "RHOSTS", ""},
-                "SSH Version": {"auxiliary/scanner/ssh/ssh_version", "RHOSTS", ""},
-                "HTTP Version": {"auxiliary/scanner/http/http_version", "RHOSTS", ""},
-                "FTP Version": {"auxiliary/scanner/ftp/ftp_version", "RHOSTS", ""},
-                "SNMP Enum": {"auxiliary/scanner/snmp/snmp_enum", "RHOSTS", ""}
+                "Port Scanner": ("auxiliary/scanner/portscan/tcp", "RHOSTS", "PORTS=1-1000"),
+                "SMB Version": ("auxiliary/scanner/smb/smb_version", "RHOSTS", ""),
+                "SSH Version": ("auxiliary/scanner/ssh/ssh_version", "RHOSTS", ""),
+                "HTTP Version": ("auxiliary/scanner/http/http_version", "RHOSTS", ""),
+                "FTP Version": ("auxiliary/scanner/ftp/ftp_version", "RHOSTS", ""),
+                "SNMP Enum": ("auxiliary/scanner/snmp/snmp_enum", "RHOSTS", "")
             }
         }
 
@@ -4062,7 +4068,7 @@ Adjustable:  Yes (via Settings)
         # Version
         version = tk.Label(
             about_window,
-            text="Version 3.1",
+            text="Version 3.3",
             font=("Courier", 12),
             fg=self.accent_cyan,
             bg=self.bg_primary
@@ -4202,7 +4208,7 @@ Adjustable:  Yes (via Settings)
 
         version_label = tk.Label(
             right_frame,
-            text="v3.1",
+            text="v3.3",
             font=("Courier", 10, "bold"),
             fg=self.accent_purple,
             bg=self.bg_primary
@@ -8486,18 +8492,27 @@ Configure in the Settings tab:
             # Get selected mode (passive, active, or both)
             mode = self.workflow_mode.get()
 
-            # Build steps list based on mode
+            # Build steps list based on mode - track step types for display
             workflow_steps = []
             if mode in ("passive", "both"):
                 passive_steps = workflow.get('passive_steps', [])
-                workflow_steps.extend(passive_steps)
+                for step in passive_steps:
+                    step_with_type = step.copy()
+                    step_with_type['_step_type'] = 'PASSIVE'
+                    workflow_steps.append(step_with_type)
             if mode in ("active", "both"):
                 active_steps = workflow.get('active_steps', [])
-                workflow_steps.extend(active_steps)
+                for step in active_steps:
+                    step_with_type = step.copy()
+                    step_with_type['_step_type'] = 'ACTIVE'
+                    workflow_steps.append(step_with_type)
 
             # Fallback to old 'steps' format if present
             if not workflow_steps and 'steps' in workflow:
-                workflow_steps = workflow['steps']
+                for step in workflow['steps']:
+                    step_with_type = step.copy()
+                    step_with_type['_step_type'] = 'LEGACY'
+                    workflow_steps.append(step_with_type)
 
             if not workflow_steps:
                 messagebox.showwarning("No Steps", f"No steps available for mode: {mode.upper()}")
@@ -8578,15 +8593,19 @@ Configure in the Settings tab:
             
             # FIX HIGH-3: Check condition with proper evaluation
             condition = step.get('condition')
+            step_type = step.get('_step_type', 'UNKNOWN')
             if condition:
                 condition_met = self.evaluate_workflow_condition(condition)
                 if not condition_met:
-                    self.append_output(f"\n⏭️  Step {i + 1} SKIPPED: {step['name']} (condition not met: {condition})\n")
+                    step_icon = '🔍' if step_type == 'PASSIVE' else '⚡' if step_type == 'ACTIVE' else '📌'
+                    self.append_output(f"\n⏭️  {step_icon} {step_type} Step {i + 1} SKIPPED: {step['name']} (condition not met: {condition})\n")
                     continue
             
-            # Execute step
+            # Execute step - display step type (PASSIVE/ACTIVE)
+            step_type = step.get('_step_type', 'UNKNOWN')
+            step_icon = '🔍' if step_type == 'PASSIVE' else '⚡' if step_type == 'ACTIVE' else '📌'
             self.append_output(f"\n{'*' * 60}\n")
-            self.append_output(f"▶ Step {i + 1}/{total_steps}: {step['name']}\n")
+            self.append_output(f"{step_icon} {step_type} Step {i + 1}/{total_steps}: {step['name']}\n")
             self.append_output(f"{'*' * 60}\n\n")
             
             # FIX CRIT-2: Execute with timeout
