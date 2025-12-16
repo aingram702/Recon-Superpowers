@@ -169,6 +169,8 @@ class TestValidateDomain:
         "sub.example.com",
         "my-domain.co.uk",
         "test123.example.org",
+        "x.co",  # Single character subdomain
+        "a",     # Single character domain (rare but valid)
     ])
     def test_valid_domains(self, domain: str) -> None:
         """Valid domains should pass validation."""

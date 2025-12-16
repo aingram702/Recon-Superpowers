@@ -183,7 +183,8 @@ def validate_domain(domain: str) -> ValidationResult:
         return ValidationResult(False, "Domain contains invalid characters")
 
     # Domain must be alphanumeric with dots and hyphens
-    if not re.match(r'^[a-zA-Z0-9][a-zA-Z0-9.\-]*[a-zA-Z0-9]$', domain):
+    # Allow single character domains (e.g., "x.co") and multi-character
+    if not re.match(r'^[a-zA-Z0-9]([a-zA-Z0-9.\-]*[a-zA-Z0-9])?$', domain):
         return ValidationResult(False, "Invalid domain format")
 
     # No consecutive dots

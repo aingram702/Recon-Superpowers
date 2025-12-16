@@ -116,38 +116,45 @@ ALLOWED_BPF_KEYWORDS: Tuple[str, ...] = (
 # SCAN PROFILES
 # =============================================================================
 
+# Note: Each profile value is a tuple with tool-specific settings
+# Using tuples instead of sets to preserve ordering
 SCAN_PROFILES: Dict[str, Dict[str, Any]] = {
     "nmap": {
-        "Quick Scan": {"-sS", "T4", "1-1000", ""},
-        "Deep Scan": {"-sS -sV -sC", "T3", "1-65535", "-A"},
-        "Stealth Scan": {"-sS", "T1", "1-1000", "-f"},
-        "UDP Scan": {"-sU", "T3", "53,161,500", ""}
+        # (scan_type, timing, ports, extra_options)
+        "Quick Scan": ("-sS", "T4", "1-1000", ""),
+        "Deep Scan": ("-sS -sV -sC", "T3", "1-65535", "-A"),
+        "Stealth Scan": ("-sS", "T1", "1-1000", "-f"),
+        "UDP Scan": ("-sU", "T3", "53,161,500", "")
     },
     "gobuster": {
-        "Quick Dir": {"dir", "10", "php,html,txt", "-k"},
-        "Deep Dir": {"dir", "50", "php,html,txt,asp,aspx,jsp,js,json,xml", "-k"},
-        "DNS Enum": {"dns", "20", "", ""},
-        "VHost Scan": {"vhost", "10", "", "-k"}
+        # (mode, threads, extensions, extra_options)
+        "Quick Dir": ("dir", "10", "php,html,txt", "-k"),
+        "Deep Dir": ("dir", "50", "php,html,txt,asp,aspx,jsp,js,json,xml", "-k"),
+        "DNS Enum": ("dns", "20", "", ""),
+        "VHost Scan": ("vhost", "10", "", "-k")
     },
     "nikto": {
-        "Quick": {"80", False, "x", ""},
-        "SSL Scan": {"443", True, "x", ""},
-        "Targeted": {"80", False, "4,6,9", ""}
+        # (port, ssl, tuning, extra_options)
+        "Quick": ("80", False, "x", ""),
+        "SSL Scan": ("443", True, "x", ""),
+        "Targeted": ("80", False, "4,6,9", "")
     },
     "sqlmap": {
-        "Basic": {"--batch", "--smart", "1"},
-        "Full Scan": {"--batch --forms --crawl=3", "--level=5 --risk=3", "5"},
-        "Quick Test": {"--batch", "--level=1 --risk=1", "1"},
-        "Database Enum": {"--batch --dbs", "--level=3 --risk=2", "3"},
-        "Table Dump": {"--batch --tables", "--level=3 --risk=2", "3"}
+        # (base_options, level_risk, threads)
+        "Basic": ("--batch", "--smart", "1"),
+        "Full Scan": ("--batch --forms --crawl=3", "--level=5 --risk=3", "5"),
+        "Quick Test": ("--batch", "--level=1 --risk=1", "1"),
+        "Database Enum": ("--batch --dbs", "--level=3 --risk=2", "3"),
+        "Table Dump": ("--batch --tables", "--level=3 --risk=2", "3")
     },
     "metasploit": {
-        "Port Scanner": {"auxiliary/scanner/portscan/tcp", "RHOSTS", "PORTS=1-1000"},
-        "SMB Version": {"auxiliary/scanner/smb/smb_version", "RHOSTS", ""},
-        "SSH Version": {"auxiliary/scanner/ssh/ssh_version", "RHOSTS", ""},
-        "HTTP Version": {"auxiliary/scanner/http/http_version", "RHOSTS", ""},
-        "FTP Version": {"auxiliary/scanner/ftp/ftp_version", "RHOSTS", ""},
-        "SNMP Enum": {"auxiliary/scanner/snmp/snmp_enum", "RHOSTS", ""}
+        # (module, target_option, extra_options)
+        "Port Scanner": ("auxiliary/scanner/portscan/tcp", "RHOSTS", "PORTS=1-1000"),
+        "SMB Version": ("auxiliary/scanner/smb/smb_version", "RHOSTS", ""),
+        "SSH Version": ("auxiliary/scanner/ssh/ssh_version", "RHOSTS", ""),
+        "HTTP Version": ("auxiliary/scanner/http/http_version", "RHOSTS", ""),
+        "FTP Version": ("auxiliary/scanner/ftp/ftp_version", "RHOSTS", ""),
+        "SNMP Enum": ("auxiliary/scanner/snmp/snmp_enum", "RHOSTS", "")
     }
 }
 
