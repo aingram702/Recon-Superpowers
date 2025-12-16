@@ -1,8 +1,8 @@
-# ⚡ The Recon Superpower v3.2
+# ⚡ The Recon Superpower v3.3
 
 A professional **Monokai-themed** GUI wrapper for **12 essential security reconnaissance tools** with **60+ automated workflows**, advanced features, API integrations, and comprehensive security hardening.
 
-![Version](https://img.shields.io/badge/version-3.2-brightgreen)
+![Version](https://img.shields.io/badge/version-3.3-brightgreen)
 ![Python](https://img.shields.io/badge/python-3.6%2B-blue)
 ![License](https://img.shields.io/badge/license-MIT-orange)
 ![Security](https://img.shields.io/badge/security-hardened-brightgreen)
@@ -802,6 +802,21 @@ Use this tool responsibly and legally.
 
 ## 📝 Changelog
 
+### v3.3 (2025-12-16)
+- **Modular Architecture** - New package structure with separated modules for config, core, ui, and utils
+- **Enhanced Shodan Tab** - Comprehensive query builder with presets for common searches
+- **Improved Nikto Scanner** - Better robustness and error handling
+- **Centralized Settings** - New Settings singleton class with configuration persistence
+- **Security Logging** - Dedicated security logger with event tracking
+- **Input Validators** - Comprehensive validation module with 15+ validator functions
+- **Test Suite** - Added pytest-based tests for validators, config, and logging
+
+### v3.2 (2025-12-10)
+- **Code Quality Overhaul** - Major refactoring with modular architecture
+- **Expanded Shellz Tab** - Comprehensive shell categories with more payload options
+- **Passive/Active Scanning Modes** - All 30 workflows now support passive and active modes
+- **Logo and Icon Integration** - Added dark hacker-themed logo and icon
+
 ### v3.1 (2025-12-08)
 - **Monokai Theme** - Complete UI overhaul with Monokai terminal color scheme
 - **30 Workflows** - Added 10 new specialized workflows (network mapper, web vuln hunter, OSINT gather, password hunt, infrastructure map, API pentest, subdomain hunter, cloud pentest, red team initial, blue team audit)
@@ -851,7 +866,7 @@ Use this tool responsibly and legally.
 ---
 
 **Project**: Recon-Superpowers
-**Version**: 3.1
+**Version**: 3.3
 **Author**: aingram702
 **Repository**: https://github.com/aingram702/Recon-Superpowers
 **License**: MIT
