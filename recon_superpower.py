@@ -3590,6 +3590,265 @@ Adjustable:  Yes (via Settings)
                     {"tool": "dnsrecon", "name": "Subdomain Discovery", "config": {"scan_type": "brt", "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt"}},
                     {"tool": "nmap", "name": "Service Discovery", "config": {"scan_type": "SYN", "ports": "21,22,80,443,3389,8080,8443", "timing": "T4"}}
                 ]
+            },
+            # ============================================
+            # ACTIVE-FOCUSED RECONNAISSANCE WORKFLOWS
+            # ============================================
+            "aggressive_port_scan": {
+                "name": "⚡ Aggressive Full Port Scan",
+                "description": "Complete 65535 port scan with aggressive service detection",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Quick Intel Lookup", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Full TCP Port Scan", "config": {"scan_type": "SYN", "ports": "1-65535", "timing": "T4", "scripts": "default"}},
+                    {"tool": "nmap", "name": "Top 1000 UDP Ports", "config": {"scan_type": "UDP", "ports": "1-1000", "timing": "T4"}},
+                    {"tool": "nmap", "name": "Aggressive Service Detection", "config": {"scan_type": "SYN", "ports": "1-10000", "timing": "T4", "scripts": "version,default,vuln"}},
+                    {"tool": "nmap", "name": "OS Fingerprinting", "config": {"scan_type": "SYN", "ports": "22,80,443,445,3389", "timing": "T4", "scripts": "smb-os-discovery"}}
+                ]
+            },
+            "web_pentesting_suite": {
+                "name": "⚡ Web Application Pentesting Suite",
+                "description": "Comprehensive active web application security testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Web Tech Detection", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Web Port Discovery", "config": {"scan_type": "SYN", "ports": "80,443,8000,8080,8443,8888,9000,9443,3000,4443,5000,5443", "timing": "T4", "scripts": "http-enum,http-headers,http-methods,http-robots.txt,http-title,http-server-header"}},
+                    {"tool": "nikto", "name": "Web Vulnerability Scan", "config": {"port": "80", "ssl": False, "tuning": "x"}},
+                    {"tool": "nikto", "name": "SSL Web Vulnerability Scan", "config": {"port": "443", "ssl": True, "tuning": "x"}},
+                    {"tool": "gobuster", "name": "Directory Brute Force", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt", "extensions": "php,asp,aspx,jsp,html,js,json,xml,txt,bak,old,inc,zip,tar,gz,sql,log,conf,config", "threads": "50"}},
+                    {"tool": "gobuster", "name": "File Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/raft-large-files.txt", "extensions": "php,asp,aspx,jsp,html,txt,bak,old,sql,zip,tar,gz", "threads": "50"}},
+                    {"tool": "feroxbuster", "name": "Recursive Deep Crawl", "config": {"wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "php,html,js,json,xml,txt,bak,old,inc,zip,tar,gz,sql,log", "threads": "60", "depth": "5"}},
+                    {"tool": "sqlmap", "name": "SQL Injection Testing", "config": {"level": "5", "risk": "3", "batch": True, "forms": True, "random_agent": True, "dbs": True}},
+                    {"tool": "nmap", "name": "Web Vulnerability Scripts", "config": {"scan_type": "SYN", "ports": "80,443,8080,8443", "timing": "T4", "scripts": "http-vuln-cve2017-5638,http-vuln-cve2014-3704,http-shellshock,http-slowloris-check"}}
+                ]
+            },
+            "exploitation_recon": {
+                "name": "⚡ Exploitation Reconnaissance",
+                "description": "Identify exploitable services and known vulnerabilities",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Known CVE Search", "config": {"search_type": "search", "query": "ip:[TARGET_IP] vuln:CVE"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Vulnerability Scan", "config": {"scan_type": "SYN", "ports": "1-10000", "timing": "T4", "scripts": "vuln"}},
+                    {"tool": "nmap", "name": "SMB Vulnerability Check", "config": {"scan_type": "SYN", "ports": "139,445", "timing": "T4", "scripts": "smb-vuln-ms17-010,smb-vuln-ms08-067,smb-vuln-cve-2017-7494,smb-vuln-conficker"}},
+                    {"tool": "nmap", "name": "SSL/TLS Vulnerabilities", "config": {"scan_type": "SYN", "ports": "443,8443,993,995,465,636", "timing": "T4", "scripts": "ssl-heartbleed,ssl-poodle,ssl-ccs-injection,ssl-dh-params"}},
+                    {"tool": "nmap", "name": "RDP Vulnerabilities", "config": {"scan_type": "SYN", "ports": "3389", "timing": "T4", "scripts": "rdp-vuln-ms12-020,rdp-enum-encryption"}},
+                    {"tool": "metasploit", "name": "EternalBlue Check", "config": {"module": "auxiliary/scanner/smb/smb_ms17_010", "threads": "10"}},
+                    {"tool": "metasploit", "name": "BlueKeep Check", "config": {"module": "auxiliary/scanner/rdp/cve_2019_0708_bluekeep", "threads": "10"}},
+                    {"tool": "nikto", "name": "Web Exploit Check", "config": {"port": "80", "ssl": False, "tuning": "9"}},
+                    {"tool": "nmap", "name": "Default Credential Check", "config": {"scan_type": "SYN", "ports": "21,22,23,3306,5432,1433,27017", "timing": "T4", "scripts": "ftp-anon,ssh-auth-methods,mysql-empty-password,ms-sql-empty-password,mongodb-info"}}
+                ]
+            },
+            "credential_audit": {
+                "name": "⚡ Credential & Authentication Audit",
+                "description": "Test for weak credentials and authentication flaws",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Service Intel", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Auth Service Discovery", "config": {"scan_type": "SYN", "ports": "21,22,23,25,110,143,389,445,1433,3306,3389,5432,5900,6379,27017", "timing": "T4", "scripts": "default,version"}},
+                    {"tool": "nmap", "name": "FTP Anonymous Check", "config": {"scan_type": "SYN", "ports": "21", "timing": "T4", "scripts": "ftp-anon,ftp-brute"}},
+                    {"tool": "nmap", "name": "SSH Auth Methods", "config": {"scan_type": "SYN", "ports": "22", "timing": "T4", "scripts": "ssh-auth-methods,ssh-brute"}},
+                    {"tool": "nmap", "name": "Telnet Bruteforce", "config": {"scan_type": "SYN", "ports": "23", "timing": "T4", "scripts": "telnet-brute"}},
+                    {"tool": "nmap", "name": "MySQL Auth Check", "config": {"scan_type": "SYN", "ports": "3306", "timing": "T4", "scripts": "mysql-empty-password,mysql-brute,mysql-info"}},
+                    {"tool": "nmap", "name": "MSSQL Auth Check", "config": {"scan_type": "SYN", "ports": "1433", "timing": "T4", "scripts": "ms-sql-empty-password,ms-sql-brute,ms-sql-info"}},
+                    {"tool": "nmap", "name": "PostgreSQL Auth Check", "config": {"scan_type": "SYN", "ports": "5432", "timing": "T4", "scripts": "pgsql-brute"}},
+                    {"tool": "nmap", "name": "VNC Auth Check", "config": {"scan_type": "SYN", "ports": "5900,5901", "timing": "T4", "scripts": "vnc-brute,vnc-info"}},
+                    {"tool": "nmap", "name": "Redis Auth Check", "config": {"scan_type": "SYN", "ports": "6379", "timing": "T4", "scripts": "redis-info,redis-brute"}},
+                    {"tool": "nmap", "name": "LDAP Anonymous Bind", "config": {"scan_type": "SYN", "ports": "389,636", "timing": "T4", "scripts": "ldap-brute,ldap-rootdse"}},
+                    {"tool": "enum4linux", "name": "SMB Credential Enum", "config": {"all_enum": True}},
+                    {"tool": "metasploit", "name": "SMB Login Check", "config": {"module": "auxiliary/scanner/smb/smb_login", "threads": "10"}}
+                ]
+            },
+            "database_pentest": {
+                "name": "⚡ Database Penetration Testing",
+                "description": "Comprehensive database security assessment",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Database Exposure Check", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:3306,5432,1433,1521,27017,6379,9200"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Database Port Discovery", "config": {"scan_type": "SYN", "ports": "1433,1434,1521,1830,2483,2484,3050,3306,5432,5433,6379,7474,7687,8086,9042,9200,9300,11211,27017,27018,28017,50000", "timing": "T4", "scripts": "default,version"}},
+                    {"tool": "nmap", "name": "MySQL Enumeration", "config": {"scan_type": "SYN", "ports": "3306", "timing": "T4", "scripts": "mysql-info,mysql-databases,mysql-enum,mysql-empty-password,mysql-brute,mysql-audit"}},
+                    {"tool": "nmap", "name": "MSSQL Enumeration", "config": {"scan_type": "SYN", "ports": "1433,1434", "timing": "T4", "scripts": "ms-sql-info,ms-sql-config,ms-sql-dump-hashes,ms-sql-empty-password,ms-sql-brute"}},
+                    {"tool": "nmap", "name": "PostgreSQL Enumeration", "config": {"scan_type": "SYN", "ports": "5432", "timing": "T4", "scripts": "pgsql-brute"}},
+                    {"tool": "nmap", "name": "Oracle Enumeration", "config": {"scan_type": "SYN", "ports": "1521,1830", "timing": "T4", "scripts": "oracle-tns-version,oracle-sid-brute,oracle-brute"}},
+                    {"tool": "nmap", "name": "MongoDB Enumeration", "config": {"scan_type": "SYN", "ports": "27017,27018,28017", "timing": "T4", "scripts": "mongodb-info,mongodb-databases,mongodb-brute"}},
+                    {"tool": "nmap", "name": "Redis Enumeration", "config": {"scan_type": "SYN", "ports": "6379", "timing": "T4", "scripts": "redis-info,redis-brute"}},
+                    {"tool": "nmap", "name": "Elasticsearch Enumeration", "config": {"scan_type": "SYN", "ports": "9200,9300", "timing": "T4", "scripts": "http-headers"}},
+                    {"tool": "metasploit", "name": "MySQL Login Scan", "config": {"module": "auxiliary/scanner/mysql/mysql_login", "threads": "10"}},
+                    {"tool": "metasploit", "name": "MSSQL Login Scan", "config": {"module": "auxiliary/scanner/mssql/mssql_login", "threads": "10"}},
+                    {"tool": "sqlmap", "name": "SQL Injection Deep Test", "config": {"level": "5", "risk": "3", "batch": True, "forms": True, "dbs": True}}
+                ]
+            },
+            "network_pivoting": {
+                "name": "⚡ Network Pivoting Assessment",
+                "description": "Identify potential pivot points for lateral movement",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Network Intel", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Dual-Homed Host Discovery", "config": {"scan_type": "SYN", "ports": "22,23,80,135,139,443,445,3389,5985,5986", "timing": "T4", "scripts": "default,version"}},
+                    {"tool": "nmap", "name": "Remote Access Services", "config": {"scan_type": "SYN", "ports": "22,23,3389,5900,5985,5986", "timing": "T4", "scripts": "ssh-hostkey,vnc-info,rdp-enum-encryption"}},
+                    {"tool": "nmap", "name": "Proxy/Gateway Detection", "config": {"scan_type": "SYN", "ports": "80,443,1080,3128,8080,8443,9050", "timing": "T4", "scripts": "http-proxy-brute,socks-open-proxy"}},
+                    {"tool": "nmap", "name": "WMI/WinRM Detection", "config": {"scan_type": "SYN", "ports": "135,5985,5986", "timing": "T4"}},
+                    {"tool": "enum4linux", "name": "Windows Trust Enumeration", "config": {"all_enum": True}},
+                    {"tool": "metasploit", "name": "SMB Session Enumeration", "config": {"module": "auxiliary/scanner/smb/smb_enumusers_domain", "threads": "10"}},
+                    {"tool": "nmap", "name": "Routing Protocol Detection", "config": {"scan_type": "SYN", "ports": "179,520,521,646,1723,1812,1813", "timing": "T4"}}
+                ]
+            },
+            "service_fingerprint": {
+                "name": "⚡ Deep Service Fingerprinting",
+                "description": "Comprehensive service version and configuration detection",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "Service Intel", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Intense Version Detection", "config": {"scan_type": "SYN", "ports": "1-10000", "timing": "T4", "scripts": "version"}},
+                    {"tool": "nmap", "name": "Banner Grabbing", "config": {"scan_type": "SYN", "ports": "21,22,23,25,80,110,143,443,445,3389", "timing": "T4", "scripts": "banner"}},
+                    {"tool": "nmap", "name": "HTTP Fingerprinting", "config": {"scan_type": "SYN", "ports": "80,443,8080,8443", "timing": "T4", "scripts": "http-headers,http-server-header,http-title,http-methods,http-waf-detect,http-waf-fingerprint"}},
+                    {"tool": "nmap", "name": "SSL/TLS Fingerprinting", "config": {"scan_type": "SYN", "ports": "443,8443,993,995,465,636,989,990", "timing": "T4", "scripts": "ssl-cert,ssl-enum-ciphers,ssl-known-key"}},
+                    {"tool": "nmap", "name": "SMTP Fingerprinting", "config": {"scan_type": "SYN", "ports": "25,465,587", "timing": "T4", "scripts": "smtp-commands,smtp-ntlm-info"}},
+                    {"tool": "nmap", "name": "DNS Fingerprinting", "config": {"scan_type": "SYN", "ports": "53", "timing": "T4", "scripts": "dns-nsid,dns-service-discovery,dns-recursion"}},
+                    {"tool": "nmap", "name": "SMB Fingerprinting", "config": {"scan_type": "SYN", "ports": "139,445", "timing": "T4", "scripts": "smb-os-discovery,smb-protocols,smb-security-mode,smb-server-stats"}},
+                    {"tool": "nmap", "name": "RPC Fingerprinting", "config": {"scan_type": "SYN", "ports": "111,135", "timing": "T4", "scripts": "rpcinfo,msrpc-enum"}},
+                    {"tool": "nikto", "name": "Web Server Fingerprint", "config": {"port": "80", "ssl": False, "tuning": "1"}}
+                ]
+            },
+            "internal_network_sweep": {
+                "name": "⚡ Internal Network Active Sweep",
+                "description": "Comprehensive internal network reconnaissance sweep",
+                "passive_steps": [],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Host Discovery Sweep", "config": {"scan_type": "SYN", "ports": "22,80,443,445", "timing": "T4"}},
+                    {"tool": "nmap", "name": "Quick Port Scan", "config": {"scan_type": "SYN", "ports": "21,22,23,25,53,80,110,111,135,139,143,443,445,993,995,1433,1521,3306,3389,5432,5900,5985,8080,8443", "timing": "T4", "scripts": "default"}},
+                    {"tool": "nmap", "name": "Windows Service Detection", "config": {"scan_type": "SYN", "ports": "135,139,445,3389,5985,5986", "timing": "T4", "scripts": "smb-os-discovery,smb-enum-shares"}},
+                    {"tool": "nmap", "name": "Linux Service Detection", "config": {"scan_type": "SYN", "ports": "22,111,2049", "timing": "T4", "scripts": "ssh-hostkey,nfs-showmount"}},
+                    {"tool": "enum4linux", "name": "Windows Enumeration", "config": {"all_enum": True}},
+                    {"tool": "metasploit", "name": "SMB Version Scan", "config": {"module": "auxiliary/scanner/smb/smb_version", "threads": "20"}},
+                    {"tool": "metasploit", "name": "SSH Version Scan", "config": {"module": "auxiliary/scanner/ssh/ssh_version", "threads": "20"}},
+                    {"tool": "nmap", "name": "Network Service Audit", "config": {"scan_type": "SYN", "ports": "53,67,68,69,123,161,162,389,636,1812,1813", "timing": "T4", "scripts": "default"}}
+                ]
+            },
+            "firewall_evasion_test": {
+                "name": "⚡ Firewall Evasion Testing",
+                "description": "Test firewall rules and identify bypass techniques",
+                "passive_steps": [],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Standard Port Scan", "config": {"scan_type": "SYN", "ports": "80,443,22,21,25,53,110,143,3389", "timing": "T4"}},
+                    {"tool": "nmap", "name": "Fragmented Packet Scan", "config": {"scan_type": "SYN", "ports": "80,443,22,21,25", "timing": "T3", "extra": "-f"}},
+                    {"tool": "nmap", "name": "ACK Scan (Firewall Rules)", "config": {"scan_type": "ACK", "ports": "80,443,22,21,25,53", "timing": "T4"}},
+                    {"tool": "nmap", "name": "FIN Scan (Stealthy)", "config": {"scan_type": "FIN", "ports": "80,443,22,21,25", "timing": "T3"}},
+                    {"tool": "nmap", "name": "NULL Scan", "config": {"scan_type": "NULL", "ports": "80,443,22,21,25", "timing": "T3"}},
+                    {"tool": "nmap", "name": "Xmas Scan", "config": {"scan_type": "Xmas", "ports": "80,443,22,21,25", "timing": "T3"}},
+                    {"tool": "nmap", "name": "Alternative HTTP Ports", "config": {"scan_type": "SYN", "ports": "81,82,83,84,85,86,87,88,8000,8001,8008,8080,8081,8088,8443,8888,9000,9080,9443", "timing": "T4"}},
+                    {"tool": "nmap", "name": "High Port Services", "config": {"scan_type": "SYN", "ports": "49152-65535", "timing": "T4"}}
+                ]
+            },
+            "initial_foothold_vectors": {
+                "name": "⚡ Initial Foothold Vectors",
+                "description": "Red team initial access vector identification",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "External Footprint", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Perimeter Service Scan", "config": {"scan_type": "SYN", "ports": "21,22,23,25,53,80,110,143,443,445,465,587,993,995,1433,3306,3389,5900,8080,8443", "timing": "T4", "scripts": "default,version,vuln"}},
+                    {"tool": "nmap", "name": "VPN/Remote Access", "config": {"scan_type": "SYN", "ports": "443,500,1194,1701,1723,4500,10443", "timing": "T4", "scripts": "ike-version,ssl-cert"}},
+                    {"tool": "nikto", "name": "Web App Vulnerabilities", "config": {"port": "80", "ssl": False, "tuning": "x"}},
+                    {"tool": "nikto", "name": "SSL Web App Vulnerabilities", "config": {"port": "443", "ssl": True, "tuning": "x"}},
+                    {"tool": "gobuster", "name": "Admin Panel Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "php,asp,aspx,jsp,html", "threads": "40"}},
+                    {"tool": "sqlmap", "name": "SQL Injection Probe", "config": {"level": "3", "risk": "2", "batch": True, "forms": True}},
+                    {"tool": "metasploit", "name": "EternalBlue Check", "config": {"module": "auxiliary/scanner/smb/smb_ms17_010", "threads": "5"}},
+                    {"tool": "metasploit", "name": "BlueKeep Check", "config": {"module": "auxiliary/scanner/rdp/cve_2019_0708_bluekeep", "threads": "5"}},
+                    {"tool": "nmap", "name": "Default Creds Check", "config": {"scan_type": "SYN", "ports": "21,22,23,3306,1433", "timing": "T4", "scripts": "ftp-anon,ssh-auth-methods,telnet-brute,mysql-empty-password,ms-sql-empty-password"}}
+                ]
+            },
+            "web_api_exploitation": {
+                "name": "⚡ Web API Exploitation Recon",
+                "description": "API security testing and vulnerability discovery",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "API Service Intel", "config": {"search_type": "host", "query": "[TARGET_IP]"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "API Port Detection", "config": {"scan_type": "SYN", "ports": "80,443,3000,4000,5000,8000,8080,8443,9000,9443", "timing": "T4", "scripts": "http-headers,http-methods,http-cors"}},
+                    {"tool": "gobuster", "name": "API Endpoint Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt", "extensions": "json,xml", "threads": "50"}},
+                    {"tool": "gobuster", "name": "API Version Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "json", "threads": "40"}},
+                    {"tool": "feroxbuster", "name": "Deep API Crawl", "config": {"wordlist": "/usr/share/seclists/Discovery/Web-Content/api/api-endpoints.txt", "extensions": "json,xml,yaml", "threads": "50", "depth": "4"}},
+                    {"tool": "nikto", "name": "API Security Scan", "config": {"port": "80", "ssl": False, "tuning": "x"}},
+                    {"tool": "nmap", "name": "REST API Methods", "config": {"scan_type": "SYN", "ports": "80,443,8080,8443", "timing": "T4", "scripts": "http-methods"}},
+                    {"tool": "sqlmap", "name": "API SQL Injection", "config": {"level": "3", "risk": "2", "batch": True, "random_agent": True}}
+                ]
+            },
+            "smb_shares_attack": {
+                "name": "⚡ SMB Shares Attack Surface",
+                "description": "Comprehensive SMB share enumeration and access testing",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "SMB Intel", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:445"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "SMB Service Detection", "config": {"scan_type": "SYN", "ports": "139,445", "timing": "T4", "scripts": "smb-os-discovery,smb-protocols,smb-security-mode"}},
+                    {"tool": "nmap", "name": "SMB Share Enumeration", "config": {"scan_type": "SYN", "ports": "445", "timing": "T4", "scripts": "smb-enum-shares,smb-enum-users,smb-enum-domains,smb-enum-groups"}},
+                    {"tool": "nmap", "name": "SMB Vulnerability Scan", "config": {"scan_type": "SYN", "ports": "445", "timing": "T4", "scripts": "smb-vuln-ms17-010,smb-vuln-ms08-067,smb-vuln-cve-2017-7494,smb-vuln-conficker,smb-vuln-regsvc-dos"}},
+                    {"tool": "enum4linux", "name": "Full SMB Enumeration", "config": {"all_enum": True}},
+                    {"tool": "metasploit", "name": "SMB Share Enum", "config": {"module": "auxiliary/scanner/smb/smb_enumshares", "threads": "10"}},
+                    {"tool": "metasploit", "name": "SMB User Enum", "config": {"module": "auxiliary/scanner/smb/smb_enumusers", "threads": "10"}},
+                    {"tool": "metasploit", "name": "SMB Login Test", "config": {"module": "auxiliary/scanner/smb/smb_login", "threads": "5"}},
+                    {"tool": "metasploit", "name": "MS17-010 Check", "config": {"module": "auxiliary/scanner/smb/smb_ms17_010", "threads": "5"}}
+                ]
+            },
+            "rdp_attack_surface": {
+                "name": "⚡ RDP Attack Surface Analysis",
+                "description": "Remote Desktop Protocol security assessment",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "RDP Intel", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:3389"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "RDP Service Detection", "config": {"scan_type": "SYN", "ports": "3389", "timing": "T4", "scripts": "rdp-enum-encryption,rdp-ntlm-info"}},
+                    {"tool": "nmap", "name": "RDP Vulnerability Scan", "config": {"scan_type": "SYN", "ports": "3389", "timing": "T4", "scripts": "rdp-vuln-ms12-020"}},
+                    {"tool": "nmap", "name": "Alternative RDP Ports", "config": {"scan_type": "SYN", "ports": "3388,3390,3391,3392,3393,13389,23389,33389", "timing": "T4"}},
+                    {"tool": "metasploit", "name": "BlueKeep Check", "config": {"module": "auxiliary/scanner/rdp/cve_2019_0708_bluekeep", "threads": "10"}},
+                    {"tool": "metasploit", "name": "RDP Scanner", "config": {"module": "auxiliary/scanner/rdp/rdp_scanner", "threads": "10"}},
+                    {"tool": "nmap", "name": "NLA Detection", "config": {"scan_type": "SYN", "ports": "3389", "timing": "T4", "scripts": "rdp-enum-encryption"}}
+                ]
+            },
+            "ssh_attack_surface": {
+                "name": "⚡ SSH Attack Surface Analysis",
+                "description": "Secure Shell security assessment and enumeration",
+                "passive_steps": [
+                    {"tool": "shodan", "name": "SSH Intel", "config": {"search_type": "search", "query": "ip:[TARGET_IP] port:22"}}
+                ],
+                "active_steps": [
+                    {"tool": "nmap", "name": "SSH Service Detection", "config": {"scan_type": "SYN", "ports": "22,2222,22222", "timing": "T4", "scripts": "ssh-hostkey,ssh2-enum-algos,sshv1"}},
+                    {"tool": "nmap", "name": "SSH Auth Methods", "config": {"scan_type": "SYN", "ports": "22", "timing": "T4", "scripts": "ssh-auth-methods"}},
+                    {"tool": "nmap", "name": "SSH Brute Force", "config": {"scan_type": "SYN", "ports": "22", "timing": "T3", "scripts": "ssh-brute"}},
+                    {"tool": "nmap", "name": "Alternative SSH Ports", "config": {"scan_type": "SYN", "ports": "22,222,2222,22222,2200,2022", "timing": "T4"}},
+                    {"tool": "metasploit", "name": "SSH Version Scan", "config": {"module": "auxiliary/scanner/ssh/ssh_version", "threads": "10"}},
+                    {"tool": "metasploit", "name": "SSH Login Check", "config": {"module": "auxiliary/scanner/ssh/ssh_login", "threads": "5"}}
+                ]
+            },
+            "full_active_recon": {
+                "name": "⚡ FULL ACTIVE RECONNAISSANCE",
+                "description": "Complete active-only reconnaissance suite - all tools, maximum coverage",
+                "passive_steps": [],
+                "active_steps": [
+                    {"tool": "nmap", "name": "Full TCP Port Scan", "config": {"scan_type": "SYN", "ports": "1-65535", "timing": "T4"}},
+                    {"tool": "nmap", "name": "Service Version Detection", "config": {"scan_type": "SYN", "ports": "1-10000", "timing": "T4", "scripts": "default,version"}},
+                    {"tool": "nmap", "name": "Vulnerability Scan", "config": {"scan_type": "SYN", "ports": "1-10000", "timing": "T4", "scripts": "vuln"}},
+                    {"tool": "nmap", "name": "UDP Top Ports", "config": {"scan_type": "UDP", "ports": "53,67,68,69,123,137,138,161,162,500,514,520,631,1434,1900,4500,5353,49152", "timing": "T4"}},
+                    {"tool": "dnsrecon", "name": "DNS Enumeration", "config": {"scan_type": "std"}},
+                    {"tool": "dnsrecon", "name": "Zone Transfer", "config": {"scan_type": "axfr"}},
+                    {"tool": "dnsrecon", "name": "Subdomain Brute", "config": {"scan_type": "brt", "wordlist": "/usr/share/seclists/Discovery/DNS/subdomains-top1million-20000.txt"}},
+                    {"tool": "nikto", "name": "Web Vulnerability Scan", "config": {"port": "80", "ssl": False, "tuning": "x"}, "condition": "http_detected"},
+                    {"tool": "nikto", "name": "SSL Web Scan", "config": {"port": "443", "ssl": True, "tuning": "x"}, "condition": "https_detected"},
+                    {"tool": "gobuster", "name": "Directory Discovery", "config": {"mode": "dir", "wordlist": "/usr/share/seclists/Discovery/Web-Content/raft-large-directories.txt", "extensions": "php,asp,aspx,jsp,html,js,txt,bak", "threads": "50"}, "condition": "http_detected"},
+                    {"tool": "feroxbuster", "name": "Deep Content Discovery", "config": {"wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt", "extensions": "php,html,js,json,xml,txt,bak,old", "threads": "50", "depth": "4"}, "condition": "http_detected"},
+                    {"tool": "sqlmap", "name": "SQL Injection Testing", "config": {"level": "3", "risk": "2", "batch": True, "forms": True}, "condition": "http_detected"},
+                    {"tool": "enum4linux", "name": "SMB Enumeration", "config": {"all_enum": True}},
+                    {"tool": "metasploit", "name": "SMB Version", "config": {"module": "auxiliary/scanner/smb/smb_version", "threads": "10"}},
+                    {"tool": "metasploit", "name": "SMB Shares", "config": {"module": "auxiliary/scanner/smb/smb_enumshares", "threads": "10"}},
+                    {"tool": "metasploit", "name": "MS17-010 Check", "config": {"module": "auxiliary/scanner/smb/smb_ms17_010", "threads": "5"}}
+                ]
             }
         }
 
