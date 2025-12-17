@@ -69,33 +69,33 @@ By using this tool, you agree to use it responsibly and legally.
 5. ☁️ **Cloud Asset Discovery** - AWSBucketDump → GitHarvester → Shodan
 6. ⚡ **Quick Host Discovery** - Nmap (fast) → Nikto (quick)
 
-**Advanced Attack Workflows (14):**
-7. 🏢 **AD Reconnaissance** - Nmap (AD ports) → enum4linux → MSF LDAP → Kerberos
-8. 🌍 **Web Application Pentesting** - Nmap → Nikto → Gobuster → feroxbuster → Vhost → SQLmap
-9. 🔴 **External Perimeter Assessment** - DNS → Subdomain → Shodan → Nmap → GitHarvester
-10. 🔄 **Internal Network Sweep** - Host Discovery → Service Enum → Windows → MSF
-11. 🔌 **API Security Assessment** - Nmap → Gobuster (API) → feroxbuster → Nikto
-12. 🔑 **Credential Hunting** - GitHarvester → Shodan → Nmap → MSF FTP
-13. 🔒 **SSL/TLS Assessment** - Nmap (SSL scripts) → Nikto HTTPS → Shodan
-14. 📊 **Network Services Audit** - Full Port Scan → Version Detection → Nikto → SMB → SSH
-15. 🥷 **Stealth Reconnaissance** - Slow Nmap → DNS → Shodan → GitHub
-16. 📦 **Full Stack Assessment** - DNS → Nmap → Nikto → Gobuster → enum4linux → Shodan → Git
-17. 🔓 **Vulnerability Assessment** - Nmap (vuln) → Nikto → MSF SMB → Shodan
-18. 🗄️ **Database Discovery** - Nmap (DB ports) → MySQL → MSSQL → Shodan
-19. 📧 **Mail Server Reconnaissance** - DNS MX → Nmap (mail) → SMTP Enum → Shodan
-20. 💉 **SQL Injection Assessment** - Nmap → Nikto → Gobuster → SQLmap
+**Advanced Attack Workflows:** 
+1. 🏢 **AD Reconnaissance** - Nmap (AD ports) → enum4linux → MSF LDAP → Kerberos 
+2. 🌍 **Web Application Pentesting** - Nmap → Nikto → Gobuster → feroxbuster → Vhost → SQLmap 
+3. 🔴 **External Perimeter Assessment** - DNS → Subdomain → Shodan → Nmap → GitHarvester 
+4. 🔄 **Internal Network Sweep** - Host Discovery → Service Enum → Windows → MSF 
+5. 🔌 **API Security Assessment** - Nmap → Gobuster (API) → feroxbuster → Nikto 
+6. 🔑 **Credential Hunting** - GitHarvester → Shodan → Nmap → MSF FTP 
+7. 🔒 **SSL/TLS Assessment** - Nmap (SSL scripts) → Nikto HTTPS → Shodan 
+8. 📊 **Network Services Audit** - Full Port Scan → Version Detection → Nikto → SMB → SSH 
+9. 🥷 **Stealth Reconnaissance** - Slow Nmap → DNS → Shodan → GitHub 
+10. 📦 **Full Stack Assessment** - DNS → Nmap → Nikto → Gobuster → enum4linux → Shodan → Git 
+11. 🔓 **Vulnerability Assessment** - Nmap (vuln) → Nikto → MSF SMB → Shodan 
+12. 🗄️ **Database Discovery** - Nmap (DB ports) → MySQL → MSSQL → Shodan 
+13. 📧 **Mail Server Reconnaissance** - DNS MX → Nmap (mail) → SMTP Enum → Shodan 
+14. 💉 **SQL Injection Assessment** - Nmap → Nikto → Gobuster → SQLmap 
 
 **Active-Focused Workflows (15):**
-21. ⚡ **Aggressive Full Port Scan** - Complete 65535 TCP + UDP scan with aggressive service detection
-22. ⚡ **Web Application Pentesting Suite** - Comprehensive active web security testing
-23. ⚡ **Exploitation Reconnaissance** - Identify exploitable services and vulnerabilities
-24. ⚡ **Credential Audit** - Active credential testing across services
-25. ⚡ **Database Pentest** - Active database security testing
-26. ⚡ **Firewall Evasion Test** - ACK, FIN, NULL, Xmas scans for firewall rule detection
-27. ⚡ **Service Exploitation Prep** - Identify vulnerable services for exploitation
-28. ⚡ **Web Vulnerability Hunter** - Active web vulnerability scanning and testing
-29. ⚡ **Network Pivot Discovery** - Identify potential pivot points in network
-30. ⚡ **API Exploitation Prep** - Active API security testing and enumeration
+1. ⚡ **Aggressive Full Port Scan** - Complete 65535 TCP + UDP scan with aggressive service detection
+2. ⚡ **Web Application Pentesting Suite** - Comprehensive active web security testing
+3. ⚡ **Exploitation Reconnaissance** - Identify exploitable services and vulnerabilities
+4. ⚡ **Credential Audit** - Active credential testing across services
+5. ⚡ **Database Pentest** - Active database security testing
+6. ⚡ **Firewall Evasion Test** - ACK, FIN, NULL, Xmas scans for firewall rule detection
+7. ⚡ **Service Exploitation Prep** - Identify vulnerable services for exploitation
+8. ⚡ **Web Vulnerability Hunter** - Active web vulnerability scanning and testing
+9. ⚡ **Network Pivot Discovery** - Identify potential pivot points in network
+10. ⚡ **API Exploitation Prep** - Active API security testing and enumeration
 
 **Specialized Industry Workflows (25+):**
 - 🏭 **IoT/SCADA Security** - Industrial control system reconnaissance
