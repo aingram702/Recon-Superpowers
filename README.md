@@ -23,14 +23,16 @@ By using this tool, you agree to use it responsibly and legally.
 
 ---
 
-## 🚀 What's New in v3.0
+## 🚀 What's New in v3.3
 
 ### 🔄 Automated Workflows ⭐
-- ✅ **30 Pre-defined Workflows** - Basic, advanced, and specialized attack patterns automated
+- ✅ **60+ Pre-defined Workflows** - Basic, advanced, active-focused, and specialized attack patterns automated
+- ✅ **Passive/Active Mode Selection** - Choose passive-only, active-only, or both modes per workflow
+- ✅ **Smart Mode Auto-Selection** - Workflows automatically select appropriate mode based on available steps
 - ✅ **Sequential Execution** - Multi-tool chains with progress tracking
-- ✅ **Smart Conditions** - Steps execute based on previous results
+- ✅ **Smart Conditions** - Steps execute based on previous results (HTTP, HTTPS, SMB, SSH detection)
 - ✅ **Target Validation** - Workflow-specific format checking
-- ✅ **Interactive Progress** - Real-time status updates and step tracking
+- ✅ **Interactive Progress** - Real-time status updates with PASSIVE/ACTIVE step indicators
 
 ### 🆕 New Feature Tabs
 - ✅ **SQLmap Tab** - Full SQL injection testing with level/risk controls, tamper scripts, and database enumeration
@@ -59,7 +61,7 @@ By using this tool, you agree to use it responsibly and legally.
 - ✅ **Timeout Controls** - Total and per-step timeout enforcement
 - ✅ **Secure Execution** - All subprocess calls use shell=False
 
-**Basic Workflows:**
+**Basic Workflows (6):**
 1. 🎯 **Full Network Reconnaissance** - Nmap (full port + vuln) → DNS → Gobuster → Nikto → SQLmap → Shodan
 2. 🌐 **Web Application Deep Scan** - Nmap (web scripts) → Nikto → Gobuster → feroxbuster → SQLmap → Shodan
 3. 📡 **Domain Intelligence Gathering** - DNSrecon (std + brt) → Shodan → GitHarvester
@@ -82,6 +84,26 @@ By using this tool, you agree to use it responsibly and legally.
 12. 🗄️ **Database Discovery** - Nmap (DB ports) → MySQL → MSSQL → Shodan 
 13. 📧 **Mail Server Reconnaissance** - DNS MX → Nmap (mail) → SMTP Enum → Shodan 
 14. 💉 **SQL Injection Assessment** - Nmap → Nikto → Gobuster → SQLmap 
+
+**Active-Focused Workflows (15):**
+1. ⚡ **Aggressive Full Port Scan** - Complete 65535 TCP + UDP scan with aggressive service detection
+2. ⚡ **Web Application Pentesting Suite** - Comprehensive active web security testing
+3. ⚡ **Exploitation Reconnaissance** - Identify exploitable services and vulnerabilities
+4. ⚡ **Credential Audit** - Active credential testing across services
+5. ⚡ **Database Pentest** - Active database security testing
+6. ⚡ **Firewall Evasion Test** - ACK, FIN, NULL, Xmas scans for firewall rule detection
+7. ⚡ **Service Exploitation Prep** - Identify vulnerable services for exploitation
+8. ⚡ **Web Vulnerability Hunter** - Active web vulnerability scanning and testing
+9. ⚡ **Network Pivot Discovery** - Identify potential pivot points in network
+10. ⚡ **API Exploitation Prep** - Active API security testing and enumeration
+
+**Specialized Industry Workflows (25+):**
+- 🏭 **IoT/SCADA Security** - Industrial control system reconnaissance
+- 🏥 **Healthcare Infrastructure** - HIPAA-focused security assessment
+- 💳 **PCI Compliance** - Payment card environment scanning
+- 🎓 **Educational Network** - Campus infrastructure assessment
+- 🏛️ **Government/Defense** - Hardened network reconnaissance
+- And many more...
 
 ---
 
@@ -360,11 +382,24 @@ python3 recon_superpower.py
 
 1. Select **Nmap** from sidebar
 2. Enter target (IP, hostname, or CIDR)
-3. Choose scan type (SYN scan recommended)
+3. Choose scan type
 4. Set port range (e.g., `1-1000`, `80,443,8080`)
 5. Select timing template (T3 Normal is default)
 6. **NEW:** Choose NSE script category or enter custom script
 7. Click **RUN SCAN**
+
+**Scan Types:**
+- `-sS` - TCP SYN Scan (default, stealthy)
+- `-sT` - TCP Connect Scan (full connection)
+- `-sU` - UDP Scan
+- `-sV` - Version Detection
+- `-O` - OS Detection
+- `-A` - Aggressive Scan (OS + version + scripts + traceroute)
+- `-sn` - Ping Scan (host discovery only)
+- `-sA` - ACK Scan (firewall rule detection)
+- `-sF` - FIN Scan (stealthy, evades some firewalls)
+- `-sN` - NULL Scan (no flags set)
+- `-sX` - Xmas Scan (FIN, PSH, URG flags)
 
 **NSE Script Categories:**
 - `default` - Default scripts
@@ -541,11 +576,13 @@ python3 recon_superpower.py
 ### 🔐 Nikto - Web Vulnerability Scanner
 
 1. Select **Nikto** from sidebar
-2. Enter target URL or IP
-3. Specify port (default 80)
-4. Enable SSL for HTTPS targets
-5. Choose scan tuning (x = all tests)
+2. Enter target URL (e.g., `http://example.com`) or hostname/IP
+3. Port is auto-detected from URL; only specify if using hostname/IP without URL scheme
+4. SSL is auto-detected for `https://` URLs; manually enable for non-URL targets
+5. Choose scan tuning (x = all tests, or combine like "124" for multiple)
 6. Click **RUN SCAN**
+
+**Note:** When using a full URL (http:// or https://), Nikto auto-detects the port and SSL settings.
 
 **Scan Tuning Options:**
 - `1` - Interesting files
@@ -747,13 +784,15 @@ self.accent_red = "#ff0055"      # Alert/stop color
 
 ## 📊 Project Stats
 
-- **Lines of Code**: 8,500+
-- **Methods**: 80+
-- **Security Validations**: 30+
+- **Lines of Code**: 11,000+
+- **Methods**: 100+
+- **Security Validations**: 40+
 - **Integrated Tools**: 12 reconnaissance tools
-- **Feature Tabs**: 6 (Shellz, Encoders, Decoders, LOLOL, Help, Workflows)
-- **File Size**: ~300KB
-- **Workflows**: 30 automated reconnaissance patterns
+- **Feature Tabs**: 7 (SQLmap, Shellz, Encoders, Decoders, LOLOL, Help, Workflows)
+- **File Size**: ~400KB
+- **Workflows**: 60+ automated reconnaissance patterns
+- **Nmap Scan Types**: 11 (including ACK, FIN, NULL, Xmas for firewall evasion)
+- **Condition Handlers**: 4 (HTTP, HTTPS, SMB, SSH detection)
 
 ---
 
@@ -802,10 +841,20 @@ Use this tool responsibly and legally.
 
 ## 📝 Changelog
 
-### v3.3 (2025-12-16)
-- **Modular Architecture** - New package structure with separated modules for config, core, ui, and utils
+### v3.3 (2025-12-17)
+- **60+ Automated Workflows** - Added 15 new active-focused workflows for penetration testing
+- **Smart Mode Auto-Selection** - Workflows automatically select passive/active mode based on available steps
+- **Enhanced Nmap Scan Types** - Added ACK, FIN, NULL, Xmas scans for firewall evasion testing
+- **Complete Condition Handler System** - Added HTTPS, SMB, SSH detection (previously only HTTP)
+- **Fixed Widget Naming Bugs** - Resolved feroxbuster, enum4linux, metasploit configuration issues
+- **Fixed Shodan Configuration** - Corrected attribute name and type mapping
+- **Fixed Nikto Port Handling** - Port now auto-detected from full URLs
+- **Fixed Nikto Tuning** - Now supports combined tuning options (e.g., "124")
+- **Fixed Gobuster/DNSrecon** - Resolved 'os' variable scoping bug that broke multiple tools
+- **Fixed SCAN_PROFILES** - Changed from sets to tuples for predictable ordering
+- **Version Consistency** - All version strings updated to 3.3
+- **Modular Architecture** - Package structure with separated modules for config, core, ui, and utils
 - **Enhanced Shodan Tab** - Comprehensive query builder with presets for common searches
-- **Improved Nikto Scanner** - Better robustness and error handling
 - **Centralized Settings** - New Settings singleton class with configuration persistence
 - **Security Logging** - Dedicated security logger with event tracking
 - **Input Validators** - Comprehensive validation module with 15+ validator functions
@@ -814,7 +863,7 @@ Use this tool responsibly and legally.
 ### v3.2 (2025-12-10)
 - **Code Quality Overhaul** - Major refactoring with modular architecture
 - **Expanded Shellz Tab** - Comprehensive shell categories with more payload options
-- **Passive/Active Scanning Modes** - All 30 workflows now support passive and active modes
+- **Passive/Active Scanning Modes** - All workflows now support passive and active modes
 - **Logo and Icon Integration** - Added dark hacker-themed logo and icon
 
 ### v3.1 (2025-12-08)
