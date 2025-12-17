@@ -10475,7 +10475,7 @@ Configure in the Settings tab:
 
             # SECURITY FIX (CRIT-1): Use environment variable for API key to prevent exposure
             # Set key as environment variable instead of command line argument
-            import os
+            # Note: os is already imported at top of file
             os.environ['SHODAN_API_KEY'] = api_key
             cmd = ["shodan", search_type, query]
             
