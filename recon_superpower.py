@@ -10208,7 +10208,8 @@ Configure in the Settings tab:
                 return None
 
             cmd = ["nikto", "-h", target]
-            if port:
+            # Only add -p port if target is NOT a full URI (Nikto doesn't accept -port with URIs)
+            if port and not target.startswith(('http://', 'https://')):
                 cmd.extend(["-p", port])
             if self.nikto_ssl_var.get():
                 cmd.append("-ssl")
