@@ -4737,8 +4737,8 @@ Adjustable:  Yes (via Settings)
         # Target
         self.nikto_target = self.create_labeled_entry(frame, "Target:", 0, "http://example.com")
 
-        # Port
-        self.nikto_port = self.create_labeled_entry(frame, "Port:", 1, "80")
+        # Port (leave empty to use default from target URL)
+        self.nikto_port = self.create_labeled_entry(frame, "Port:", 1, "")
 
         # SSL
         self.nikto_ssl_var = tk.BooleanVar()
