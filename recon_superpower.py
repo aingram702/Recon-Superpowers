@@ -4737,8 +4737,8 @@ Adjustable:  Yes (via Settings)
         # Target
         self.nikto_target = self.create_labeled_entry(frame, "Target:", 0, "http://example.com")
 
-        # Port
-        self.nikto_port = self.create_labeled_entry(frame, "Port:", 1, "80")
+        # Port (leave empty to use default from target URL)
+        self.nikto_port = self.create_labeled_entry(frame, "Port:", 1, "")
 
         # SSL
         self.nikto_ssl_var = tk.BooleanVar()
@@ -10208,7 +10208,8 @@ Configure in the Settings tab:
                 return None
 
             cmd = ["nikto", "-h", target]
-            if port:
+            # Only add -p port if target is NOT a full URI (Nikto doesn't accept -port with URIs)
+            if port and not target.startswith(('http://', 'https://')):
                 cmd.extend(["-p", port])
             if self.nikto_ssl_var.get():
                 cmd.append("-ssl")
@@ -10474,7 +10475,7 @@ Configure in the Settings tab:
 
             # SECURITY FIX (CRIT-1): Use environment variable for API key to prevent exposure
             # Set key as environment variable instead of command line argument
-            import os
+            # Note: os is already imported at top of file
             os.environ['SHODAN_API_KEY'] = api_key
             cmd = ["shodan", search_type, query]
             
