@@ -4256,7 +4256,7 @@ Adjustable:  Yes (via Settings)
         )
         sidebar_header.pack(fill=tk.X)
 
-        # Scrollable tool list
+        # Scrollable tool list container (holds canvas + scrollbar)
         tool_list_canvas = tk.Canvas(sidebar_frame, bg=self.bg_tertiary, highlightthickness=0)
         scrollbar = tk.Scrollbar(sidebar_frame, orient="vertical", command=tool_list_canvas.yview)
         tool_list_frame = tk.Frame(tool_list_canvas, bg=self.bg_tertiary)
@@ -4266,7 +4266,7 @@ Adjustable:  Yes (via Settings)
             lambda e: tool_list_canvas.configure(scrollregion=tool_list_canvas.bbox("all"))
         )
 
-        tool_list_canvas.create_window((0, 0), window=tool_list_frame, anchor="nw")
+        tool_list_canvas.create_window((0, 0), window=tool_list_frame, anchor="nw", width=120)
         tool_list_canvas.configure(yscrollcommand=scrollbar.set)
 
         tool_list_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -4274,12 +4274,19 @@ Adjustable:  Yes (via Settings)
 
         # Enable mouse wheel scrolling for tool list
         def _on_tool_list_mousewheel(event):
-            tool_list_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+            # Handle both Windows and Linux mouse wheel
+            if event.num == 4 or event.delta > 0:
+                tool_list_canvas.yview_scroll(-1, "units")
+            elif event.num == 5 or event.delta < 0:
+                tool_list_canvas.yview_scroll(1, "units")
 
+        # Bind to canvas and frame for better responsiveness
         tool_list_canvas.bind("<MouseWheel>", _on_tool_list_mousewheel)
-        # For Linux
-        tool_list_canvas.bind("<Button-4>", lambda e: tool_list_canvas.yview_scroll(-1, "units"))
-        tool_list_canvas.bind("<Button-5>", lambda e: tool_list_canvas.yview_scroll(1, "units"))
+        tool_list_canvas.bind("<Button-4>", _on_tool_list_mousewheel)
+        tool_list_canvas.bind("<Button-5>", _on_tool_list_mousewheel)
+        tool_list_frame.bind("<MouseWheel>", _on_tool_list_mousewheel)
+        tool_list_frame.bind("<Button-4>", _on_tool_list_mousewheel)
+        tool_list_frame.bind("<Button-5>", _on_tool_list_mousewheel)
 
         # Tool buttons in sidebar
         self.tool_buttons = {}
@@ -4325,10 +4332,15 @@ Adjustable:  Yes (via Settings)
             )
             btn.pack(fill=tk.X, padx=2, pady=2)
             self.tool_buttons[tool_id] = btn
-            
+
             # Add hover effects
             btn.bind("<Enter>", lambda e, b=btn: b.config(bg=self.bg_primary) if b['bg'] != self.bg_primary else None)
             btn.bind("<Leave>", lambda e, b=btn, t=tool_id: b.config(bg=self.bg_primary if self.current_tool == t else self.bg_tertiary))
+
+            # Add mouse wheel scrolling to each button
+            btn.bind("<MouseWheel>", _on_tool_list_mousewheel)
+            btn.bind("<Button-4>", _on_tool_list_mousewheel)
+            btn.bind("<Button-5>", _on_tool_list_mousewheel)
 
         # Tool configuration container (right side of left panel)
         self.tool_container = tk.Frame(left_panel, bg=self.bg_secondary)
