@@ -41,6 +41,7 @@ class ReconSuperpower:
         self.root = root
         self.root.title("The Recon Superpower")
         self.root.geometry("1400x900")
+        self.root.resizable(True, True)  # Allow window resizing
 
         # Monokai terminal theme colors
         self.bg_primary = "#272822"      # Main background (dark greenish-gray)
@@ -4270,6 +4271,15 @@ Adjustable:  Yes (via Settings)
 
         tool_list_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Enable mouse wheel scrolling for tool list
+        def _on_tool_list_mousewheel(event):
+            tool_list_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+
+        tool_list_canvas.bind("<MouseWheel>", _on_tool_list_mousewheel)
+        # For Linux
+        tool_list_canvas.bind("<Button-4>", lambda e: tool_list_canvas.yview_scroll(-1, "units"))
+        tool_list_canvas.bind("<Button-5>", lambda e: tool_list_canvas.yview_scroll(1, "units"))
 
         # Tool buttons in sidebar
         self.tool_buttons = {}
