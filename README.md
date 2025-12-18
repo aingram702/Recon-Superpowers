@@ -61,7 +61,7 @@ By using this tool, you agree to use it responsibly and legally.
 - ✅ **Timeout Controls** - Total and per-step timeout enforcement
 - ✅ **Secure Execution** - All subprocess calls use shell=False
 
-**Basic Workflows (6):**
+**Basic Workflows:**
 1. 🎯 **Full Network Reconnaissance** - Nmap (full port + vuln) → DNS → Gobuster → Nikto → SQLmap → Shodan
 2. 🌐 **Web Application Deep Scan** - Nmap (web scripts) → Nikto → Gobuster → feroxbuster → SQLmap → Shodan
 3. 📡 **Domain Intelligence Gathering** - DNSrecon (std + brt) → Shodan → GitHarvester
@@ -85,7 +85,7 @@ By using this tool, you agree to use it responsibly and legally.
 13. 📧 **Mail Server Reconnaissance** - DNS MX → Nmap (mail) → SMTP Enum → Shodan 
 14. 💉 **SQL Injection Assessment** - Nmap → Nikto → Gobuster → SQLmap 
 
-**Active-Focused Workflows (15):**
+**Active-Focused Workflows:**
 1. ⚡ **Aggressive Full Port Scan** - Complete 65535 TCP + UDP scan with aggressive service detection
 2. ⚡ **Web Application Pentesting Suite** - Comprehensive active web security testing
 3. ⚡ **Exploitation Reconnaissance** - Identify exploitable services and vulnerabilities
