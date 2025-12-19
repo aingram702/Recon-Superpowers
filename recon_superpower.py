@@ -35,6 +35,13 @@ try:
 except ImportError:
     HAS_CAIROSVG = False
 
+# Try to import psutil for CPU monitoring
+try:
+    import psutil
+    HAS_PSUTIL = True
+except ImportError:
+    HAS_PSUTIL = False
+
 
 class ReconSuperpower:
     def __init__(self, root):
@@ -59,11 +66,16 @@ class ReconSuperpower:
 
         self.root.configure(bg=self.bg_primary)
 
-        # Process tracking with thread safety
-        self.current_process = None
-        self.is_running = False
+        # Process tracking with thread safety - supports concurrent scans
+        self.current_process = None  # Legacy: kept for backward compatibility
+        self.is_running = False  # Legacy: True if ANY scan is running
         self.scan_lock = threading.Lock()
-        self.stop_event = threading.Event()
+        self.stop_event = threading.Event()  # Legacy: kept for backward compatibility
+
+        # Concurrent scan tracking
+        self.active_scans = {}  # {scan_id: {"process": Popen, "tool": str, "target": str, "stop_event": Event}}
+        self.scan_counter = 0  # Unique ID generator for scans
+        self.max_concurrent_scans = 10  # Limit to prevent resource exhaustion
 
         # Security: Process timeout (1 hour default)
         self.process_timeout = 3600
@@ -4209,7 +4221,7 @@ Adjustable:  Yes (via Settings)
 
         version_label = tk.Label(
             right_frame,
-            text="v3.3",
+            text="v3.4",
             font=("Courier", 10, "bold"),
             fg=self.accent_purple,
             bg=self.bg_primary
@@ -4528,6 +4540,54 @@ Adjustable:  Yes (via Settings)
             anchor=tk.W
         )
         self.status_label.pack(side=tk.LEFT, padx=10, pady=5)
+
+        # Active scans counter (right side of status bar)
+        self.scans_label = tk.Label(
+            status_bar,
+            text="SCANS: 0",
+            font=("Courier", 9),
+            fg=self.text_muted,
+            bg=self.bg_tertiary,
+            anchor=tk.E
+        )
+        self.scans_label.pack(side=tk.RIGHT, padx=5, pady=5)
+
+        # CPU meter (right side of status bar)
+        self.cpu_frame = tk.Frame(status_bar, bg=self.bg_tertiary)
+        self.cpu_frame.pack(side=tk.RIGHT, padx=5, pady=5)
+
+        self.cpu_label = tk.Label(
+            self.cpu_frame,
+            text="CPU:",
+            font=("Courier", 9),
+            fg=self.text_muted,
+            bg=self.bg_tertiary
+        )
+        self.cpu_label.pack(side=tk.LEFT)
+
+        # CPU meter bar (small visual indicator)
+        self.cpu_meter_canvas = tk.Canvas(
+            self.cpu_frame,
+            width=50,
+            height=12,
+            bg=self.bg_primary,
+            highlightthickness=1,
+            highlightbackground=self.text_muted
+        )
+        self.cpu_meter_canvas.pack(side=tk.LEFT, padx=3)
+
+        self.cpu_percent_label = tk.Label(
+            self.cpu_frame,
+            text="0%",
+            font=("Courier", 9),
+            fg=self.text_muted,
+            bg=self.bg_tertiary,
+            width=4
+        )
+        self.cpu_percent_label.pack(side=tk.LEFT)
+
+        # Start CPU monitoring timer
+        self.update_cpu_meter()
 
         # Initial welcome message
         self.print_banner()
@@ -10068,6 +10128,60 @@ Configure in the Settings tab:
             color = self.accent_green
         self.status_label.config(text=f"[ {message} ]", fg=color)
 
+    def update_cpu_meter(self):
+        """Update the CPU usage meter in the status bar."""
+        try:
+            if HAS_PSUTIL:
+                cpu_percent = psutil.cpu_percent(interval=None)
+            else:
+                cpu_percent = 0
+
+            # Update the percentage label
+            self.cpu_percent_label.config(text=f"{int(cpu_percent)}%")
+
+            # Determine color based on CPU usage
+            if cpu_percent < 50:
+                bar_color = self.accent_green
+                text_color = self.text_muted
+            elif cpu_percent < 80:
+                bar_color = self.accent_orange
+                text_color = self.accent_orange
+            else:
+                bar_color = self.accent_red
+                text_color = self.accent_red
+
+            self.cpu_percent_label.config(fg=text_color)
+
+            # Update the visual bar
+            self.cpu_meter_canvas.delete("all")
+            bar_width = int((cpu_percent / 100) * 48)  # 48 = canvas width - 2 for border
+            if bar_width > 0:
+                self.cpu_meter_canvas.create_rectangle(
+                    1, 1, bar_width + 1, 11,
+                    fill=bar_color, outline=""
+                )
+
+        except Exception:
+            pass  # Silently ignore errors in CPU monitoring
+
+        # Schedule next update (every 1.5 seconds)
+        self.root.after(1500, self.update_cpu_meter)
+
+    def update_scans_counter(self):
+        """Update the active scans counter in the status bar."""
+        with self.scan_lock:
+            count = len(self.active_scans)
+
+        # Update label text and color
+        if count == 0:
+            self.scans_label.config(text="SCANS: 0", fg=self.text_muted)
+        elif count < self.max_concurrent_scans // 2:
+            self.scans_label.config(text=f"SCANS: {count}", fg=self.accent_green)
+        elif count < self.max_concurrent_scans:
+            self.scans_label.config(text=f"SCANS: {count}", fg=self.accent_orange)
+        else:
+            self.scans_label.config(text=f"SCANS: {count} (MAX)", fg=self.accent_red)
+
     def build_command(self):
         # Use current tool instead of tab index
         tool_id = self.current_tool
@@ -10868,10 +10982,12 @@ Configure in the Settings tab:
         return None
 
     def run_scan(self):
-        # Security: Thread-safe check for running scan
+        # Check if we've reached the max concurrent scans limit
         with self.scan_lock:
-            if self.is_running:
-                messagebox.showwarning("Warning", "A scan is already running")
+            if len(self.active_scans) >= self.max_concurrent_scans:
+                messagebox.showwarning("Warning",
+                    f"Maximum concurrent scans reached ({self.max_concurrent_scans}).\n"
+                    "Please wait for a scan to finish or stop one.")
                 return
 
         try:
@@ -10882,6 +10998,10 @@ Configure in the Settings tab:
         if not cmd:
             return
 
+        # Get target info for display
+        tool_id = self.current_tool
+        target_display = self._get_current_target()
+
         # Confirmation
         confirm = messagebox.askyesno(
             "Confirm Scan",
@@ -10890,27 +11010,33 @@ Configure in the Settings tab:
         if not confirm:
             return
 
-        # Security: Reset stop event for new scan
-        self.stop_event.clear()
+        # Generate unique scan ID
+        with self.scan_lock:
+            self.scan_counter += 1
+            scan_id = self.scan_counter
 
+        # Create stop event for this specific scan
+        scan_stop_event = threading.Event()
+
+        # Legacy compatibility: update is_running
         with self.scan_lock:
             self.is_running = True
 
-        self.run_button.config(state=tk.DISABLED)
+        # Enable stop button (always enabled when any scan is running)
         self.stop_button.config(state=tk.NORMAL)
 
         self.append_output(f"\n{'='*70}\n")
-        self.append_output(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Starting scan...\n")
+        self.append_output(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Starting scan #{scan_id} ({tool_id.upper()})...\n")
         self.append_output(f"Command: {' '.join(cmd)}\n")
         self.append_output(f"{'='*70}\n\n")
 
-        self.update_status("SCANNING...", self.accent_red)
+        self.update_status(f"SCANNING ({len(self.active_scans) + 1} active)...", self.accent_red)
+        self.update_scans_counter()
 
         # Add command to history
         self.add_to_history(command=cmd)
 
         # Add target/URL to history based on tool
-        tool_id = self.current_tool
         if tool_id == "nmap":
             target = self.nmap_target.get().strip()
             if target:
@@ -10933,15 +11059,50 @@ Configure in the Settings tab:
             if target:
                 self.add_to_history(target=target)
 
-        thread = threading.Thread(target=self.execute_command, args=(cmd,))
+        # Start the scan in a new thread with scan_id
+        thread = threading.Thread(
+            target=self.execute_command,
+            args=(cmd, scan_id, tool_id, target_display, scan_stop_event)
+        )
         thread.daemon = True
         thread.start()
 
-    def execute_command(self, cmd):
+    def _get_current_target(self):
+        """Get the current target based on the active tool."""
+        tool_id = self.current_tool
+        try:
+            if tool_id == "nmap":
+                return self.nmap_target.get().strip()
+            elif tool_id == "gobuster":
+                return self.gobuster_url.get().strip()
+            elif tool_id == "nikto":
+                return self.nikto_target.get().strip()
+            elif tool_id == "sqlmap":
+                return self.sqlmap_url.get().strip()
+            elif tool_id == "metasploit":
+                return self.msf_target.get().strip()
+            elif tool_id == "shodan":
+                return self.shodan_query.get().strip()
+            elif tool_id == "dnsrecon":
+                return self.dnsrecon_domain.get().strip()
+        except AttributeError:
+            pass
+        return "unknown"
+
+    def execute_command(self, cmd, scan_id=None, tool_id=None, target=None, scan_stop_event=None):
+        """Execute a scan command. Supports concurrent scans with unique scan_id."""
+        # Legacy support: if no scan_id provided, use legacy single-scan behavior
+        if scan_id is None:
+            scan_id = 0
+            tool_id = self.current_tool
+            target = "legacy"
+            scan_stop_event = self.stop_event
+
+        process = None
         try:
             # Security: Create process without shell=True to prevent injection
             # Also set preexec_fn to create new process group for clean termination
-            self.current_process = subprocess.Popen(
+            process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -10951,79 +11112,287 @@ Configure in the Settings tab:
                 preexec_fn=os.setsid if os.name != 'nt' else None  # Unix-specific
             )
 
+            # Register in active_scans
+            with self.scan_lock:
+                self.active_scans[scan_id] = {
+                    "process": process,
+                    "tool": tool_id,
+                    "target": target,
+                    "stop_event": scan_stop_event,
+                    "start_time": datetime.now()
+                }
+                # Legacy compatibility
+                self.current_process = process
+            self.update_scans_counter()
+
             # Read output with stop event checking
-            for line in self.current_process.stdout:
-                if self.stop_event.is_set():
+            for line in process.stdout:
+                if scan_stop_event.is_set():
                     break
-                self.append_output(line)
+                self.append_output(f"[#{scan_id}] {line}" if len(self.active_scans) > 1 else line)
 
             # Security: Wait for process with timeout
             try:
-                self.current_process.wait(timeout=self.process_timeout)
+                process.wait(timeout=self.process_timeout)
 
                 # Only show completion if not stopped
-                if not self.stop_event.is_set():
+                if not scan_stop_event.is_set():
                     self.append_output(f"\n{'='*70}\n")
-                    self.append_output(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Scan completed\n")
+                    self.append_output(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Scan #{scan_id} ({tool_id.upper()}) completed\n")
                     self.append_output(f"{'='*70}\n")
-                    self.update_status("SCAN COMPLETE", self.accent_green)
 
             except subprocess.TimeoutExpired:
                 # Security: Kill process if timeout exceeded
-                self.append_output(f"\n[TIMEOUT] Scan exceeded maximum time limit ({self.process_timeout} seconds)\n")
+                self.append_output(f"\n[TIMEOUT] Scan #{scan_id} exceeded maximum time limit ({self.process_timeout} seconds)\n")
                 self.append_output("Terminating process...\n")
-                self.current_process.kill()
-                self.current_process.wait()
-                self.update_status("TIMEOUT", self.accent_red)
+                process.kill()
+                process.wait()
 
         except FileNotFoundError:
-            self.append_output(f"\n[ERROR] Command not found: {cmd[0]}\n")
+            self.append_output(f"\n[ERROR] Scan #{scan_id}: Command not found: {cmd[0]}\n")
             self.append_output(f"Make sure {cmd[0]} is installed and in your PATH\n")
-            self.update_status("ERROR", self.accent_red)
         except PermissionError:
-            self.append_output(f"\n[ERROR] Permission denied for: {cmd[0]}\n")
+            self.append_output(f"\n[ERROR] Scan #{scan_id}: Permission denied for: {cmd[0]}\n")
             self.append_output("Some scans require root/sudo privileges\n")
-            self.update_status("ERROR", self.accent_red)
         except Exception as e:
-            self.append_output(f"\n[ERROR] {str(e)}\n")
-            self.update_status("ERROR", self.accent_red)
+            self.append_output(f"\n[ERROR] Scan #{scan_id}: {str(e)}\n")
         finally:
-            # Security: Thread-safe cleanup
+            # Thread-safe cleanup: remove from active_scans
             with self.scan_lock:
-                self.is_running = False
-            self.run_button.config(state=tk.NORMAL)
-            self.stop_button.config(state=tk.DISABLED)
-            self.current_process = None
+                if scan_id in self.active_scans:
+                    del self.active_scans[scan_id]
+                # Update legacy is_running based on remaining active scans
+                self.is_running = len(self.active_scans) > 0
+                # Clear legacy current_process if this was it
+                if self.current_process == process:
+                    self.current_process = None
 
-    def stop_scan(self):
-        # Security: Thread-safe process termination
+            # Update UI based on remaining scans
+            self.update_scans_counter()
+            if len(self.active_scans) == 0:
+                self.stop_button.config(state=tk.DISABLED)
+                self.update_status("READY", self.accent_green)
+            else:
+                self.update_status(f"SCANNING ({len(self.active_scans)} active)...", self.accent_red)
+
+    def stop_scan(self, scan_id=None):
+        """Stop running scans. If scan_id is None, prompts user or stops all."""
         with self.scan_lock:
-            if self.current_process and self.is_running:
-                # Signal the stop event first
-                self.stop_event.set()
+            active_count = len(self.active_scans)
 
+        if active_count == 0:
+            messagebox.showinfo("Info", "No scans are currently running.")
+            return
+
+        # If only one scan is running, stop it directly
+        if active_count == 1:
+            scan_id = list(self.active_scans.keys())[0]
+            self._stop_single_scan(scan_id)
+            return
+
+        # Multiple scans running - ask user what to do
+        if scan_id is None:
+            # Build list of active scans for display
+            scan_list = []
+            with self.scan_lock:
+                for sid, scan_info in self.active_scans.items():
+                    elapsed = (datetime.now() - scan_info["start_time"]).seconds
+                    scan_list.append(f"#{sid}: {scan_info['tool'].upper()} -> {scan_info['target'][:30]} ({elapsed}s)")
+
+            # Create a simple dialog to choose
+            choice = messagebox.askyesnocancel(
+                "Stop Scans",
+                f"Multiple scans running ({active_count}):\n\n" +
+                "\n".join(scan_list) +
+                "\n\nYes = Stop ALL scans\nNo = Show scan selector\nCancel = Keep running"
+            )
+
+            if choice is None:  # Cancel
+                return
+            elif choice:  # Yes - stop all
+                self._stop_all_scans()
+            else:  # No - show selector
+                self._show_scan_selector()
+        else:
+            self._stop_single_scan(scan_id)
+
+    def _stop_single_scan(self, scan_id):
+        """Stop a specific scan by its ID."""
+        with self.scan_lock:
+            if scan_id not in self.active_scans:
+                return
+            scan_info = self.active_scans[scan_id]
+            process = scan_info["process"]
+            stop_event = scan_info["stop_event"]
+
+        # Signal the stop event
+        stop_event.set()
+
+        try:
+            # Try graceful termination first
+            process.terminate()
+
+            # Give it 2 seconds to terminate gracefully
+            try:
+                process.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                # Force kill if still running
+                process.kill()
+                process.wait()
+
+            self.append_output(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Scan #{scan_id} stopped by user\n")
+        except Exception as e:
+            self.append_output(f"\n[ERROR] Failed to stop scan #{scan_id}: {str(e)}\n")
+
+        # Update UI (the execute_command finally block will clean up active_scans)
+        self.update_scans_counter()
+
+    def _stop_all_scans(self):
+        """Stop all running scans."""
+        with self.scan_lock:
+            scan_ids = list(self.active_scans.keys())
+
+        stopped_count = 0
+        for scan_id in scan_ids:
+            with self.scan_lock:
+                if scan_id not in self.active_scans:
+                    continue
+                scan_info = self.active_scans[scan_id]
+                process = scan_info["process"]
+                stop_event = scan_info["stop_event"]
+
+            stop_event.set()
+
+            try:
+                process.terminate()
                 try:
-                    # Try graceful termination first
-                    self.current_process.terminate()
+                    process.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
+                stopped_count += 1
+            except Exception as e:
+                self.append_output(f"\n[ERROR] Failed to stop scan #{scan_id}: {str(e)}\n")
 
-                    # Give it 2 seconds to terminate gracefully
-                    try:
-                        self.current_process.wait(timeout=2)
-                    except subprocess.TimeoutExpired:
-                        # Force kill if still running
-                        self.current_process.kill()
-                        self.current_process.wait()
+        self.append_output(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Stopped {stopped_count} scan(s)\n")
+        self.update_status("ALL STOPPED", self.accent_red)
+        self.update_scans_counter()
 
-                    self.append_output(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Scan stopped by user\n")
-                    self.update_status("STOPPED", self.accent_red)
-                except Exception as e:
-                    self.append_output(f"\n[ERROR] Failed to stop process: {str(e)}\n")
+    def _show_scan_selector(self):
+        """Show a dialog to select which scan to stop."""
+        # Create a popup window
+        popup = tk.Toplevel(self.root)
+        popup.title("Select Scan to Stop")
+        popup.geometry("400x300")
+        popup.configure(bg=self.bg_primary)
+        popup.transient(self.root)
+        popup.grab_set()
 
-                self.is_running = False
+        # Title
+        title_label = tk.Label(
+            popup,
+            text="ACTIVE SCANS",
+            font=("Courier", 14, "bold"),
+            fg=self.accent_cyan,
+            bg=self.bg_primary
+        )
+        title_label.pack(pady=10)
 
-        # Update UI state
-        self.run_button.config(state=tk.NORMAL)
-        self.stop_button.config(state=tk.DISABLED)
+        # Listbox for scans
+        listbox_frame = tk.Frame(popup, bg=self.bg_secondary)
+        listbox_frame.pack(fill=tk.BOTH, expand=True, padx=15, pady=5)
+
+        scrollbar = tk.Scrollbar(listbox_frame)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        scan_listbox = tk.Listbox(
+            listbox_frame,
+            font=("Courier", 10),
+            bg=self.bg_secondary,
+            fg=self.text_color,
+            selectbackground=self.accent_green,
+            selectforeground=self.bg_primary,
+            yscrollcommand=scrollbar.set,
+            height=8
+        )
+        scan_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.config(command=scan_listbox.yview)
+
+        # Populate listbox
+        scan_ids = []
+        with self.scan_lock:
+            for sid, scan_info in self.active_scans.items():
+                elapsed = (datetime.now() - scan_info["start_time"]).seconds
+                display = f"#{sid}: {scan_info['tool'].upper()} -> {scan_info['target'][:25]} ({elapsed}s)"
+                scan_listbox.insert(tk.END, display)
+                scan_ids.append(sid)
+
+        # Buttons frame
+        btn_frame = tk.Frame(popup, bg=self.bg_primary)
+        btn_frame.pack(pady=10)
+
+        def stop_selected():
+            selection = scan_listbox.curselection()
+            if selection:
+                selected_scan_id = scan_ids[selection[0]]
+                self._stop_single_scan(selected_scan_id)
+                # Refresh the list
+                scan_listbox.delete(0, tk.END)
+                scan_ids.clear()
+                with self.scan_lock:
+                    for sid, scan_info in self.active_scans.items():
+                        elapsed = (datetime.now() - scan_info["start_time"]).seconds
+                        display = f"#{sid}: {scan_info['tool'].upper()} -> {scan_info['target'][:25]} ({elapsed}s)"
+                        scan_listbox.insert(tk.END, display)
+                        scan_ids.append(sid)
+                if not scan_ids:
+                    popup.destroy()
+
+        def stop_all_and_close():
+            self._stop_all_scans()
+            popup.destroy()
+
+        stop_btn = tk.Button(
+            btn_frame,
+            text="STOP SELECTED",
+            font=("Courier", 10, "bold"),
+            bg=self.accent_orange,
+            fg=self.bg_primary,
+            relief=tk.FLAT,
+            padx=15,
+            pady=5,
+            cursor="hand2",
+            command=stop_selected
+        )
+        stop_btn.pack(side=tk.LEFT, padx=5)
+
+        stop_all_btn = tk.Button(
+            btn_frame,
+            text="STOP ALL",
+            font=("Courier", 10, "bold"),
+            bg=self.accent_red,
+            fg=self.text_color,
+            relief=tk.FLAT,
+            padx=15,
+            pady=5,
+            cursor="hand2",
+            command=stop_all_and_close
+        )
+        stop_all_btn.pack(side=tk.LEFT, padx=5)
+
+        close_btn = tk.Button(
+            btn_frame,
+            text="CLOSE",
+            font=("Courier", 10, "bold"),
+            bg=self.bg_tertiary,
+            fg=self.text_color,
+            relief=tk.FLAT,
+            padx=15,
+            pady=5,
+            cursor="hand2",
+            command=popup.destroy
+        )
+        close_btn.pack(side=tk.LEFT, padx=5)
 
 
 def main():

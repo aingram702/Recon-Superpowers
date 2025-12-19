@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "recon-superpower"
-version = "3.3.0"
+version = "3.4.0"
 description = "Professional GUI wrapper for security reconnaissance tools"
 readme = "README.md"
 license = {text = "MIT"}
@@ -46,6 +46,14 @@ dev = [
 gui = [
     "pillow>=9.0",
     "cairosvg>=2.5",
+]
+monitoring = [
+    "psutil>=5.9",  # For CPU/memory monitoring
+]
+full = [
+    "pillow>=9.0",
+    "cairosvg>=2.5",
+    "psutil>=5.9",
 ]
 
 [project.scripts]
@@ -129,6 +137,7 @@ module = [
     "tkinter.*",
     "PIL.*",
     "cairosvg.*",
+    "psutil.*",
 ]
 ignore_missing_imports = true
 
