@@ -10101,7 +10101,7 @@ Configure in the Settings tab:
                 messagebox.showerror("Error", "Invalid port format. Use format like: 80,443 or 1-1000")
                 return None
 
-            cmd = ["nmap", scan_type, timing]
+            cmd = ["nmap", scan_type, f"-{timing}"]
             if ports:
                 cmd.extend(["-p", ports])
 
