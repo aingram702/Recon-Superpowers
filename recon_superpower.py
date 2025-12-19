@@ -4240,8 +4240,8 @@ Adjustable:  Yes (via Settings)
         left_panel.pack(side=tk.LEFT, fill=tk.BOTH, padx=(0, 10), pady=0)
         left_panel.pack_propagate(False)
 
-        # Tool selector sidebar (narrower)
-        sidebar_frame = tk.Frame(left_panel, bg=self.bg_tertiary, width=140)
+        # Tool selector sidebar (compact)
+        sidebar_frame = tk.Frame(left_panel, bg=self.bg_tertiary, width=130)
         sidebar_frame.pack(side=tk.LEFT, fill=tk.Y, padx=0, pady=0)
         sidebar_frame.pack_propagate(False)
 
@@ -4249,10 +4249,10 @@ Adjustable:  Yes (via Settings)
         sidebar_header = tk.Label(
             sidebar_frame,
             text="TOOLS",
-            font=("Courier", 10, "bold"),
+            font=("Courier", 9, "bold"),
             fg=self.accent_cyan,
             bg=self.bg_tertiary,
-            pady=10
+            pady=6
         )
         sidebar_header.pack(fill=tk.X)
 
@@ -4266,7 +4266,7 @@ Adjustable:  Yes (via Settings)
             lambda e: tool_list_canvas.configure(scrollregion=tool_list_canvas.bbox("all"))
         )
 
-        tool_list_canvas.create_window((0, 0), window=tool_list_frame, anchor="nw", width=120)
+        tool_list_canvas.create_window((0, 0), window=tool_list_frame, anchor="nw", width=115)
         tool_list_canvas.configure(yscrollcommand=scrollbar.set)
 
         tool_list_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
@@ -4316,21 +4316,21 @@ Adjustable:  Yes (via Settings)
             btn = tk.Button(
                 tool_list_frame,
                 text=tool_name,
-                font=("Courier", 9, "bold"),
+                font=("Courier", 8, "bold"),
                 bg=self.bg_tertiary,
                 fg=self.text_color,
                 activebackground=self.bg_primary,
                 activeforeground=self.accent_green,
                 relief=tk.FLAT,
                 anchor=tk.W,
-                padx=10,
-                pady=12,
+                padx=8,
+                pady=5,
                 cursor="hand2",
                 borderwidth=0,
                 highlightthickness=0,
                 command=lambda t=tool_id: self.switch_tool(t)
             )
-            btn.pack(fill=tk.X, padx=2, pady=2)
+            btn.pack(fill=tk.X, padx=1, pady=1)
             self.tool_buttons[tool_id] = btn
 
             # Add hover effects
