@@ -10102,6 +10102,11 @@ Configure in the Settings tab:
                 return None
 
             cmd = ["nmap", scan_type, f"-{timing}"]
+
+            # On Windows, use --unprivileged to avoid raw socket issues
+            if os.name == 'nt':
+                cmd.append("--unprivileged")
+
             if ports:
                 cmd.extend(["-p", ports])
 
