@@ -64,7 +64,8 @@ class ColoredFormatter(logging.Formatter):
     def __init__(self, fmt: Optional[str] = None, datefmt: Optional[str] = None,
                  use_colors: bool = True) -> None:
         super().__init__(fmt, datefmt)
-        self.use_colors = use_colors and sys.stderr.isatty()
+        # Handle case where sys.stderr is None (e.g., in PyInstaller bundles)
+        self.use_colors = use_colors and sys.stderr is not None and hasattr(sys.stderr, 'isatty') and sys.stderr.isatty()
 
     def format(self, record: logging.LogRecord) -> str:
         """Format log record with optional color coding."""
@@ -123,10 +124,12 @@ def setup_logging(
             file_handler.addFilter(security_filter)
             root_logger.addHandler(file_handler)
         except OSError as e:
-            print(f"Warning: Could not set up file logging: {e}", file=sys.stderr)
+            # Handle case where sys.stderr is None (PyInstaller bundles)
+            if sys.stderr is not None:
+                print(f"Warning: Could not set up file logging: {e}", file=sys.stderr)
 
-    # Console handler
-    if log_to_console:
+    # Console handler - only add if stderr is available
+    if log_to_console and sys.stderr is not None:
         console_handler = logging.StreamHandler(sys.stderr)
         console_handler.setLevel(console_level or logging.WARNING)
         console_handler.setFormatter(ColoredFormatter(LOG_FORMAT, LOG_DATE_FORMAT))
