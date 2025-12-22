@@ -21,6 +21,71 @@ from collections import deque
 import base64
 import io
 
+# Try to import theme definitions from package
+try:
+    from recon_superpower.config.defaults import AVAILABLE_THEMES, DEFAULT_THEME
+    HAS_THEMES = True
+except ImportError:
+    HAS_THEMES = False
+    # Fallback theme definitions if package not available
+    AVAILABLE_THEMES = {
+        "Monokai": {
+            "bg_primary": "#272822", "bg_secondary": "#3E3D32", "bg_tertiary": "#49483E",
+            "accent_green": "#A6E22E", "accent_cyan": "#66D9EF", "accent_red": "#F92672",
+            "accent_orange": "#FD971F", "accent_yellow": "#E6DB74", "accent_purple": "#AE81FF",
+            "text_color": "#F8F8F2", "text_muted": "#75715E", "border_color": "#A6E22E", "output_bg": "#1E1E1E",
+        },
+        "One Dark": {
+            "bg_primary": "#282C34", "bg_secondary": "#21252B", "bg_tertiary": "#2C313A",
+            "accent_green": "#98C379", "accent_cyan": "#56B6C2", "accent_red": "#E06C75",
+            "accent_orange": "#D19A66", "accent_yellow": "#E5C07B", "accent_purple": "#C678DD",
+            "text_color": "#ABB2BF", "text_muted": "#5C6370", "border_color": "#61AFEF", "output_bg": "#1E2127",
+        },
+        "Nord": {
+            "bg_primary": "#2E3440", "bg_secondary": "#3B4252", "bg_tertiary": "#434C5E",
+            "accent_green": "#A3BE8C", "accent_cyan": "#88C0D0", "accent_red": "#BF616A",
+            "accent_orange": "#D08770", "accent_yellow": "#EBCB8B", "accent_purple": "#B48EAD",
+            "text_color": "#ECEFF4", "text_muted": "#4C566A", "border_color": "#81A1C1", "output_bg": "#242933",
+        },
+        "Dracula": {
+            "bg_primary": "#282A36", "bg_secondary": "#44475A", "bg_tertiary": "#343746",
+            "accent_green": "#50FA7B", "accent_cyan": "#8BE9FD", "accent_red": "#FF5555",
+            "accent_orange": "#FFB86C", "accent_yellow": "#F1FA8C", "accent_purple": "#BD93F9",
+            "text_color": "#F8F8F2", "text_muted": "#6272A4", "border_color": "#FF79C6", "output_bg": "#21222C",
+        },
+        "Darcula": {
+            "bg_primary": "#2B2B2B", "bg_secondary": "#3C3F41", "bg_tertiary": "#313335",
+            "accent_green": "#6A8759", "accent_cyan": "#6897BB", "accent_red": "#CC7832",
+            "accent_orange": "#FFC66D", "accent_yellow": "#A9B7C6", "accent_purple": "#9876AA",
+            "text_color": "#A9B7C6", "text_muted": "#808080", "border_color": "#629755", "output_bg": "#1E1E1E",
+        },
+        "Material": {
+            "bg_primary": "#263238", "bg_secondary": "#37474F", "bg_tertiary": "#455A64",
+            "accent_green": "#C3E88D", "accent_cyan": "#89DDFF", "accent_red": "#F07178",
+            "accent_orange": "#F78C6C", "accent_yellow": "#FFCB6B", "accent_purple": "#C792EA",
+            "text_color": "#EEFFFF", "text_muted": "#546E7A", "border_color": "#82AAFF", "output_bg": "#1A2327",
+        },
+        "Solarized Dark": {
+            "bg_primary": "#002B36", "bg_secondary": "#073642", "bg_tertiary": "#094959",
+            "accent_green": "#859900", "accent_cyan": "#2AA198", "accent_red": "#DC322F",
+            "accent_orange": "#CB4B16", "accent_yellow": "#B58900", "accent_purple": "#6C71C4",
+            "text_color": "#839496", "text_muted": "#586E75", "border_color": "#268BD2", "output_bg": "#001F27",
+        },
+        "Gruvbox Dark": {
+            "bg_primary": "#282828", "bg_secondary": "#3C3836", "bg_tertiary": "#504945",
+            "accent_green": "#B8BB26", "accent_cyan": "#8EC07C", "accent_red": "#FB4934",
+            "accent_orange": "#FE8019", "accent_yellow": "#FABD2F", "accent_purple": "#D3869B",
+            "text_color": "#EBDBB2", "text_muted": "#928374", "border_color": "#83A598", "output_bg": "#1D2021",
+        },
+        "Obsidian": {
+            "bg_primary": "#1E1E1E", "bg_secondary": "#2D2D30", "bg_tertiary": "#3E3E42",
+            "accent_green": "#6A9955", "accent_cyan": "#4EC9B0", "accent_red": "#F44747",
+            "accent_orange": "#CE9178", "accent_yellow": "#DCDCAA", "accent_purple": "#C586C0",
+            "text_color": "#D4D4D4", "text_muted": "#6A6A6A", "border_color": "#569CD6", "output_bg": "#1A1A1A",
+        },
+    }
+    DEFAULT_THEME = "Monokai"
+
 # Try to import PIL for image handling
 try:
     from PIL import Image, ImageTk
@@ -50,19 +115,11 @@ class ReconSuperpower:
         self.root.geometry("1400x900")
         self.root.resizable(True, True)  # Allow window resizing
 
-        # Monokai terminal theme colors
-        self.bg_primary = "#272822"      # Main background (dark greenish-gray)
-        self.bg_secondary = "#3E3D32"    # Panel background (lighter)
-        self.bg_tertiary = "#49483E"     # Sidebar/accent background
-        self.accent_green = "#A6E22E"    # Monokai green (strings/success)
-        self.accent_cyan = "#66D9EF"     # Monokai cyan (functions/info)
-        self.accent_red = "#F92672"      # Monokai pink/red (keywords/errors)
-        self.accent_orange = "#FD971F"   # Monokai orange (numbers/warnings)
-        self.accent_yellow = "#E6DB74"   # Monokai yellow (classes/highlights)
-        self.accent_purple = "#AE81FF"   # Monokai purple (constants)
-        self.text_color = "#F8F8F2"      # Monokai foreground (off-white)
-        self.text_muted = "#75715E"      # Monokai comments (muted text)
-        self.border_color = "#A6E22E"    # Green border
+        # Theme tracking - will be updated from config
+        self.current_theme = DEFAULT_THEME
+
+        # Initialize with default theme colors (Monokai)
+        self._init_theme_colors(self.current_theme)
 
         self.root.configure(bg=self.bg_primary)
 
@@ -3891,6 +3948,33 @@ Adjustable:  Yes (via Settings)
         # Restore last session settings
         self.restore_last_session()
 
+        # Apply theme from config after UI is built
+        saved_theme = self.config.get("theme", DEFAULT_THEME)
+        if saved_theme in AVAILABLE_THEMES:
+            self.current_theme = saved_theme
+            self._init_theme_colors(saved_theme)
+
+    def _init_theme_colors(self, theme_name):
+        """Initialize color variables from a theme name."""
+        if theme_name not in AVAILABLE_THEMES:
+            theme_name = DEFAULT_THEME
+        self.current_theme = theme_name
+        theme = AVAILABLE_THEMES[theme_name]
+
+        self.bg_primary = theme["bg_primary"]
+        self.bg_secondary = theme["bg_secondary"]
+        self.bg_tertiary = theme["bg_tertiary"]
+        self.accent_green = theme["accent_green"]
+        self.accent_cyan = theme["accent_cyan"]
+        self.accent_red = theme["accent_red"]
+        self.accent_orange = theme["accent_orange"]
+        self.accent_yellow = theme["accent_yellow"]
+        self.accent_purple = theme["accent_purple"]
+        self.text_color = theme["text_color"]
+        self.text_muted = theme["text_muted"]
+        self.border_color = theme["border_color"]
+        self.output_bg = theme.get("output_bg", "#1E1E1E")
+
     def load_config(self):
         """Load user configuration from file."""
         default_config = {
@@ -3898,7 +3982,7 @@ Adjustable:  Yes (via Settings)
             "timeout": 3600,
             "max_output_lines": 10000,
             "auto_save": False,
-            "theme": "dark"
+            "theme": DEFAULT_THEME
         }
 
         if self.config_file.exists():
@@ -9316,6 +9400,49 @@ Configure in the Settings tab:
         section_label.grid(row=row, column=0, columnspan=3, sticky=tk.W, padx=10, pady=(15, 5))
         row += 1
 
+        # Color Theme selection
+        label = tk.Label(scrollable_frame, text="Color Theme:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        label.grid(row=row, column=0, sticky=tk.W, padx=10, pady=5)
+
+        theme_frame = tk.Frame(scrollable_frame, bg=self.bg_secondary)
+        theme_frame.grid(row=row, column=1, sticky=tk.EW, padx=10, pady=5)
+        theme_frame.columnconfigure(0, weight=1)
+
+        # Theme dropdown
+        self.settings_theme_var = tk.StringVar(value=self.config.get("theme", DEFAULT_THEME))
+        theme_names = list(AVAILABLE_THEMES.keys())
+        self.settings_theme_dropdown = ttk.Combobox(
+            theme_frame,
+            textvariable=self.settings_theme_var,
+            values=theme_names,
+            state="readonly",
+            font=("Courier", 10),
+            width=20
+        )
+        self.settings_theme_dropdown.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        # Theme preview button
+        preview_btn = tk.Button(theme_frame, text="Preview", font=("Courier", 9),
+                               bg=self.bg_primary, fg=self.accent_cyan,
+                               relief=tk.FLAT, cursor="hand2",
+                               command=self.preview_theme)
+        preview_btn.pack(side=tk.RIGHT, padx=(10, 0))
+        row += 1
+
+        # Theme color preview frame
+        self.theme_preview_frame = tk.Frame(scrollable_frame, bg=self.bg_secondary)
+        self.theme_preview_frame.grid(row=row, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
+        self._update_theme_preview()
+        row += 1
+
+        # Note about theme requiring restart
+        theme_note = tk.Label(scrollable_frame,
+                             text="Note: Theme changes require application restart to fully apply.",
+                             font=("Courier", 8), fg=self.text_muted, bg=self.bg_secondary)
+        theme_note.grid(row=row, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(0, 10))
+        row += 1
+
         # Auto-save checkbox
         self.settings_autosave_var = tk.BooleanVar(value=self.config.get("auto_save", False))
         autosave_check = tk.Checkbutton(scrollable_frame, text="Auto-save output after each scan",
@@ -9410,7 +9537,7 @@ Configure in the Settings tab:
                 "timeout": 3600,
                 "max_output_lines": 10000,
                 "auto_save": False,
-                "theme": "dark",
+                "theme": DEFAULT_THEME,
                 "shodan_api_key": "",
                 "wordlist_path": "/usr/share/wordlists",
                 "tools_path": "/usr/bin",
@@ -9420,10 +9547,11 @@ Configure in the Settings tab:
                 "confirm_exit": True
             }
             self.config = default_config
+            self.current_theme = DEFAULT_THEME
             self.save_config()
             # Refresh settings UI
             self.switch_tool("settings")
-            messagebox.showinfo("Settings Reset", "Settings have been reset to defaults.")
+            messagebox.showinfo("Settings Reset", "Settings have been reset to defaults.\nRestart the application to apply the default theme.")
 
     def save_settings(self):
         """Save settings from the settings tab."""
@@ -9491,6 +9619,13 @@ Configure in the Settings tab:
         if hasattr(self, 'settings_confirm_exit_var'):
             self.config["confirm_exit"] = self.settings_confirm_exit_var.get()
 
+        # Save theme
+        if hasattr(self, 'settings_theme_var'):
+            theme_name = self.settings_theme_var.get()
+            if theme_name in AVAILABLE_THEMES:
+                self.config["theme"] = theme_name
+                self.current_theme = theme_name
+
         # Save to file
         self.save_config()
 
@@ -9510,10 +9645,91 @@ Configure in the Settings tab:
         messagebox.showinfo("Settings Saved", "Settings have been saved successfully!")
         self.update_status("Settings saved")
 
-    def validate_file_path(self, filepath):
+    def preview_theme(self):
+        """Preview the selected theme colors."""
+        if hasattr(self, 'settings_theme_var'):
+            theme_name = self.settings_theme_var.get()
+            if theme_name in AVAILABLE_THEMES:
+                self._update_theme_preview(theme_name)
+
+    def _update_theme_preview(self, theme_name=None):
+        """Update the theme color preview display."""
+        if not hasattr(self, 'theme_preview_frame'):
+            return
+
+        # Clear existing preview
+        for widget in self.theme_preview_frame.winfo_children():
+            widget.destroy()
+
+        # Get theme colors
+        if theme_name is None:
+            theme_name = getattr(self, 'current_theme', DEFAULT_THEME)
+        if theme_name not in AVAILABLE_THEMES:
+            theme_name = DEFAULT_THEME
+        theme = AVAILABLE_THEMES[theme_name]
+
+        # Theme name label
+        name_label = tk.Label(
+            self.theme_preview_frame,
+            text=f"Theme: {theme_name}",
+            font=("Courier", 9, "bold"),
+            fg=self.accent_cyan,
+            bg=self.bg_secondary
+        )
+        name_label.pack(side=tk.TOP, anchor=tk.W, pady=(0, 5))
+
+        # Create color swatches row
+        swatches_frame = tk.Frame(self.theme_preview_frame, bg=self.bg_secondary)
+        swatches_frame.pack(side=tk.TOP, fill=tk.X, pady=2)
+
+        # Show main colors as swatches
+        colors_to_show = [
+            ("bg_primary", "Primary"),
+            ("bg_secondary", "Secondary"),
+            ("accent_green", "Green"),
+            ("accent_cyan", "Cyan"),
+            ("accent_red", "Red"),
+            ("accent_orange", "Orange"),
+            ("accent_yellow", "Yellow"),
+            ("accent_purple", "Purple"),
+            ("text_color", "Text"),
+        ]
+
+        for color_key, label in colors_to_show:
+            color = theme.get(color_key, "#FFFFFF")
+            swatch = tk.Frame(swatches_frame, bg=color, width=25, height=20,
+                            highlightthickness=1, highlightbackground=self.text_muted)
+            swatch.pack(side=tk.LEFT, padx=2)
+            swatch.pack_propagate(False)
+
+        # Sample text preview
+        preview_text_frame = tk.Frame(
+            self.theme_preview_frame,
+            bg=theme.get("bg_primary", "#272822"),
+            highlightthickness=1,
+            highlightbackground=theme.get("border_color", "#A6E22E")
+        )
+        preview_text_frame.pack(side=tk.TOP, fill=tk.X, pady=5)
+
+        sample_text = tk.Label(
+            preview_text_frame,
+            text=f"Sample: {theme_name} Theme Preview",
+            font=("Courier", 9),
+            fg=theme.get("text_color", "#F8F8F2"),
+            bg=theme.get("bg_primary", "#272822"),
+            padx=10,
+            pady=5
+        )
+        sample_text.pack(side=tk.LEFT)
+
+    def validate_file_path(self, filepath, check_exists=True):
         """
         Security: Validate file paths to prevent path traversal attacks.
         Only allow absolute paths and check for suspicious patterns.
+
+        Args:
+            filepath: The file path to validate
+            check_exists: If True, verify file exists and is readable (default: True)
         """
         try:
             # Resolve to absolute path and normalize
@@ -9522,6 +9738,11 @@ Configure in the Settings tab:
             # Check for path traversal patterns
             if '..' in filepath or '~' in filepath:
                 return False
+
+            # If not checking existence, just validate the path format
+            if not check_exists:
+                # Just ensure path doesn't contain dangerous patterns
+                return True
 
             # Ensure file exists and is readable
             if not os.path.isfile(abs_path):

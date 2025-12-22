@@ -6,9 +6,9 @@ Provides centralized access to colors and styling.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
-from recon_superpower.config.defaults import THEME_COLORS
+from recon_superpower.config.defaults import THEME_COLORS, AVAILABLE_THEMES, DEFAULT_THEME
 
 
 @dataclass
@@ -17,8 +17,12 @@ class Theme:
     Theme configuration for the application UI.
 
     Provides access to all theme colors and styling properties.
-    Supports the Monokai terminal theme by default.
+    Supports multiple themes including Monokai, One Dark, Nord, Dracula,
+    Darcula, Material, Solarized Dark, Gruvbox Dark, and Obsidian.
     """
+
+    # Theme name
+    name: str = DEFAULT_THEME
 
     # Main backgrounds
     bg_primary: str = THEME_COLORS["bg_primary"]
@@ -42,9 +46,23 @@ class Theme:
     output_bg: str = THEME_COLORS["output_bg"]
 
     @classmethod
-    def from_dict(cls, colors: Dict[str, str]) -> Theme:
+    def from_dict(cls, colors: Dict[str, str], name: str = "Custom") -> Theme:
         """Create a Theme from a dictionary of colors."""
-        return cls(**{k: v for k, v in colors.items() if hasattr(cls, k)})
+        theme_dict = {k: v for k, v in colors.items() if hasattr(cls, k) and k != "name"}
+        theme_dict["name"] = name
+        return cls(**theme_dict)
+
+    @classmethod
+    def from_name(cls, theme_name: str) -> Theme:
+        """Create a Theme from a predefined theme name."""
+        if theme_name not in AVAILABLE_THEMES:
+            theme_name = DEFAULT_THEME
+        return cls.from_dict(AVAILABLE_THEMES[theme_name], name=theme_name)
+
+    @classmethod
+    def get_available_themes(cls) -> List[str]:
+        """Get list of available theme names."""
+        return list(AVAILABLE_THEMES.keys())
 
     def get(self, name: str, default: Optional[str] = None) -> str:
         """Get a color by name with optional default."""
@@ -53,6 +71,7 @@ class Theme:
     def to_dict(self) -> Dict[str, str]:
         """Convert theme to dictionary."""
         return {
+            "name": self.name,
             "bg_primary": self.bg_primary,
             "bg_secondary": self.bg_secondary,
             "bg_tertiary": self.bg_tertiary,
@@ -93,3 +112,15 @@ class Theme:
     def highlight(self) -> str:
         """Color for highlighted text."""
         return self.accent_yellow
+
+
+def get_theme_colors(theme_name: str) -> Dict[str, str]:
+    """Get color dictionary for a theme by name."""
+    if theme_name in AVAILABLE_THEMES:
+        return AVAILABLE_THEMES[theme_name].copy()
+    return AVAILABLE_THEMES[DEFAULT_THEME].copy()
+
+
+def get_available_theme_names() -> List[str]:
+    """Get list of all available theme names."""
+    return list(AVAILABLE_THEMES.keys())
