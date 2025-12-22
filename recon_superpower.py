@@ -4000,6 +4000,13 @@ Adjustable:  Yes (via Settings)
             self.config["window_geometry"] = self.root.geometry()
             with open(self.config_file, 'w') as f:
                 json.dump(self.config, f, indent=2)
+            
+            # SECURITY: Set restrictive file permissions (user read/write only)
+            # Prevents other users from reading API keys and configuration
+            try:
+                os.chmod(self.config_file, 0o600)  # rw-------
+            except (OSError, PermissionError):
+                pass  # Skip if permission setting fails (e.g., Windows)
         except IOError:
             pass  # Silently fail if unable to save
 
@@ -9421,6 +9428,8 @@ Configure in the Settings tab:
             width=20
         )
         self.settings_theme_dropdown.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        # Bind event to automatically update preview when theme changes
+        self.settings_theme_dropdown.bind("<<ComboboxSelected>>", lambda e: self.preview_theme())
 
         # Theme preview button
         preview_btn = tk.Button(theme_frame, text="Preview", font=("Courier", 9),
