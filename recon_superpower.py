@@ -9436,9 +9436,9 @@ Configure in the Settings tab:
         self._update_theme_preview()
         row += 1
 
-        # Note about theme requiring restart
+        # Theme application note
         theme_note = tk.Label(scrollable_frame,
-                             text="Note: Theme changes require application restart to fully apply.",
+                             text="Theme changes apply immediately when you save settings.",
                              font=("Courier", 8), fg=self.text_muted, bg=self.bg_secondary)
         theme_note.grid(row=row, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(0, 10))
         row += 1
@@ -9623,8 +9623,12 @@ Configure in the Settings tab:
         if hasattr(self, 'settings_theme_var'):
             theme_name = self.settings_theme_var.get()
             if theme_name in AVAILABLE_THEMES:
+                old_theme = self.config.get("theme", DEFAULT_THEME)
                 self.config["theme"] = theme_name
-                self.current_theme = theme_name
+                if theme_name != old_theme:
+                    # Apply theme colors to UI
+                    self._init_theme_colors(theme_name)
+                    self.apply_theme()
 
         # Save to file
         self.save_config()
@@ -9721,6 +9725,114 @@ Configure in the Settings tab:
             pady=5
         )
         sample_text.pack(side=tk.LEFT)
+
+    def apply_theme(self):
+        """Apply the current theme colors to all widgets."""
+        # Update root window
+        self.root.configure(bg=self.bg_primary)
+
+        # Recursively update all widgets
+        self._apply_theme_to_widget(self.root)
+
+        # Update output text area specifically (has special colors)
+        if hasattr(self, 'output_text'):
+            self.output_text.configure(
+                bg=self.output_bg,
+                fg=self.text_color,
+                insertbackground=self.accent_green,
+                selectbackground=self.accent_cyan,
+                selectforeground=self.bg_primary
+            )
+
+        # Update status bar
+        if hasattr(self, 'status_bar'):
+            self.status_bar.configure(bg=self.bg_secondary, fg=self.accent_green)
+
+        # Force redraw
+        self.root.update_idletasks()
+
+    def _apply_theme_to_widget(self, widget):
+        """Recursively apply theme colors to a widget and its children."""
+        widget_class = widget.winfo_class()
+
+        try:
+            # Skip ttk widgets (they use styles, handled separately)
+            if widget_class.startswith('T'):
+                pass
+            # Frame widgets
+            elif widget_class in ('Frame', 'Labelframe'):
+                widget.configure(bg=self.bg_secondary)
+            # Label widgets
+            elif widget_class == 'Label':
+                current_fg = str(widget.cget('fg')).lower()
+                # Preserve accent colors, update backgrounds and standard text
+                if current_fg in (self.accent_green.lower(), '#a6e22e'):
+                    widget.configure(bg=self.bg_secondary, fg=self.accent_green)
+                elif current_fg in (self.accent_cyan.lower(), '#66d9ef'):
+                    widget.configure(bg=self.bg_secondary, fg=self.accent_cyan)
+                elif current_fg in (self.accent_red.lower(), '#f92672'):
+                    widget.configure(bg=self.bg_secondary, fg=self.accent_red)
+                elif current_fg in (self.accent_orange.lower(), '#fd971f'):
+                    widget.configure(bg=self.bg_secondary, fg=self.accent_orange)
+                elif current_fg in (self.accent_yellow.lower(), '#e6db74'):
+                    widget.configure(bg=self.bg_secondary, fg=self.accent_yellow)
+                elif current_fg in (self.accent_purple.lower(), '#ae81ff'):
+                    widget.configure(bg=self.bg_secondary, fg=self.accent_purple)
+                else:
+                    widget.configure(bg=self.bg_secondary, fg=self.text_color)
+            # Button widgets
+            elif widget_class == 'Button':
+                current_bg = str(widget.cget('bg')).lower()
+                # Preserve special button colors (green save, red stop, etc.)
+                if current_bg in ('#a6e22e', self.accent_green.lower()):
+                    widget.configure(bg=self.accent_green, fg=self.bg_primary,
+                                   activebackground=self.accent_cyan)
+                elif current_bg in ('#f92672', self.accent_red.lower()):
+                    widget.configure(bg=self.accent_red, fg=self.text_color,
+                                   activebackground=self.accent_orange)
+                elif current_bg in ('#fd971f', self.accent_orange.lower()):
+                    widget.configure(bg=self.accent_orange, fg=self.bg_primary,
+                                   activebackground=self.accent_yellow)
+                else:
+                    widget.configure(bg=self.bg_tertiary, fg=self.text_color,
+                                   activebackground=self.bg_secondary)
+            # Entry widgets
+            elif widget_class == 'Entry':
+                widget.configure(bg=self.bg_primary, fg=self.accent_cyan,
+                               insertbackground=self.accent_green,
+                               selectbackground=self.accent_cyan,
+                               selectforeground=self.bg_primary)
+            # Text widgets
+            elif widget_class == 'Text':
+                widget.configure(bg=self.output_bg, fg=self.text_color,
+                               insertbackground=self.accent_green,
+                               selectbackground=self.accent_cyan,
+                               selectforeground=self.bg_primary)
+            # Checkbutton widgets
+            elif widget_class == 'Checkbutton':
+                widget.configure(bg=self.bg_secondary, fg=self.text_color,
+                               selectcolor=self.bg_primary,
+                               activebackground=self.bg_secondary,
+                               activeforeground=self.text_color)
+            # Listbox widgets
+            elif widget_class == 'Listbox':
+                widget.configure(bg=self.bg_secondary, fg=self.text_color,
+                               selectbackground=self.accent_green,
+                               selectforeground=self.bg_primary)
+            # Canvas widgets
+            elif widget_class == 'Canvas':
+                widget.configure(bg=self.bg_secondary)
+            # Scrollbar
+            elif widget_class == 'Scrollbar':
+                widget.configure(bg=self.bg_tertiary, troughcolor=self.bg_secondary)
+
+        except tk.TclError:
+            # Some widgets may not support certain options
+            pass
+
+        # Recursively process children
+        for child in widget.winfo_children():
+            self._apply_theme_to_widget(child)
 
     def validate_file_path(self, filepath, check_exists=True):
         """
